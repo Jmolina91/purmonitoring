@@ -107,9 +107,9 @@
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-    // Your Firebase config
+    // Firebase config with placeholder for API key
     const firebaseConfig = {
-      apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+      apiKey: "%FIREBASE_API_KEY%",  // <-- Replace this at build/deploy time!
       authDomain: "order-monitoring-purchasing.firebaseapp.com",
       projectId: "order-monitoring-purchasing",
       storageBucket: "order-monitoring-purchasing.firebasestorage.app",
