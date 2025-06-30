@@ -230,12 +230,16 @@
   </nav>
 
   <!-- Sidebar -->
-<div id="sidebar" class="sidebar">
-  <h5 class="sidebar-title">Functions</h5>
+  <div id="sidebar" class="sidebar">
+    <h5 class="sidebar-title">Functions</h5>
   <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">
-    UPDATE ORDER DETAILS
-  </button>
-</div>
+  UPDATE ORDER DETAILS
+</button>
+<button id="btnCustomizeTable" class="btn btn-primary sidebar-btn w-100 mb-3">
+  Customize Table
+</button>
+
+  </div>
 
   <!-- MAIN CONTENT -->
   <div id="mainContent" style="margin-left: 270px; padding: 20px;">
@@ -309,21 +313,8 @@
         <div class="card-body p-0">
           <div style="max-height: 500px; overflow-y: auto;">
             <table class="table table-hover table-bordered align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="min-width: 120px;">Order ID</th>
-                  <th style="min-width: 140px;">Order Date</th>
-                  <th style="min-width: 150px;">Supplier</th>
-                  <th style="min-width: 200px;">Product</th>
-                  <th>Qty</th>
-                  <th>Delivered</th>
-                  <th>Cancelled</th>
-                  <th>Balance</th>
-                  <th>Unit Price</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Remarks</th>
-                </tr>
+              <thead id="orderTableHead" class="table-light sticky-top">
+                <!-- Dynamic headers inserted here -->
               </thead>
               <tbody id="orderTableBody">
                 <!-- JavaScript will populate rows here -->
@@ -337,51 +328,67 @@
     <!-- CHART SECTION -->
     <div class="container-fluid p-0 mb-5">
       <h4 class="mb-3">📊 Charts</h4>
-      <canvas id="chartCanvas" height="100"></canvas>
+      <canvas id="chartCanvas" style="width:100%; height:400px;"></canvas>
     </div>
   </div>
 
   <!-- Edit Multiple Order Items Modal -->
-<div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content rounded-4 shadow-lg border-0">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title" id="updateOrderModalLabel">
-          Update Order <span id="modalOrderNumber" class="text-primary"></span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body pt-0">
-        <div id="multiItemContainer">
-          <table class="table table-bordered table-hover">
-            <thead class="table-light">
-              <tr>
-                <th>Product</th>
-                <th>Qty Ordered</th>
-                <th>Qty Delivered</th>
-                <th>Qty Cancelled</th>
-                <th>Unit Price</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody id="multiItemTableBody">
-              <!-- JavaScript will inject order item rows here -->
-            </tbody>
-          </table>
+  <div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow-lg border-0">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title" id="updateOrderModalLabel">
+            Update Order <span id="modalOrderNumber" class="text-primary"></span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-      </div>
 
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
+        <div class="modal-body pt-0">
+          <div id="multiItemContainer">
+            <table class="table table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Qty Ordered</th>
+                  <th>Qty Delivered</th>
+                  <th>Qty Cancelled</th>
+                  <th>Unit Price</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="multiItemTableBody">
+                <!-- JavaScript will inject order item rows here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- Customize Table Modal -->
+  <div class="modal fade" id="customizeTableModal" tabindex="-1" aria-labelledby="customizeTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="customizeTableModalLabel">Select Columns to Display</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="columnCheckboxContainer">
+          <!-- Dynamically generated checkboxes will appear here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirmColumnsBtn" class="btn btn-success">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
-
 
 
  
@@ -415,6 +422,9 @@
   let fullData = [];
   let currentEditingOrderId = '';
   let currentUserId = null; // Use UID for Firestore path
+  let chartInstance = null;
+  let selectedColumns = [];  // Store which columns are selected
+
 
   auth.onAuthStateChanged(user => {
     if (user) {
@@ -437,24 +447,25 @@
   document.getElementById('statusFilter').addEventListener('change', filterTable);
 
   async function loadOrdersFromFirestore(userId) {
-    try {
-      const ordersSnapshot = await firestore.collection('orders').doc(userId).collection('userOrders').get();
-      fullData = [];ordersSnapshot.forEach(doc => {
-  const data = doc.data();
-  data["docId"] = doc.id; // ✅ Attach Firestore doc ID
-  fullData.push(data);
-});
+  try {
+    const ordersSnapshot = await firestore.collection('orders').doc(userId).collection('userOrders').get();
+    fullData = [];
+    ordersSnapshot.forEach(doc => {
+      const data = doc.data();
+      data["docId"] = doc.id;
+      fullData.push(data);
+    });
 
-
-      populateTable(fullData);
-      updateSummary(fullData);
-    } catch (error) {
-      console.error("Error loading user orders:", error);
-      fullData = [];
-      populateTable(fullData);
-      updateSummary(fullData);
-    }
+    populateTable(fullData);
+    updateSummary(fullData);
+    renderCharts(fullData);  // ✅ Add this line to show the chart!
+  } catch (error) {
+    console.error("Error loading user orders:", error);
+    fullData = [];
+    populateTable(fullData);
+    updateSummary(fullData);
   }
+}
 
   function handleFile(e) {
     const file = e.target.files[0];
@@ -492,10 +503,181 @@
 
 
 
+
+
+
+
+
+// Get btnCustomizeTable once
+const btnCustomizeTable = document.getElementById('btnCustomizeTable');
+const customizeTableModal = new bootstrap.Modal(document.getElementById('customizeTableModal'));
+const columnCheckboxContainer = document.getElementById('columnCheckboxContainer');
+const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
+
+// Attach click event once
+btnCustomizeTable.addEventListener('click', () => {
+  if (!fullData.length) {
+    alert('No data loaded yet.');
+    return;
+  }
+
+  const headers = Object.keys(fullData[0]);
+  columnCheckboxContainer.innerHTML = headers.map(header => {
+    const checked = selectedColumns.length === 0 || selectedColumns.includes(header);
+    return `
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${header}" id="col-${header}" ${checked ? 'checked' : ''}>
+        <label class="form-check-label" for="col-${header}">${header}</label>
+      </div>
+    `;
+  }).join('');
+
+  customizeTableModal.show();
+});
+
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  selectedColumns = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+
+  if (selectedColumns.length === 0) {
+    alert('Select at least one column to display.');
+    return;
+  }
+
+  customizeTableModal.hide();
+  populateTable(fullData);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const btnShowUpdate = document.getElementById('btnShowUpdate');
 const updateOrderModal = new bootstrap.Modal(document.getElementById('updateOrderModal'));
 const modalOrderNumber = document.getElementById('modalOrderNumber');
 const saveUpdateBtn = document.getElementById('saveUpdateBtn');
+
+
+// Show modal and generate checkboxes
+btnCustomizeTable.addEventListener('click', () => {
+  if (!fullData.length) {
+    alert('No data loaded yet.');
+    return;
+  }
+  
+  // Get unique headers from data keys
+  const headers = Object.keys(fullData[0]);
+
+  // Generate checkboxes, check those already selected or all by default
+  columnCheckboxContainer.innerHTML = headers.map(header => {
+    const checked = selectedColumns.length === 0 || selectedColumns.includes(header);
+    return `
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${header}" id="col-${header}" ${checked ? 'checked' : ''}>
+        <label class="form-check-label" for="col-${header}">${header}</label>
+      </div>
+    `;
+  }).join('');
+
+  customizeTableModal.show();
+});
+
+// On confirm, update selected columns and re-render table
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  selectedColumns = Array.from(checkboxes)
+                         .filter(cb => cb.checked)
+                         .map(cb => cb.value);
+
+  if (selectedColumns.length === 0) {
+    alert('Select at least one column to display.');
+    return;
+  }
+
+  customizeTableModal.hide();
+  populateTable(fullData);  // Re-render table with selected columns
+});
+
+// Modify populateTable to respect selectedColumns
+function populateTable(data) {
+  const tbody = document.getElementById('orderTableBody');
+  const thead = document.getElementById('orderTableHead');
+  tbody.innerHTML = '';
+  thead.innerHTML = '';
+
+  const columns = selectedColumns.length > 0 ? selectedColumns : (data.length ? Object.keys(data[0]) : []);
+
+  // Build header
+  const headerRow = document.createElement('tr');
+  columns.forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Build rows
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      let cellValue = row[col] ?? '';
+
+      // Optional formatting example
+      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
+        cellValue = Number(cellValue).toFixed(2);
+      }
+      td.textContent = cellValue;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Form fields inside modal
 const updateProduct = document.getElementById('updateProduct');
@@ -563,39 +745,19 @@ saveUpdateBtn.addEventListener('click', () => {
     return;
   }
 
-  // Validate inputs
+  // Loop through each row to gather updated values
   const inputs = document.querySelectorAll('#multiItemTableBody input');
-  let valid = true;
-  let errorMessage = '';
-
   inputs.forEach(input => {
     const index = parseInt(input.dataset.index);
     const field = input.dataset.field;
-    let value = input.value.trim();
+    let value = input.value;
 
     if (["Quantity Ordered", "Quantity Delivered", "Quantity Cancelled", "Unit Price"].includes(field)) {
-      value = Number(value);
-      if (isNaN(value) || value < 0) {
-        valid = false;
-        errorMessage = `Field "${field}" must be a non-negative number.`;
-      }
-    } else {
-      // For text fields (like Description or Remarks), check required fields if needed
-      if (field === 'Description' && value === '') {
-        valid = false;
-        errorMessage = 'Product Description is required.';
-      }
+      value = Number(value) || 0;
     }
-
-    if (!valid) return; // early exit from forEach
 
     currentItem[index][field] = value;
   });
-
-  if (!valid) {
-    alert(errorMessage);
-    return;
-  }
 
   // Recalculate balance and update Firestore
   saveUpdateBtn.disabled = true;
@@ -768,26 +930,22 @@ async function saveOrdersToFirestore(userId, ordersArray) {
   }
 
   function filterTable() {
+  console.log('filterTable called');
   const search = document.getElementById('searchInput').value.toLowerCase();
   const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
 
+  console.log('Search:', search, 'Status filter:', statusFilter);
+
   const filtered = fullData.filter(row => {
-    const customer = (row["Supplier"] || '').toLowerCase();      // use Supplier
-    const product = (row["Description"] || '').toLowerCase();    // use Description
+    const customer = (row["Customer"] || row["Supplier"] || '').toLowerCase();
+    const product = (row["Product"] || row["Description"] || '').toLowerCase();
     const status = determineStatus(row).toLowerCase();
 
-    const qtyOrdered = Number(row["Quantity Ordered"] || 0);
-    const qtyDelivered = Number(row["Quantity Delivered"] || 0);
-    const qtyCancelled = Number(row["Quantity Cancelled"] || 0);
-    const unitPrice = Number(row["Unit Price"] || 0);
-
-    const validNumbers = qtyOrdered >= 0 && qtyDelivered >= 0 && qtyCancelled >= 0 && unitPrice >= 0;
-    const hasRequired = customer && product && validNumbers;
-
-    return hasRequired &&
-      (customer.includes(search) || product.includes(search)) &&
-      (!statusFilter || status === statusFilter);
+    return (customer.includes(search) || product.includes(search)) &&
+           (!statusFilter || status === statusFilter);
   });
+
+  console.log('Filtered data count:', filtered.length);
 
   populateTable(filtered);
   updateSummary(filtered);
@@ -816,6 +974,52 @@ async function saveOrdersToFirestore(userId, ordersArray) {
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
   }
+
+function renderCharts(data) {
+  const monthlySales = {};
+
+  data.forEach(order => {
+    if (!order["Order Date"]) return;
+
+    const date = new Date(order["Order Date"]);
+    const monthYear = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+
+    const qty = Number(order["Quantity Ordered"]) || 0;
+    const price = parseFloat(order["Unit Price"]) || 0;
+    const total = qty * price;
+
+    monthlySales[monthYear] = (monthlySales[monthYear] || 0) + total;
+  });
+
+  const labels = Object.keys(monthlySales).sort((a, b) => new Date(a) - new Date(b));
+  const dataPoints = labels.map(label => monthlySales[label]);
+
+  const ctx = document.getElementById("chartCanvas").getContext("2d");
+
+  if (chartInstance) chartInstance.destroy(); // prevent duplicates
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Monthly Sales Total",
+        data: dataPoints,
+        fill: false,
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: "Monthly Sales Overview" },
+        legend: { position: 'top' }
+      }
+    }
+  });
+}
+
 </script>
 
 
