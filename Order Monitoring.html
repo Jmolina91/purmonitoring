@@ -563,19 +563,39 @@ saveUpdateBtn.addEventListener('click', () => {
     return;
   }
 
-  // Loop through each row to gather updated values
+  // Validate inputs
   const inputs = document.querySelectorAll('#multiItemTableBody input');
+  let valid = true;
+  let errorMessage = '';
+
   inputs.forEach(input => {
     const index = parseInt(input.dataset.index);
     const field = input.dataset.field;
-    let value = input.value;
+    let value = input.value.trim();
 
     if (["Quantity Ordered", "Quantity Delivered", "Quantity Cancelled", "Unit Price"].includes(field)) {
-      value = Number(value) || 0;
+      value = Number(value);
+      if (isNaN(value) || value < 0) {
+        valid = false;
+        errorMessage = `Field "${field}" must be a non-negative number.`;
+      }
+    } else {
+      // For text fields (like Description or Remarks), check required fields if needed
+      if (field === 'Description' && value === '') {
+        valid = false;
+        errorMessage = 'Product Description is required.';
+      }
     }
+
+    if (!valid) return; // early exit from forEach
 
     currentItem[index][field] = value;
   });
+
+  if (!valid) {
+    alert(errorMessage);
+    return;
+  }
 
   // Recalculate balance and update Firestore
   saveUpdateBtn.disabled = true;
@@ -748,21 +768,31 @@ async function saveOrdersToFirestore(userId, ordersArray) {
   }
 
   function filterTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
 
-    const filtered = fullData.filter(row => {
-      const customer = (row["Customer"] || row["Supplier"] || '').toLowerCase();
-      const product = (row["Product"] || row["Description"] || '').toLowerCase();
-      const status = determineStatus(row).toLowerCase();
+  const filtered = fullData.filter(row => {
+    const customer = (row["Customer"] || row["Supplier"] || '').toLowerCase();
+    const product = (row["Product"] || row["Description"] || '').toLowerCase();
+    const status = determineStatus(row).toLowerCase();
 
-      return (customer.includes(search) || product.includes(search)) &&
-             (!statusFilter || status === statusFilter);
-    });
+    // Validate non-negative numeric fields
+    const quantity = row["Quantity"];
+    const price = row["Price"];
+    const isValidQuantity = Number.isInteger(quantity) && quantity >= 0;
+    const isValidPrice = typeof price === 'number' && price >= 0;
 
-    populateTable(filtered);
-    updateSummary(filtered);
-  }
+    // Ensure required fields are present
+    const hasRequiredFields = customer && product && isValidQuantity && isValidPrice;
+
+    return hasRequiredFields &&
+           (customer.includes(search) || product.includes(search)) &&
+           (!statusFilter || status === statusFilter);
+  });
+
+  populateTable(filtered);
+  updateSummary(filtered);
+}
 
   
 
