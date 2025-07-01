@@ -5,215 +5,325 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Order Monitoring Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    body {
-  background-color: #f5f5f7; /* subtle off-white, like Apple pages */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  color: #1d1d1f; /* dark text but not harsh black */
-  line-height: 1.6;
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  :root {
+  --apple-blue: #007aff;
+  --sidebar-bg: #f9fafc;
+  --sidebar-border: #dce1e6;
+  --text-main: #1c1c1e;
+  --text-muted: #8e8e93;
+  --highlight: #0a84ff;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.06);
+  --hover-shadow: rgba(0, 0, 0, 0.1);
+  --transition-fast: 0.25s ease;
 }
 
-.card-summary {
-  border-left: 4px solid #0071e3; /* Apple blue */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f2f4f8;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+
+/* === Apple-Style Sidebar (Fixed to avoid collision with navbar) === */
+.sidebar {
+  position: fixed;
+  top: 56px; /* Leaves space for the navbar */
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 56px); /* Subtract navbar height */
+  background: rgba(255, 255, 255, 0.65); /* Glassmorphism */
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  z-index: 999;
+  overflow-y: auto;
+}
+
+
+/* ✨ Sidebar Title — Improved Readability and Padding */
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
+
+/* 🚪 Slide-In Sidebar Effect (Apple-like animation) */
+.sidebar {
+  position: fixed;
+  top: 56px; /* height of your navbar */
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 56px); /* full height minus navbar */
   background-color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: box-shadow 0.3s ease;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+  z-index: 1050;
+  overflow-y: auto;
+  padding: 1rem;
+  border-top-right-radius: 12px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hidden (slide-out) */
+.sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* 🍎 Sidebar Button — Apple-style Friendly UI */
+.sidebar-btn {
+  background: linear-gradient(135deg, #007aff, #0a84ff);
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 18px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sidebar-btn:hover {
+  background: linear-gradient(135deg, #005ecb, #007aff);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
+}
+
+.sidebar-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.2);
+}
+
+.sidebar-btn.active {
+  background: #004ba0;
+  box-shadow: inset 0 0 0 2px #ffffff33;
+}
+
+
+/* 🧑‍💻 Optional: Add icons to buttons if needed */
+.sidebar-btn::before {
+  content: '🛠️';
+  font-size: 1.1rem;
+}
+
+
+
+/* === Main Content === */
+.main-content {
+  margin-left: 260px;
+  padding: 2rem;
+  transition: margin-left var(--transition-fast);
+}
+
+/* === Card Summary === */
+.card-summary {
+  background: var(--card-bg);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px var(--card-shadow);
+  border-left: 5px solid var(--highlight);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-summary:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px var(--hover-shadow);
 }
 
+/* === Upload Zone === */
+.upload-zone {
+  border: 2px dashed #c7c7cc;
+  background-color: #f4f4f7;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: var(--highlight);
+  color: var(--highlight);
+  background-color: #e6f0ff;
+}
+
+/* === Table === */
+.table-wrapper {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
+  margin-top: 2rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  min-width: 600px;
+}
+
+th,
+td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+th {
+  background-color: #f1f2f6;
+  font-weight: 600;
+  position: relative;
+  white-space: nowrap;
+  cursor: move;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+th.dragging {
+  background-color: #e0f0ff;
+  opacity: 0.6;
+}
+
+th .resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background-color: transparent;
+}
+
+th .resizer:hover {
+  background-color: #ccc;
+}
+
+/* === Chart Styling === */
+.chart-wrapper {
+  height: 240px;
+}
+
+#chartCanvas,
+#ordersIssuedChart {
+  width: 100% !important;
+  height: 240px !important;
+}
+
+/* === Side-by-side Charts === */
+.chart-duo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-box {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Divider */
+.chart-divider {
+  width: 1px;
+  background-color: #e0e0e0;
+  margin: 0 10px;
+}
+
+@media (max-width: 992px) {
+  .chart-duo {
+    flex-direction: column;
+  }
+  .chart-divider {
+    display: none;
+  }
+}
+
+/* === Status Tags === */
 .status-delivered {
-  color: #34c759; /* Apple green */
+  color: #34c759;
   font-weight: 600;
 }
 
 .status-cancelled {
-  color: #ff453a; /* Apple red */
+  color: #ff3b30;
   font-weight: 600;
 }
 
 .status-partial {
-  color: #ff9f0a; /* Apple orange */
+  color: #ff9500;
   font-weight: 600;
 }
 
-.upload-zone {
-  border: 2px dashed #d2d2d7;
-  padding: 28px;
-  text-align: center;
-  background-color: #f2f2f7;
-  color: #636366;
+/* === Fade Animation === */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out both;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apple-style-btn {
+  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* Apple-style gray gradient */
+  color: #1c1c1e;
+  border: 1px solid #c7c7cc;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
   font-weight: 500;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-  user-select: none;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  backdrop-filter: blur(10px);
 }
 
-.upload-zone:hover {
-  background-color: #e5e5ea;
-  border-color: #0071e3;
-  color: #0071e3;
+.apple-style-btn:hover {
+  background: linear-gradient(to bottom, #e0e0e5, #c7c7cc);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
 }
 
-.table-wrapper {
-  max-height: 500px;
-  overflow-y: auto;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
-  background: #fff;
-}
-
-/* Modal container */
-/* Modal container - wider and centered */
-.modal-content {
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  border: none;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  color: #1d1d1f;
-  background-color: #fff;
-  padding: 1.5rem 2rem;
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-}
-
-/* Ensure modal dialog respects new width */
-.modal-xl {
-  max-width: 1200px;
-}
-
-/* Modal body with scroll on small screens */
-.modal-body {
-  padding-top: 0;
-  font-size: 1rem;
-  color: #1d1d1f;
-  overflow-x: auto;
-}
-
-/* Table styling */
-#multiItemContainer table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 12px;
-}
-
-/* Column widths (optional fine-tuning) */
-#multiItemContainer th:nth-child(1),
-#multiItemContainer td:nth-child(1) {
-  width: 22%; /* Product */
-}
-#multiItemContainer th:nth-child(6),
-#multiItemContainer td:nth-child(6) {
-  width: 25%; /* Remarks */
-}
-
-/* Inputs */
-#multiItemTableBody input.form-control {
-  border-radius: 10px;
-  border: 1px solid #d2d2d7;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  background-color: #fafafa;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  width: 100%;
-}
-
-#multiItemTableBody input.form-control:focus {
-  outline: none;
-  border-color: #0071e3;
-  box-shadow: 0 0 8px rgba(0, 113, 227, 0.4);
-  background-color: #fff;
+.apple-style-btn:active {
+  background: #d1d1d6;
+  transform: scale(0.98);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
 }
 
 
 
-  :root {
-    --apple-blue: #0071e3;
-    --text-dark: #1d1d1f;
-    --bg-light: rgba(255, 255, 255, 0.8);
-    --border-light: #e3e3e6;
-  }
 
-  body {
-    background-color: #f5f5f7;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    color: var(--text-dark);
-    line-height: 1.6;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
 
-  /* Sidebar styles */
-  /* Sidebar container */
-.sidebar {
-  position: fixed;
-  top: 60px; /* height of navbar */
-  left: 0;
-  width: 260px;
-  height: calc(100vh - 60px);
-  background: #f5f5f7; /* subtle Apple off-white */
-  border-right: 1px solid #d1d1d6; /* softer border */
-  padding: 24px 20px;
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05); /* soft shadow for depth */
-  overflow-y: auto;
-  z-index: 1050;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  color: #1d1d1f;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  border-top-right-radius: 20px; /* subtle rounding on right side */
-  border-bottom-right-radius: 20px;
-}
+</style>
 
-/* Sidebar title */
-.sidebar-title {
-  font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: 0.03em;
-  margin: 0 0 1rem 0;
-  color: #0071e3; /* Apple blue accent */
-  user-select: none;
-}
 
-/* Sidebar button */
-.sidebar-btn {
-  background-color: #0071e3;
-  border: none;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 24px;
-  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-  user-select: none;
-}
-
-.sidebar-btn:hover,
-.sidebar-btn:focus {
-  background-color: #005bb5;
-  box-shadow: 0 6px 20px rgba(0, 91, 181, 0.5);
-  outline: none;
-}
-
-  </style>
 </head>
 <body>
   <!-- NAVIGATION -->
@@ -223,22 +333,26 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Upload</a></li>
+<li class="nav-item">
+  <a class="nav-link" href="#" id="toggleSidebar">Update</a>
+</li>
+
       </ul>
       <span id="userEmailDisplay" class="navbar-text text-white ms-auto"></span>
     </div>
   </nav>
 
-  <!-- Sidebar -->
-<div id="sidebar" class="sidebar">
+  <!-- SIDEBAR -->
+<div id="functionSidebar" class="sidebar hidden">
   <h5 class="sidebar-title">Functions</h5>
-  <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">
-    UPDATE ORDER DETAILS
-  </button>
+  <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">UPDATE ORDER DETAILS</button>
+  <button id="btnCustomizeTable" class="btn btn-primary sidebar-btn w-100 mb-3">Customize Table</button>
 </div>
+
 
   <!-- MAIN CONTENT -->
   <div id="mainContent" style="margin-left: 270px; padding: 20px;">
+
     <!-- DASHBOARD SUMMARY -->
     <div class="container-fluid p-0 mb-4">
       <div class="row text-center gx-3">
@@ -291,14 +405,86 @@
             <option value="Partial">Partial</option>
           </select>
         </div>
+
         <div class="col-md-6">
           <label class="upload-zone" for="excelFile">
             📁 Click or drag Excel file to upload
             <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
           </label>
+
+
+
+  <button id="btnDownloadExcel" class="apple-style-btn">
+    📥 Download Excel
+  </button>
+
+
+        </div>
+
+
+
+      </div>
+    </div>
+
+
+
+
+<!-- 📊 Side-by-Side Charts -->
+<div class="container-fluid p-0 mb-4">
+  <div class="d-flex flex-wrap justify-content-between chart-duo">
+
+    <!-- Left Chart: Monthly Sales -->
+    <div class="chart-box me-md-3 mb-3 mb-md-0">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">📊 Monthly Sales Overview</h5>
+            <select id="currencySelector" class="form-select form-select-sm" style="max-width: 150px; border-radius: 12px;">
+              <option value="ALL">All Currencies</option>
+              <option value="PHP">PHP</option>
+              <option value="USD">USD</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartCanvas"></canvas>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Divider Line -->
+    <div class="chart-divider d-none d-md-block"></div>
+
+    <!-- Right Chart: Orders Issued -->
+    <div class="chart-box ms-md-3">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <h5 class="mb-3" style="font-weight: 600; color: #1d1d1f;">🧾 Total Orders Issued Per Month</h5>
+          <div class="chart-wrapper">
+            <canvas id="ordersIssuedChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- ORDERS TABLE -->
     <div class="container-fluid p-0 mb-5">
@@ -309,21 +495,8 @@
         <div class="card-body p-0">
           <div style="max-height: 500px; overflow-y: auto;">
             <table class="table table-hover table-bordered align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="min-width: 120px;">Order ID</th>
-                  <th style="min-width: 140px;">Order Date</th>
-                  <th style="min-width: 150px;">Customer</th>
-                  <th style="min-width: 200px;">Product</th>
-                  <th>Qty</th>
-                  <th>Delivered</th>
-                  <th>Cancelled</th>
-                  <th>Balance</th>
-                  <th>Unit Price</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Remarks</th>
-                </tr>
+              <thead id="orderTableHead" class="table-light sticky-top">
+                <!-- Dynamic headers inserted here -->
               </thead>
               <tbody id="orderTableBody">
                 <!-- JavaScript will populate rows here -->
@@ -334,53 +507,70 @@
       </div>
     </div>
 
-    <!-- CHART SECTION -->
-    <div class="container-fluid p-0 mb-5">
-      <h4 class="mb-3">📊 Charts</h4>
-      <canvas id="chartCanvas" height="100"></canvas>
-    </div>
-  </div>
 
-  <!-- Edit Multiple Order Items Modal -->
-<div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content rounded-4 shadow-lg border-0">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title" id="updateOrderModalLabel">
-          Update Order <span id="modalOrderNumber" class="text-primary"></span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
 
-      <div class="modal-body pt-0">
-        <div id="multiItemContainer">
-          <table class="table table-bordered table-hover">
-            <thead class="table-light">
-              <tr>
-                <th>Product</th>
-                <th>Qty Ordered</th>
-                <th>Qty Delivered</th>
-                <th>Qty Cancelled</th>
-                <th>Unit Price</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody id="multiItemTableBody">
-              <!-- JavaScript will inject order item rows here -->
-            </tbody>
-          </table>
+  <!-- UPDATE ORDER MODAL -->
+  <div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow-lg border-0">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title" id="updateOrderModalLabel">
+            Update Order <span id="modalOrderNumber" class="text-primary"></span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <div id="multiItemContainer">
+            <table class="table table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Qty Ordered</th>
+                  <th>Qty Delivered</th>
+                  <th>Qty Cancelled</th>
+                  <th>Unit Price</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="multiItemTableBody">
+                <!-- JavaScript will inject rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
+  <!-- CUSTOMIZE TABLE MODAL -->
+  <div class="modal fade" id="customizeTableModal" tabindex="-1" aria-labelledby="customizeTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="customizeTableModalLabel">Select Columns to Display</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="columnCheckboxContainer">
+          <!-- Checkbox list rendered by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirmColumnsBtn" class="btn btn-success">Apply</button>
+          <button type="button" class="btn btn-secondary" onclick="resetColumns()">Reset</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
 </body>
+
+
+
+
+
+
 
 
 
@@ -388,6 +578,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -411,10 +602,179 @@
 
   const auth = firebase.auth();
   const firestore = firebase.firestore();
+const btnCustomizeTable = document.getElementById('btnCustomizeTable');
+const customizeTableModal = new bootstrap.Modal(document.getElementById('customizeTableModal'));
+const columnCheckboxContainer = document.getElementById('columnCheckboxContainer');
+const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
+const updateNavLink = document.getElementById("toggleSidebar");
+
 
   let fullData = [];
   let currentEditingOrderId = '';
   let currentUserId = null; // Use UID for Firestore path
+  let chartInstance = null;
+  let selectedColumns = [];  // Store which columns are selected
+  let draggedColumnIndex = null;
+  let ordersChartInstance = null; // Global chart variable
+  let fullColumnOrder = [];
+
+
+
+
+
+const storedSelected = localStorage.getItem('selectedColumns');
+if (storedSelected) {
+  try {
+    selectedColumns = JSON.parse(storedSelected);
+  } catch (e) {
+    selectedColumns = [];
+  }
+}
+
+if (selectedColumns.length > 0) {
+  // Filter fullColumnOrder to only include saved selectedColumns
+  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+btnCustomizeTable.addEventListener('click', () => {
+  columnCheckboxContainer.innerHTML = '';
+
+  const allColumns = fullColumnOrder.length > 0
+    ? fullColumnOrder
+    : fullData.length > 0
+      ? Object.keys(fullData[0])
+      : [];
+
+  allColumns.forEach(col => {
+    const isChecked = selectedColumns.includes(col);
+
+    const div = document.createElement('div');
+    div.className = 'form-check';
+
+    div.innerHTML = `
+      <input class="form-check-input" type="checkbox" value="${col}" id="col-${col}" ${isChecked ? 'checked' : ''}>
+      <label class="form-check-label" for="col-${col}">${col}</label>
+    `;
+
+    columnCheckboxContainer.appendChild(div);
+  });
+
+  customizeTableModal.show(); // open modal manually
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 👇 ADD THIS BLOCK RIGHT AFTER selectedColumns
+const storedOrder = localStorage.getItem('fullColumnOrder');
+if (storedOrder) {
+  try {
+    fullColumnOrder = JSON.parse(storedOrder);
+  } catch (e) {
+    fullColumnOrder = [];
+  }
+}
+
+
+
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  const checkedCols = Array.from(checkboxes)
+                           .filter(cb => cb.checked)
+                           .map(cb => cb.value);
+
+  if (checkedCols.length === 0) {
+    alert('Select at least one column to display.');
+    return;
+  }
+
+  selectedColumns = fullColumnOrder.filter(col => checkedCols.includes(col));
+  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+
+  customizeTableModal.hide();
+  populateTable(fullData);
+});
+
+
+
+
+
+
+
+
+
+function resetColumns() {
+  selectedColumns = [];
+  fullColumnOrder = [];
+
+  localStorage.removeItem('selectedColumns');
+  localStorage.removeItem('fullColumnOrder');
+
+  customizeTableModal.hide();
+  populateTable(fullData);
+}
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const updateNavLink = document.getElementById("toggleSidebar");
+  const sidebar = document.getElementById("functionSidebar");
+
+  if (updateNavLink && sidebar) {
+    updateNavLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      sidebar.classList.toggle("hidden");
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   auth.onAuthStateChanged(user => {
     if (user) {
@@ -436,59 +796,92 @@
   document.getElementById('searchInput').addEventListener('input', filterTable);
   document.getElementById('statusFilter').addEventListener('change', filterTable);
 
-  async function loadOrdersFromFirestore(userId) {
-    try {
-      const ordersSnapshot = await firestore.collection('orders').doc(userId).collection('userOrders').get();
-      fullData = [];ordersSnapshot.forEach(doc => {
-  const data = doc.data();
-  data["docId"] = doc.id; // ✅ Attach Firestore doc ID
-  fullData.push(data);
-});
+ async function loadOrdersFromFirestore(userId) {
+  try {
+    console.log("Loading orders for user:", userId); // ✅ Add this line
 
+    const ordersSnapshot = await firestore
+      .collection('orders')
+      .doc(userId)
+      .collection('userOrders')
+      .get();
 
-      populateTable(fullData);
-      updateSummary(fullData);
-    } catch (error) {
-      console.error("Error loading user orders:", error);
-      fullData = [];
-      populateTable(fullData);
-      updateSummary(fullData);
-    }
+    fullData = [];
+    ordersSnapshot.forEach(doc => {
+      const data = doc.data();
+      data["docId"] = doc.id;
+      fullData.push(data);
+    });
+
+    console.log("Loaded fullData:", fullData); // ✅ Log the loaded data
+
+    populateTable(fullData);
+    updateSummary(fullData);
+    renderCharts(fullData);
+  } catch (error) {
+    console.error("Error loading user orders:", error);
+    fullData = [];
+    populateTable(fullData);
+    updateSummary(fullData);
   }
+}
+
 
   function handleFile(e) {
-    const file = e.target.files[0];
-    if (!file || !currentUserId) return;
+  const file = e.target.files[0];
+  if (!file || !currentUserId) return;
 
-    const reader = new FileReader();
-    reader.onload = async function (e) {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      fullData = XLSX.utils.sheet_to_json(worksheet);
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    
+    fullData = XLSX.utils.sheet_to_json(worksheet);
+    console.log("Excel parsed data:", fullData); // ✅ Log parsed result
 
-      const dateFields = ["Order Date", "Need By Date", "Approved Date"];
-      fullData = fullData.map(row => {
-        dateFields.forEach(field => {
-          if (row[field]) row[field] = formatDate(row[field]);
-        });
-        return row;
+    if (!fullData.length) {
+      alert("Excel is empty or has no valid header row.");
+      return;
+    }
+
+    const dateFields = ["Order Date", "Need By Date", "Approved Date"];
+    fullData = fullData.map(row => {
+      dateFields.forEach(field => {
+        if (row[field]) row[field] = formatDate(row[field]);
       });
+      return row;
+    });
 
-      populateTable(fullData);
-      updateSummary(fullData);
+    try {
+      await saveOrdersToFirestore(currentUserId, fullData);
+      console.log("Data saved to Firestore.");
+      await loadOrdersFromFirestore(currentUserId); // ✅ Force reload
+    } catch (error) {
+      console.error("Error saving to Firestore:", error);
+    }
+  };
 
-      // Save to Firestore under user collection
-      try {
-        await saveOrdersToFirestore(currentUserId, fullData);
-        console.log('Data saved under current user in Firestore');
-      } catch (error) {
-        console.error('Save error:', error);
-      }
-    };
+  reader.readAsArrayBuffer(file);
+}
 
-    reader.readAsArrayBuffer(file);
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -496,6 +889,180 @@ const btnShowUpdate = document.getElementById('btnShowUpdate');
 const updateOrderModal = new bootstrap.Modal(document.getElementById('updateOrderModal'));
 const modalOrderNumber = document.getElementById('modalOrderNumber');
 const saveUpdateBtn = document.getElementById('saveUpdateBtn');
+
+
+
+
+
+
+
+
+
+// On confirm, update selected columns and re-render table
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  selectedColumns = Array.from(checkboxes)
+                         .filter(cb => cb.checked)
+                         .map(cb => cb.value);
+
+  if (selectedColumns.length === 0) {
+    alert('Select at least one column to display.');
+    return;
+  }
+
+  customizeTableModal.hide();          // ✅ Close modal
+  populateTable(fullData);             // ✅ Re-render table with new columns
+});
+
+
+// Modify populateTable to respect selectedColumns
+
+function populateTable(data) {
+  console.log("🚀 Populating table with data:", data);
+
+  const tbody = document.getElementById('orderTableBody');
+  const thead = document.getElementById('orderTableHead');
+
+  if (!tbody || !thead) {
+    console.error("❌ Table elements not found. Ensure you have <thead id='orderTableHead'> and <tbody id='orderTableBody'> in your HTML.");
+    return;
+  }
+
+  tbody.innerHTML = '';
+  thead.innerHTML = '';
+
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("⚠️ No data to populate in table.");
+    return;
+  }
+
+  // Load or initialize selectedColumns
+  if (!Array.isArray(selectedColumns) || selectedColumns.length === 0) {
+  selectedColumns = Object.keys(data[0]).filter(key => key);
+}
+
+
+  const columns = selectedColumns;
+
+  // ✅ Build header
+  const headerRow = document.createElement('tr');
+  columns.forEach((col) => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    th.setAttribute('draggable', true);
+    th.dataset.columnName = col;
+
+    const resizer = document.createElement('div');
+    resizer.classList.add('resizer');
+    th.appendChild(resizer);
+
+    if (typeof enableResize === 'function') enableResize(th, resizer);
+
+    th.addEventListener('dragstart', handleDragStart);
+    th.addEventListener('dragover', handleDragOver);
+    th.addEventListener('drop', handleDrop);
+
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // ✅ Build rows
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      let value = row[col] ?? '';
+
+      if (typeof value === 'object') {
+        value = JSON.stringify(value);
+      }
+
+      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
+        value = Number(value || 0).toFixed(2);
+      }
+
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  console.log("✅ Table populated with", data.length, "rows.");
+}
+
+
+
+
+
+
+
+
+
+function handleDragStart(e) {
+  draggedColumnName = e.target.dataset.columnName;
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const dropColumnName = e.target.closest('th')?.dataset.columnName;
+  if (!draggedColumnName || !dropColumnName || draggedColumnName === dropColumnName) return;
+
+  const fromIndex = selectedColumns.indexOf(draggedColumnName);
+  const toIndex = selectedColumns.indexOf(dropColumnName);
+
+  if (fromIndex === -1 || toIndex === -1) return;
+
+  const [moved] = selectedColumns.splice(fromIndex, 1);
+  selectedColumns.splice(toIndex, 0, moved);
+
+  // Update fullColumnOrder accordingly
+  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
+
+  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+
+  populateTable(fullData);
+}
+
+
+
+
+function enableResize(th, resizer) {
+  let startX, startWidth;
+
+  resizer.addEventListener('mousedown', function (e) {
+    startX = e.pageX;
+    startWidth = th.offsetWidth;
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    e.preventDefault();
+  });
+
+  function onMouseMove(e) {
+    const newWidth = startWidth + (e.pageX - startX);
+    th.style.width = newWidth + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+}
+
+
+
+
+
+
+
+
+
 
 // Form fields inside modal
 const updateProduct = document.getElementById('updateProduct');
@@ -641,24 +1208,26 @@ saveUpdateBtn.addEventListener('click', () => {
 
 
 async function saveOrdersToFirestore(userId, ordersArray) {
+  console.log("Saving to Firestore:", ordersArray); // ✅ log this
+
   const batch = firestore.batch();
   const ordersCollection = firestore.collection('orders').doc(userId).collection('userOrders');
 
-  // Optional: delete existing docs first (caution: batch limit is 500)
+  // Optional: delete existing first (up to 500 only)
   const existingOrders = await ordersCollection.get();
   existingOrders.forEach(doc => batch.delete(doc.ref));
 
-  // Save each order with a unique ID (even if Number is duplicated)
   ordersArray.forEach((order, index) => {
-  const uniqueId = `${order.Number || 'order'}-${index}`;
-  order["docId"] = uniqueId; // ✅ Save docId inside order data
-  const docRef = ordersCollection.doc(uniqueId);
-  batch.set(docRef, order);
-});
-
+    const uniqueId = `${order.Number || 'order'}-${index}`;
+    order["docId"] = uniqueId;
+    const docRef = ordersCollection.doc(uniqueId);
+    batch.set(docRef, order);
+  });
 
   await batch.commit();
 }
+
+
 
 
 
@@ -675,35 +1244,6 @@ async function saveOrdersToFirestore(userId, ordersArray) {
     return 'Pending';
   }
 
- function populateTable(data) {
-  const tbody = document.getElementById('orderTableBody');
-  tbody.innerHTML = '';
-
-  data.forEach(row => {
-    const status = determineStatus(row);
-    const qty = Number(row["Quantity Ordered"] || 0);
-    const unitPrice = parseFloat(row["Unit Price"] || 0);
-    const amount = (qty * unitPrice).toFixed(2);
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row["Number"] || ''}</td>
-      <td>${row["Order Date"] || ''}</td>
-      <td>${row["Supplier"] || ''}</td>
-      <td>${row["Description"] || ''}</td>
-      <td>${qty}</td>
-      <td>${row["Quantity Delivered"] || 0}</td>
-      <td>${row["Quantity Cancelled"] || 0}</td>
-      <td>${row["BALANCE"] || 0}</td>
-      <td>${unitPrice.toFixed(2)}</td>
-      <td>${amount}</td>
-      <td class="${getStatusClass(status)}">${status}</td>
-      <td>${row["REMARKS"] || ''}</td>
-  
-    `;
-    tbody.appendChild(tr);
-  });
-}
 
 
   function getStatusClass(status) {
@@ -747,22 +1287,41 @@ async function saveOrdersToFirestore(userId, ordersArray) {
     document.getElementById('partialOrders').textContent = inProgress;
   }
 
-  function filterTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+function filterTable() {
+  console.log('filterTable called');
 
-    const filtered = fullData.filter(row => {
-      const customer = (row["Customer"] || row["Supplier"] || '').toLowerCase();
-      const product = (row["Product"] || row["Description"] || '').toLowerCase();
-      const status = determineStatus(row).toLowerCase();
+  const searchInput = document.getElementById('searchInput');
+  const statusSelect = document.getElementById('statusFilter');
 
-      return (customer.includes(search) || product.includes(search)) &&
-             (!statusFilter || status === statusFilter);
-    });
+  const search = (searchInput?.value || '').toLowerCase();
+  const statusFilter = (statusSelect?.value || '').toLowerCase();
 
-    populateTable(filtered);
-    updateSummary(filtered);
-  }
+  console.log('Search:', search, 'Status filter:', statusFilter);
+
+  const filtered = fullData.filter(row => {
+    const customerRaw = row["Customer"] ?? row["Supplier"] ?? '';
+    const productRaw = row["Product"] ?? row["Description"] ?? '';
+
+    const customer = String(customerRaw).toLowerCase();
+    const product = String(productRaw).toLowerCase();
+
+    let status = '';
+    try {
+      status = determineStatus(row).toLowerCase();
+    } catch (err) {
+      console.warn("Invalid row during status determination:", row, err);
+    }
+
+    return (customer.includes(search) || product.includes(search)) &&
+           (!statusFilter || status === statusFilter);
+  });
+
+  console.log('Filtered data count:', filtered.length);
+
+  populateTable(filtered);
+  updateSummary(filtered);
+}
+
 
   
 
@@ -787,6 +1346,182 @@ async function saveOrdersToFirestore(userId, ordersArray) {
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
   }
+
+
+function renderCharts(data) {
+  const currency = document.getElementById("currencySelector")?.value || "ALL";
+
+  // 📦 Monthly Revenue per currency
+  const monthlySales = {};
+  const monthlyOrders = {};
+
+  data.forEach(order => {
+    const orderDate = order["Order Date"];
+    const orderCurrency = order["Currency"] || "PHP";
+    const unitPrice = parseFloat(order["Unit Price"] || 0);
+    const qty = parseFloat(order["Quantity Ordered"] || 0);
+
+    if (!orderDate || isNaN(unitPrice) || isNaN(qty)) return;
+
+    const date = new Date(orderDate);
+    const monthYear = date.toLocaleString("default", { month: "short", year: "numeric" });
+
+    // Monthly Revenue
+    if (currency === "ALL" || currency === orderCurrency) {
+      monthlySales[monthYear] = (monthlySales[monthYear] || 0) + qty * unitPrice;
+    }
+
+    // Monthly Order Count (always counts all regardless of currency filter)
+    monthlyOrders[monthYear] = (monthlyOrders[monthYear] || 0) + 1;
+  });
+
+  const labels = [...new Set([...Object.keys(monthlySales), ...Object.keys(monthlyOrders)])].sort((a, b) => {
+    return new Date(a) - new Date(b);
+  });
+
+  const salesData = labels.map(month => monthlySales[month] || 0);
+  const ordersData = labels.map(month => monthlyOrders[month] || 0);
+
+  // 💸 Monthly Revenue Chart
+  const salesCtx = document.getElementById("chartCanvas").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(salesCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: `Monthly Sales (${currency})`,
+        data: salesData,
+        borderColor: "#007aff",
+        backgroundColor: "rgba(0,122,255,0.1)",
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2.5,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${currency} ${ctx.parsed.y.toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: val => `${currency} ${val.toLocaleString()}`
+          }
+        }
+      }
+    }
+  });
+
+  // 🧾 Orders Issued Chart
+  const ordersCtx = document.getElementById("ordersIssuedChart").getContext("2d");
+  if (ordersChartInstance) ordersChartInstance.destroy();
+  ordersChartInstance = new Chart(ordersCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: "Orders Issued",
+        data: ordersData,
+        backgroundColor: "#34c759", // Apple green
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y} Orders`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+
+document.getElementById("currencySelector").addEventListener("change", () => {
+  renderCharts(fullData);
+});
+
+
+
+
+
+
+
+document.getElementById("btnDownloadExcel").addEventListener("click", () => {
+  const tableBody = document.getElementById("orderTableBody");
+  if (!tableBody) return;
+
+  const rows = Array.from(tableBody.querySelectorAll("tr"));
+  if (rows.length === 0) {
+    alert("No rows available to export.");
+    return;
+  }
+
+  const exportData = rows.map(row => {
+    const cells = row.querySelectorAll("td");
+    const rowData = {};
+
+    selectedColumns.forEach((col, index) => {
+      rowData[col] = cells[index]?.textContent?.trim() || "";
+    });
+
+    return rowData;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "FilteredOrders");
+
+  const fileName = `Filtered_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 
