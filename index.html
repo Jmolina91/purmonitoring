@@ -107,16 +107,11 @@
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
+
     // Firebase config with placeholder for API key
-    const firebaseConfig = {
-      apiKey: "%FIREBASE_API_KEY%",  // <-- Replace this at build/deploy time!
-      authDomain: "order-monitoring-purchasing.firebaseapp.com",
-      projectId: "order-monitoring-purchasing",
-      storageBucket: "order-monitoring-purchasing.firebasestorage.app",
-      messagingSenderId: "209378598320",
-      appId: "1:209378598320:web:0c143d69bc329a994d8a75",
-      measurementId: "G-PPNWT4ECV0"
-    };
+    import { firebaseConfig } from './firebase-config.js';
+
+
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
