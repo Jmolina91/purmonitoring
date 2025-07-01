@@ -129,41 +129,43 @@
     const errorMessage = document.getElementById('errorMessage');
 
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorMessage.textContent = '';
-      errorMessage.classList.remove('success');
+  e.preventDefault();
+  errorMessage.textContent = '';
+  errorMessage.classList.remove('success');
 
-      const email = form.email.value.trim();
-      const password = form.password.value;
-      const confirmPassword = form.confirmPassword.value;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const confirmPassword = form.confirmPassword.value;
 
-      if (password !== confirmPassword) {
-        errorMessage.textContent = "Passwords do not match.";
-        return;
-      }
+  if (password !== confirmPassword) {
+    errorMessage.textContent = "Passwords do not match.";
+    return;
+  }
 
-      try {
-        // Create user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+  try {
+    console.log("Trying to create user:", email);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    console.log("User created:", userCredential.user.uid);
 
-        // Save user info in Firestore with approved:false and role:"user"
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          createdAt: new Date().toISOString(),
-          approved: false,
-          role: "user"
-        });
-
-        errorMessage.textContent = "Signup successful! Please wait for admin approval.";
-        errorMessage.classList.add('success');
-
-        form.reset();
-
-      } catch (error) {
-        errorMessage.textContent = error.message;
-      }
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      email: userCredential.user.email,
+      createdAt: new Date().toISOString(),
+      approved: false,
+      role: "user"
     });
+    console.log("User data saved to Firestore");
+
+    errorMessage.textContent = "Signup successful! Please wait for admin approval.";
+    errorMessage.classList.add('success');
+
+    form.reset();
+
+  } catch (error) {
+    console.error("Signup error:", error);
+    errorMessage.textContent = error.message || "Unknown error occurred.";
+  }
+});
+
   </script>
 
 </body>
