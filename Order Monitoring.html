@@ -2,591 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Order Monitoring Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+  <title>Smart Order Chart Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
   :root {
-  --apple-blue: #007aff;
-  --sidebar-bg: #f9fafc;
-  --sidebar-border: #dce1e6;
-  --text-main: #1c1c1e;
-  --text-muted: #8e8e93;
-  --highlight: #0a84ff;
-  --card-bg: #ffffff;
-  --card-shadow: rgba(0, 0, 0, 0.06);
-  --hover-shadow: rgba(0, 0, 0, 0.1);
-  --transition-fast: 0.25s ease;
-}
+    --bg: #fff;
+    --fg: #000;
+    --subtle-text: #888;
+    --primary: #0071e3;
+    --radius: 12px;
+    --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+    --card-bg: #f9f9f9;
+  }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #f2f4f8;
-  color: var(--text-main);
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    padding: 60px 20px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  p {
+    color: var(--subtle-text);
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+
+  section.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  input[type="file"], select {
+    padding: 10px 18px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: var(--radius);
+    background: #fff;
+    transition: var(--transition);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  input[type="file"]:hover,
+  select:hover {
+    border-color: var(--primary);
+  }
+
+  .chart-container {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 40px 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
 
 
-/* === Apple-Style Sidebar (Fixed to avoid collision with navbar) === */
-.sidebar {
-  position: fixed;
-  top: 56px; /* Leaves space for the navbar */
-  left: 0;
-  width: 260px;
-  height: calc(100vh - 56px); /* Subtract navbar height */
-  background: rgba(255, 255, 255, 0.65); /* Glassmorphism */
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(200, 200, 200, 0.3);
-  padding: 2rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
-  z-index: 999;
-  overflow-y: auto;
-}
 
-
-/* ✨ Sidebar Title — Improved Readability and Padding */
-.sidebar-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1c1c1e;
-  margin-bottom: 1.5rem;
-  letter-spacing: 0.5px;
-  padding-left: 2px;
-}
-
-/* 🚪 Slide-In Sidebar Effect (Apple-like animation) */
-.sidebar {
-  position: fixed;
-  top: 56px; /* height of your navbar */
-  left: 0;
-  width: 260px;
-  height: calc(100vh - 56px); /* full height minus navbar */
-  background-color: #fff;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
-  z-index: 1050;
-  overflow-y: auto;
-  padding: 1rem;
-  border-top-right-radius: 12px;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-/* Hidden (slide-out) */
-.sidebar.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
+#productSelector.disabled {
+  opacity: 0.6;
   pointer-events: none;
 }
 
 
-/* 🍎 Sidebar Button — Apple-style Friendly UI */
-.sidebar-btn {
-  background: linear-gradient(135deg, #007aff, #0a84ff);
-  border: none;
-  padding: 0.7rem 1.4rem;
-  border-radius: 18px;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
-  transition: all 0.2s ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.sidebar-btn:hover {
-  background: linear-gradient(135deg, #005ecb, #007aff);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
-}
-
-.sidebar-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.2);
-}
-
-.sidebar-btn.active {
-  background: #004ba0;
-  box-shadow: inset 0 0 0 2px #ffffff33;
-}
-
-
-/* 🧑‍💻 Optional: Add icons to buttons if needed */
-.sidebar-btn::before {
-  content: '🛠️';
-  font-size: 1.1rem;
-}
 
 
 
-/* === Main Content === */
-.main-content {
-  margin-left: 260px;
-  padding: 2rem;
-  transition: margin-left var(--transition-fast);
-}
 
-/* === Card Summary === */
-.card-summary {
-  background: var(--card-bg);
-  padding: 1.5rem 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 14px var(--card-shadow);
-  border-left: 5px solid var(--highlight);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
 
-.card-summary:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px var(--hover-shadow);
-}
 
-/* === Upload Zone === */
-.upload-zone {
-  border: 2px dashed #c7c7cc;
-  background-color: #f4f4f7;
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
-  color: var(--text-muted);
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.upload-zone:hover {
-  border-color: var(--highlight);
-  color: var(--highlight);
-  background-color: #e6f0ff;
-}
-
-/* === Table === */
-.table-wrapper {
-  overflow-x: auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
-  margin-top: 2rem;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-  min-width: 600px;
-}
-
-th,
-td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e5ea;
-}
-
-th {
-  background-color: #f1f2f6;
-  font-weight: 600;
-  position: relative;
-  white-space: nowrap;
-  cursor: move;
-  user-select: none;
-  transition: background-color 0.2s ease;
-}
-
-th.dragging {
-  background-color: #e0f0ff;
-  opacity: 0.6;
-}
-
-th .resizer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 6px;
-  height: 100%;
-  cursor: col-resize;
-  background-color: transparent;
-}
-
-th .resizer:hover {
-  background-color: #ccc;
-}
-
-/* === Chart Styling === */
-.chart-wrapper {
-  height: 240px;
-}
-
-#chartCanvas,
-#ordersIssuedChart {
-  width: 100% !important;
-  height: 240px !important;
-}
-
-/* === Side-by-side Charts === */
-.chart-duo {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.chart-box {
-  flex: 1;
-  min-width: 300px;
-}
-
-/* Divider */
-.chart-divider {
-  width: 1px;
-  background-color: #e0e0e0;
-  margin: 0 10px;
-}
-
-@media (max-width: 992px) {
-  .chart-duo {
-    flex-direction: column;
+  canvas {
+    width: 100% !important;
+    height: auto !important;
   }
-  .chart-divider {
-    display: none;
+
+  footer {
+    margin-top: 60px;
+    font-size: 14px;
+    color: var(--subtle-text);
   }
-}
 
-/* === Status Tags === */
-.status-delivered {
-  color: #34c759;
-  font-weight: 600;
-}
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 28px;
+    }
 
-.status-cancelled {
-  color: #ff3b30;
-  font-weight: 600;
-}
+    section.controls {
+      flex-direction: column;
+      gap: 10px;
+    }
 
-.status-partial {
-  color: #ff9500;
-  font-weight: 600;
-}
-
-/* === Fade Animation === */
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out both;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
+    .chart-container {
+      padding: 20px 15px;
+    }
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.apple-style-btn {
-  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* Apple-style gray gradient */
-  color: #1c1c1e;
-  border: 1px solid #c7c7cc;
-  border-radius: 12px;
-  padding: 10px 18px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  box-shadow: inset 0 1px 0 #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease-in-out;
-  backdrop-filter: blur(10px);
-}
-
-.apple-style-btn:hover {
-  background: linear-gradient(to bottom, #e0e0e5, #c7c7cc);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-  transform: translateY(-1px);
-}
-
-.apple-style-btn:active {
-  background: #d1d1d6;
-  transform: scale(0.98);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
-}
-
-
-
-
-
 </style>
 
 
 </head>
 <body>
-  <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">📦 Order Monitor</a>
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
-<li class="nav-item">
-  <a class="nav-link" href="#" id="toggleSidebar">Update</a>
-</li>
+  <header>
+  <h1>📊 Smart Order Dashboard</h1>
+  <p>Upload your Excel file to visualize item downtime, sales trends, or performance data.</p>
+</header>
 
-      </ul>
-      <span id="userEmailDisplay" class="navbar-text text-white ms-auto"></span>
-    </div>
-  </nav>
+<section class="controls">
+  <input type="file" id="excelFile" accept=".xlsx, .xls" />
+  <select id="chartType" style="display: none;"></select>
+  <select id="productSelector" style="display: none;"></select>
+  <select id="chartStyle">
+    <option value="bar">📊 Bar</option>
+    <option value="line">📈 Line</option>
+    <option value="pie">🥧 Pie</option>
+    <option value="doughnut">🍩 Doughnut</option>
+  </select>
+  <select id="colorTheme">
+    <option value="summer">🌞 Summer</option>
+    <option value="winter">❄️ Winter</option>
+    <option value="fall">🍂 Fall</option>
+  </select>
+</section>
 
-  <!-- SIDEBAR -->
-<div id="functionSidebar" class="sidebar hidden">
-  <h5 class="sidebar-title">Functions</h5>
-  <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">UPDATE ORDER DETAILS</button>
-  <button id="btnCustomizeTable" class="btn btn-primary sidebar-btn w-100 mb-3">Customize Table</button>
-</div>
+<section class="chart-container">
+  <canvas id="chartCanvas"></canvas>
+</section>
 
-
-  <!-- MAIN CONTENT -->
-  <div id="mainContent" style="margin-left: 270px; padding: 20px;">
-
-    <!-- DASHBOARD SUMMARY -->
-    <div class="container-fluid p-0 mb-4">
-      <div class="row text-center gx-3">
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Total Orders</h5>
-              <h3 id="totalOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Delivered</h5>
-              <h3 class="text-success" id="deliveredOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Cancelled</h5>
-              <h3 class="text-danger" id="cancelledOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>In Progress</h5>
-              <h3 class="text-warning" id="partialOrders">--</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FILTERS + UPLOAD -->
-    <div class="container-fluid p-0 mb-4">
-      <div class="row gx-3">
-        <div class="col-md-3">
-          <input type="text" class="form-control" placeholder="Search Customer/Product..." id="searchInput">
-        </div>
-        <div class="col-md-3">
-          <select class="form-select" id="statusFilter">
-            <option value="">All Status</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Partial">Partial</option>
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label class="upload-zone" for="excelFile">
-            📁 Click or drag Excel file to upload
-            <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
-          </label>
+<footer>
+  &copy; 2025 Hans Analytics. Inspired by Apple-style UX.
+</footer>
 
 
-
-  <button id="btnDownloadExcel" class="apple-style-btn">
-    📥 Download Excel
-  </button>
-
-
-        </div>
-
-
-
-      </div>
-    </div>
-
-
-
-
-<!-- 📊 Side-by-Side Charts -->
-<div class="container-fluid p-0 mb-4">
-  <div class="d-flex flex-wrap justify-content-between chart-duo">
-
-    <!-- Left Chart: Monthly Sales -->
-    <div class="chart-box me-md-3 mb-3 mb-md-0">
-      <div class="card shadow-sm rounded-4 border-0 h-100">
-        <div class="card-body px-4 pt-4 pb-2">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">📊 Monthly Sales Overview</h5>
-            <select id="currencySelector" class="form-select form-select-sm" style="max-width: 150px; border-radius: 12px;">
-              <option value="ALL">All Currencies</option>
-              <option value="PHP">PHP</option>
-              <option value="USD">USD</option>
-              <option value="JPY">JPY</option>
-            </select>
-          </div>
-          <div class="chart-wrapper">
-            <canvas id="chartCanvas"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Divider Line -->
-    <div class="chart-divider d-none d-md-block"></div>
-
-    <!-- Right Chart: Orders Issued -->
-    <div class="chart-box ms-md-3">
-      <div class="card shadow-sm rounded-4 border-0 h-100">
-        <div class="card-body px-4 pt-4 pb-2">
-          <h5 class="mb-3" style="font-weight: 600; color: #1d1d1f;">🧾 Total Orders Issued Per Month</h5>
-          <div class="chart-wrapper">
-            <canvas id="ordersIssuedChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- ORDERS TABLE -->
-    <div class="container-fluid p-0 mb-5">
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">📋 Order List</h5>
-        </div>
-        <div class="card-body p-0">
-          <div style="max-height: 500px; overflow-y: auto;">
-            <table class="table table-hover table-bordered align-middle mb-0">
-              <thead id="orderTableHead" class="table-light sticky-top">
-                <!-- Dynamic headers inserted here -->
-              </thead>
-              <tbody id="orderTableBody">
-                <!-- JavaScript will populate rows here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-
-  <!-- UPDATE ORDER MODAL -->
-  <div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-      <div class="modal-content rounded-4 shadow-lg border-0">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title" id="updateOrderModalLabel">
-            Update Order <span id="modalOrderNumber" class="text-primary"></span>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body pt-0">
-          <div id="multiItemContainer">
-            <table class="table table-bordered table-hover">
-              <thead class="table-light">
-                <tr>
-                  <th>Product</th>
-                  <th>Qty Ordered</th>
-                  <th>Qty Delivered</th>
-                  <th>Qty Cancelled</th>
-                  <th>Unit Price</th>
-                  <th>Remarks</th>
-                </tr>
-              </thead>
-              <tbody id="multiItemTableBody">
-                <!-- JavaScript will inject rows -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CUSTOMIZE TABLE MODAL -->
-  <div class="modal fade" id="customizeTableModal" tabindex="-1" aria-labelledby="customizeTableModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="customizeTableModalLabel">Select Columns to Display</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="columnCheckboxContainer">
-          <!-- Checkbox list rendered by JS -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="confirmColumnsBtn" class="btn btn-success">Apply</button>
-          <button type="button" class="btn btn-secondary" onclick="resetColumns()">Reset</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
-
-
-
-
-
-
-
-
-
- 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
 <script>
+   // Your Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
     authDomain: "order-monitoring-purchasing.firebaseapp.com",
@@ -598,932 +164,374 @@ th .resizer:hover {
   };
 
   firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
 
-  const auth = firebase.auth();
-  const firestore = firebase.firestore();
-const btnCustomizeTable = document.getElementById('btnCustomizeTable');
-const customizeTableModal = new bootstrap.Modal(document.getElementById('customizeTableModal'));
-const columnCheckboxContainer = document.getElementById('columnCheckboxContainer');
-const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
-const updateNavLink = document.getElementById("toggleSidebar");
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    // ❌ Redirect to index if not logged in
+    window.location.href = "index.html";
+  } else {
+    // ✅ Logged in — continue chart logic
+    initChartLogic();
+  }
+});
+
+
+
+
+
+
+
+
+
+
 
 
   let fullData = [];
-  let currentEditingOrderId = '';
-  let currentUserId = null; // Use UID for Firestore path
-  let chartInstance = null;
-  let selectedColumns = [];  // Store which columns are selected
-  let draggedColumnIndex = null;
-  let ordersChartInstance = null; // Global chart variable
-  let fullColumnOrder = [];
-
-
-
-
-
-const storedSelected = localStorage.getItem('selectedColumns');
-if (storedSelected) {
-  try {
-    selectedColumns = JSON.parse(storedSelected);
-  } catch (e) {
-    selectedColumns = [];
-  }
-}
-
-if (selectedColumns.length > 0) {
-  // Filter fullColumnOrder to only include saved selectedColumns
-  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-btnCustomizeTable.addEventListener('click', () => {
-  columnCheckboxContainer.innerHTML = '';
-
-  const allColumns = fullColumnOrder.length > 0
-    ? fullColumnOrder
-    : fullData.length > 0
-      ? Object.keys(fullData[0])
-      : [];
-
-  allColumns.forEach(col => {
-    const isChecked = selectedColumns.includes(col);
-
-    const div = document.createElement('div');
-    div.className = 'form-check';
-
-    div.innerHTML = `
-      <input class="form-check-input" type="checkbox" value="${col}" id="col-${col}" ${isChecked ? 'checked' : ''}>
-      <label class="form-check-label" for="col-${col}">${col}</label>
-    `;
-
-    columnCheckboxContainer.appendChild(div);
-  });
-
-  customizeTableModal.show(); // open modal manually
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 👇 ADD THIS BLOCK RIGHT AFTER selectedColumns
-const storedOrder = localStorage.getItem('fullColumnOrder');
-if (storedOrder) {
-  try {
-    fullColumnOrder = JSON.parse(storedOrder);
-  } catch (e) {
-    fullColumnOrder = [];
-  }
-}
-
-
-
-confirmColumnsBtn.addEventListener('click', () => {
-  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
-  const checkedCols = Array.from(checkboxes)
-                           .filter(cb => cb.checked)
-                           .map(cb => cb.value);
-
-  if (checkedCols.length === 0) {
-    alert('Select at least one column to display.');
-    return;
-  }
-
-  selectedColumns = fullColumnOrder.filter(col => checkedCols.includes(col));
-  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
-  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
-
-  customizeTableModal.hide();
-  populateTable(fullData);
-});
-
-
-
-
-
-
-
-
-
-function resetColumns() {
-  selectedColumns = [];
-  fullColumnOrder = [];
-
-  localStorage.removeItem('selectedColumns');
-  localStorage.removeItem('fullColumnOrder');
-
-  customizeTableModal.hide();
-  populateTable(fullData);
-}
-
-
-
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const updateNavLink = document.getElementById("toggleSidebar");
-  const sidebar = document.getElementById("functionSidebar");
-
-  if (updateNavLink && sidebar) {
-    updateNavLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      sidebar.classList.toggle("hidden");
-    });
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUserId = user.uid;
-
-      // Display user email in navbar (make sure you have element with this ID)
-      const emailElem = document.getElementById('userEmailDisplay');
-      if(emailElem) emailElem.textContent = user.email || 'User';
-
-      // Load orders from Firestore collection
-      loadOrdersFromFirestore(currentUserId);
-    } else {
-      // If no user, redirect to login
-      window.location.href = "login.html";
-    }
-  });
+  let chart;
 
   document.getElementById('excelFile').addEventListener('change', handleFile, false);
-  document.getElementById('searchInput').addEventListener('input', filterTable);
-  document.getElementById('statusFilter').addEventListener('change', filterTable);
-
- async function loadOrdersFromFirestore(userId) {
-  try {
-    console.log("Loading orders for user:", userId); // ✅ Add this line
-
-    const ordersSnapshot = await firestore
-      .collection('orders')
-      .doc(userId)
-      .collection('userOrders')
-      .get();
-
-    fullData = [];
-    ordersSnapshot.forEach(doc => {
-      const data = doc.data();
-      data["docId"] = doc.id;
-      fullData.push(data);
-    });
-
-    console.log("Loaded fullData:", fullData); // ✅ Log the loaded data
-
-    populateTable(fullData);
-    updateSummary(fullData);
-    renderCharts(fullData);
-  } catch (error) {
-    console.error("Error loading user orders:", error);
-    fullData = [];
-    populateTable(fullData);
-    updateSummary(fullData);
-  }
-}
-
+  document.getElementById('chartType').addEventListener('change', handleChartType);
+  document.getElementById('productSelector').addEventListener('change', handleChartType);
+  document.getElementById('chartStyle').addEventListener('change', handleChartType);
 
   function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file || !currentUserId) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      fullData = XLSX.utils.sheet_to_json(worksheet);
+      if (!fullData || fullData.length === 0) return alert("Excel sheet is empty.");
+      showChartOptions(fullData);
+    };
+    reader.readAsArrayBuffer(e.target.files[0]);
+  }
 
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    
-    fullData = XLSX.utils.sheet_to_json(worksheet);
-    console.log("Excel parsed data:", fullData); // ✅ Log parsed result
-
-    if (!fullData.length) {
-      alert("Excel is empty or has no valid header row.");
-      return;
+  function getColumnMatch(possibleKeys, sampleRow) {
+    for (let key of possibleKeys) {
+      for (let actualKey in sampleRow) {
+        if (actualKey.trim().toLowerCase() === key.toLowerCase()) {
+          return actualKey;
+        }
+      }
     }
+    return null;
+  }
 
-    const dateFields = ["Order Date", "Need By Date", "Approved Date"];
-    fullData = fullData.map(row => {
-      dateFields.forEach(field => {
-        if (row[field]) row[field] = formatDate(row[field]);
+  function getThemeColors(theme) {
+    const themes = {
+      summer: ['rgba(255, 183, 77, 0.7)', 'rgba(255, 138, 101, 0.7)', 'rgba(255, 213, 79, 0.7)', 'rgba(255, 234, 167, 0.7)', 'rgba(255, 241, 118, 0.7)'],
+      winter: ['rgba(173, 216, 230, 0.7)', 'rgba(0, 123, 255, 0.7)', 'rgba(100, 181, 246, 0.7)', 'rgba(187, 222, 251, 0.7)', 'rgba(144, 202, 249, 0.7)'],
+      fall: ['rgba(205, 133, 63, 0.7)', 'rgba(139, 69, 19, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(255, 204, 128, 0.7)', 'rgba(255, 112, 67, 0.7)']
+    };
+    return themes[theme] || themes.summer;
+  }
+
+  function showChartOptions(data) {
+    const chartType = document.getElementById('chartType');
+    chartType.innerHTML = `
+      <option value="">Select Chart Type</option>
+      <option value="qtyOverTime">📈 Quantity Over Time (by Product)</option>
+      <option value="totalOverTime">💰 Total Sales Over Time (by Product)</option>
+      <option value="monthlyTotal">📊 Monthly Total Sales</option>
+      <option value="topQty">🥇 Top-Selling Items (Quantity)</option>
+      <option value="topTotal">💵 Top-Selling Items (Revenue)</option>
+      <option value="deliveryPerformance">🚚 Delivery Performance (Ordered vs Delivered)</option>
+      <option value="deliveryBreakdown">📦 Delivery Breakdown (Delivered, Cancelled, Balance)</option>
+      <option value="deliveryPie">🥰 Delivery Pie Chart</option>
+    `;
+    chartType.style.display = 'inline';
+
+    const titleKey = getColumnMatch(["Description", "Title", "Product Title"], data[0]);
+    const productSet = new Set(data.map(row => row[titleKey]));
+    const productSelector = document.getElementById('productSelector');
+    productSelector.innerHTML = '<option value="">All Items</option>' + [...productSet].map(title => `<option value="${title}">${title}</option>`).join('');
+    productSelector.style.display = 'inline';
+  }
+
+  function handleChartType() {
+    const type = document.getElementById('chartType').value;
+
+// Disable item filtering for specific chart types that are not item-specific
+const productSelector = document.getElementById('productSelector');
+const productFilterDisabledCharts = ["monthlyTotal", "topQty", "topTotal", "deliveryPie"];
+if (productFilterDisabledCharts.includes(type)) {
+  productSelector.disabled = true;
+  productSelector.classList.add("disabled");
+} else {
+  productSelector.disabled = false;
+  productSelector.classList.remove("disabled");
+}
+
+
+
+    const selectedProduct = document.getElementById('productSelector').value;
+    const selectedStyle = document.getElementById('chartStyle').value || 'bar';
+    const theme = document.getElementById('colorTheme').value || 'summer';
+    const colors = getThemeColors(theme);
+
+    const rowSample = fullData[0];
+    const titleKey = getColumnMatch(["Description", "Title", "Product Title"], rowSample);
+    const qtyKey = getColumnMatch(["Quantity Ordered", "Quantity", "Qty"], rowSample);
+    const totalKey = getColumnMatch(["Amount", "Total", "Sales"], rowSample);
+    const monthKey = getColumnMatch(["Month", "Order Month", "Month Ordered", "Date", "OrderDate", "Ordered On"], rowSample);
+    const delKey = getColumnMatch(["Quantity Delivered"], rowSample);
+    const balKey = getColumnMatch(["Balance"], rowSample);
+    const cancelKey = getColumnMatch(["Quantity Cancelled"], rowSample);
+
+    if (!type) return;
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+    let labels = [], datasets = [];
+
+    if (type === "totalOverTime") {
+      const grouped = {};
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
+
+      filtered.forEach(row => {
+        const raw = row[monthKey];
+        const date = new Date(raw);
+        const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+        const product = row[titleKey];
+        const value = Number(row[totalKey]) || 0;
+        if (!grouped[product]) grouped[product] = {};
+        if (!grouped[product][month]) grouped[product][month] = 0;
+        grouped[product][month] += value;
       });
-      return row;
-    });
 
-    try {
-      await saveOrdersToFirestore(currentUserId, fullData);
-      console.log("Data saved to Firestore.");
-      await loadOrdersFromFirestore(currentUserId); // ✅ Force reload
-    } catch (error) {
-      console.error("Error saving to Firestore:", error);
-    }
-  };
-
-  reader.readAsArrayBuffer(file);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const btnShowUpdate = document.getElementById('btnShowUpdate');
-const updateOrderModal = new bootstrap.Modal(document.getElementById('updateOrderModal'));
-const modalOrderNumber = document.getElementById('modalOrderNumber');
-const saveUpdateBtn = document.getElementById('saveUpdateBtn');
-
-
-
-
-
-
-
-
-
-// On confirm, update selected columns and re-render table
-confirmColumnsBtn.addEventListener('click', () => {
-  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
-  selectedColumns = Array.from(checkboxes)
-                         .filter(cb => cb.checked)
-                         .map(cb => cb.value);
-
-  if (selectedColumns.length === 0) {
-    alert('Select at least one column to display.');
-    return;
-  }
-
-  customizeTableModal.hide();          // ✅ Close modal
-  populateTable(fullData);             // ✅ Re-render table with new columns
-});
-
-
-// Modify populateTable to respect selectedColumns
-
-function populateTable(data) {
-  console.log("🚀 Populating table with data:", data);
-
-  const tbody = document.getElementById('orderTableBody');
-  const thead = document.getElementById('orderTableHead');
-
-  if (!tbody || !thead) {
-    console.error("❌ Table elements not found. Ensure you have <thead id='orderTableHead'> and <tbody id='orderTableBody'> in your HTML.");
-    return;
-  }
-
-  tbody.innerHTML = '';
-  thead.innerHTML = '';
-
-  if (!Array.isArray(data) || data.length === 0) {
-    console.warn("⚠️ No data to populate in table.");
-    return;
-  }
-
-  // Load or initialize selectedColumns
-  if (!Array.isArray(selectedColumns) || selectedColumns.length === 0) {
-  selectedColumns = Object.keys(data[0]).filter(key => key);
-}
-
-
-  const columns = selectedColumns;
-
-  // ✅ Build header
-  const headerRow = document.createElement('tr');
-  columns.forEach((col) => {
-    const th = document.createElement('th');
-    th.textContent = col;
-    th.setAttribute('draggable', true);
-    th.dataset.columnName = col;
-
-    const resizer = document.createElement('div');
-    resizer.classList.add('resizer');
-    th.appendChild(resizer);
-
-    if (typeof enableResize === 'function') enableResize(th, resizer);
-
-    th.addEventListener('dragstart', handleDragStart);
-    th.addEventListener('dragover', handleDragOver);
-    th.addEventListener('drop', handleDrop);
-
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // ✅ Build rows
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    columns.forEach(col => {
-      const td = document.createElement('td');
-      let value = row[col] ?? '';
-
-      if (typeof value === 'object') {
-        value = JSON.stringify(value);
-      }
-
-      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
-        value = Number(value || 0).toFixed(2);
-      }
-
-      td.textContent = value;
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-
-  console.log("✅ Table populated with", data.length, "rows.");
-}
-
-
-
-
-
-
-
-
-
-function handleDragStart(e) {
-  draggedColumnName = e.target.dataset.columnName;
-  e.dataTransfer.effectAllowed = "move";
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = "move";
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  const dropColumnName = e.target.closest('th')?.dataset.columnName;
-  if (!draggedColumnName || !dropColumnName || draggedColumnName === dropColumnName) return;
-
-  const fromIndex = selectedColumns.indexOf(draggedColumnName);
-  const toIndex = selectedColumns.indexOf(dropColumnName);
-
-  if (fromIndex === -1 || toIndex === -1) return;
-
-  const [moved] = selectedColumns.splice(fromIndex, 1);
-  selectedColumns.splice(toIndex, 0, moved);
-
-  // Update fullColumnOrder accordingly
-  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
-
-  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
-  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
-
-  populateTable(fullData);
-}
-
-
-
-
-function enableResize(th, resizer) {
-  let startX, startWidth;
-
-  resizer.addEventListener('mousedown', function (e) {
-    startX = e.pageX;
-    startWidth = th.offsetWidth;
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-    e.preventDefault();
-  });
-
-  function onMouseMove(e) {
-    const newWidth = startWidth + (e.pageX - startX);
-    th.style.width = newWidth + 'px';
-  }
-
-  function onMouseUp() {
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-  }
-}
-
-
-
-
-
-
-
-
-
-
-// Form fields inside modal
-const updateProduct = document.getElementById('updateProduct');
-const updateQtyOrdered = document.getElementById('updateQtyOrdered');
-const updateQtyDelivered = document.getElementById('updateQtyDelivered');
-const updateQtyCancelled = document.getElementById('updateQtyCancelled');
-const updateUnitPrice = document.getElementById('updateUnitPrice');
-const updateRemarks = document.getElementById('updateRemarks');
-
-let currentOrderId = null;
-let currentItem = null;
-
-btnShowUpdate.addEventListener('click', () => {
-  // Ask for Order ID with prompt
-  const orderId = prompt("Enter Order ID to update:");
-  if (!orderId) {
-    alert("No Order ID entered.");
-    return;
-  }
-
-  // Search order by ID
-  const matchingItems = fullData.filter(item => item["Number"] && item["Number"].toString() === orderId);
-
-  if (matchingItems.length === 0) {
-    alert("No order found with this ID.");
-    return;
-  }
-
-  currentOrderId = orderId;
-  currentItem = [...matchingItems]; // store full array
-modalOrderNumber.textContent = orderId;
-
-// Clear any previous rows in modal
-const tableBody = document.getElementById("multiItemTableBody");
-tableBody.innerHTML = "";
-
-// Inject a row per item
-matchingItems.forEach((item, index) => {
-  const row = document.createElement("tr");
-  row.innerHTML = `
-    <td><input type="text" class="form-control" value="${item["Description"] || ''}" data-field="Description" data-index="${index}" /></td>
-    <td><input type="number" class="form-control" value="${item["Quantity Ordered"] || 0}" data-field="Quantity Ordered" data-index="${index}" /></td>
-    <td><input type="number" class="form-control" value="${item["Quantity Delivered"] || 0}" data-field="Quantity Delivered" data-index="${index}" /></td>
-    <td><input type="number" class="form-control" value="${item["Quantity Cancelled"] || 0}" data-field="Quantity Cancelled" data-index="${index}" /></td>
-    <td><input type="number" class="form-control" value="${item["Unit Price"] || 0}" step="0.01" data-field="Unit Price" data-index="${index}" /></td>
-    <td><input type="text" class="form-control" value="${item["REMARKS"] || ''}" data-field="REMARKS" data-index="${index}" /></td>
-  `;
-  tableBody.appendChild(row);
-});
-
-
-  updateOrderModal.show();
-});
-
-// You can now remove the old btnSearchOrder listener since the search happens on btnShowUpdate
-
-saveUpdateBtn.addEventListener('click', () => {
-  if (!currentUserId) {
-    alert('User not authenticated');
-    return;
-  }
-
-  if (!currentOrderId || !currentItem || !Array.isArray(currentItem)) {
-    alert('No order loaded');
-    return;
-  }
-
-  // Loop through each row to gather updated values
-  const inputs = document.querySelectorAll('#multiItemTableBody input');
-  inputs.forEach(input => {
-    const index = parseInt(input.dataset.index);
-    const field = input.dataset.field;
-    let value = input.value;
-
-    if (["Quantity Ordered", "Quantity Delivered", "Quantity Cancelled", "Unit Price"].includes(field)) {
-      value = Number(value) || 0;
+      const allMonths = [...new Set(fullData.map(row => {
+        const raw = row[monthKey];
+        const date = new Date(raw);
+        return isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+      }))];
+
+      labels = allMonths;
+
+      datasets = Object.entries(grouped).map(([product, monthMap], idx) => {
+        const data = labels.map(month => monthMap[month] || 0);
+        return {
+          label: product,
+          data,
+          backgroundColor: colors[idx % colors.length],
+          borderColor: colors[idx % colors.length].replace('0.7', '1'),
+          borderWidth: 2,
+          borderRadius: 6
+        };
+      });
     }
 
-    currentItem[index][field] = value;
+
+
+
+    else if (type === "qtyOverTime") {
+  const groupedData = {};
+  fullData.forEach(row => {
+    const product = row[titleKey];
+    if (selectedProduct && product !== selectedProduct) return; // 👈 filter specific product if selected
+
+    const raw = row[monthKey];
+    const date = new Date(raw);
+    const month = isNaN(date) ? (raw?.toString().trim() || "Unknown") : date.toLocaleString('default', { month: 'long' });
+    const qty = Number(row[qtyKey]) || 0;
+
+    if (!groupedData[product]) groupedData[product] = {};
+    if (!groupedData[product][month]) groupedData[product][month] = 0;
+    groupedData[product][month] += qty;
   });
 
-  // Recalculate balance and update Firestore
-  saveUpdateBtn.disabled = true;
-  saveUpdateBtn.textContent = "Saving...";
+  const allMonths = [...new Set(Object.values(groupedData).flatMap(obj => Object.keys(obj)))];
+  const monthOrder = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  labels = allMonths.sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
 
-  const batch = firestore.batch();
-
-  currentItem.forEach(item => {
-    item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
-    const docRef = firestore.collection("orders")
-      .doc(currentUserId)
-      .collection("userOrders")
-      .doc(item["docId"]);
-
-    console.log("Updating document:", item["docId"]); // <-- Log docId before update
-
-    batch.update(docRef, item);
+  datasets = Object.keys(groupedData).map((product, idx) => {
+    const monthlyQty = labels.map(month => groupedData[product][month] || 0);
+    return {
+      label: product,
+      data: monthlyQty,
+      backgroundColor: colors[idx % colors.length],
+      borderColor: colors[idx % colors.length].replace('0.7', '1'),
+      borderWidth: 2,
+      borderRadius: 6
+    };
   });
+}
 
-  batch.commit()
-    .then(() => {
-      alert("Order items updated successfully.");
 
-      // Update fullData in memory
-      currentItem.forEach(updated => {
-        const index = fullData.findIndex(item => item["ID"] === updated["ID"] || item["docId"] === updated["docId"]);
-        if (index !== -1) {
-          fullData[index] = { ...updated };
+
+
+
+    else if (type === "totalOverTime") {
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
+      labels = filtered.map(row => row[monthKey]?.trim() || "Unknown");
+      const dataPoints = filtered.map(row => Number(row[totalKey]) || 0);
+      datasets = [{
+        label: `Total Sales${selectedProduct ? ": " + selectedProduct : ""}`,
+        data: dataPoints,
+        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
+        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
+        borderWidth: 2,
+        borderRadius: 6
+      }];
+    }
+
+    else if (type === "monthlyTotal") {
+      const monthMap = {};
+      fullData.forEach(row => {
+        const raw = row[monthKey];
+const date = new Date(raw);
+const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+
+        const total = Number(row[totalKey]);
+        if (month && !isNaN(total)) {
+          monthMap[month] = (monthMap[month] || 0) + total;
         }
       });
 
-      populateTable(fullData);
-      updateSummary(fullData);
-      updateOrderModal.hide();
-    })
-    .catch(error => {
-      console.error("Update failed:", error);
-      alert("Failed to update. See console for details.");
-    })
-    .finally(() => {
-      saveUpdateBtn.disabled = false;
-      saveUpdateBtn.textContent = "Save";
-    });
-});
+      const monthOrder = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
 
+      labels = Object.keys(monthMap).sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+      const dataPoints = labels.map(month => monthMap[month]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-async function saveOrdersToFirestore(userId, ordersArray) {
-  console.log("Saving to Firestore:", ordersArray); // ✅ log this
-
-  const batch = firestore.batch();
-  const ordersCollection = firestore.collection('orders').doc(userId).collection('userOrders');
-
-  // Optional: delete existing first (up to 500 only)
-  const existingOrders = await ordersCollection.get();
-  existingOrders.forEach(doc => batch.delete(doc.ref));
-
-  ordersArray.forEach((order, index) => {
-    const uniqueId = `${order.Number || 'order'}-${index}`;
-    order["docId"] = uniqueId;
-    const docRef = ordersCollection.doc(uniqueId);
-    batch.set(docRef, order);
-  });
-
-  await batch.commit();
-}
-
-
-
-
-
-
-
-  function determineStatus(row) {
-    const delivered = Number(row["Quantity Delivered"] || 0);
-    const ordered = Number(row["Quantity Ordered"] || 0);
-    const cancelled = Number(row["Quantity Cancelled"] || 0);
-
-    if (cancelled > 0) return 'Cancelled';
-    if (delivered === ordered && ordered > 0) return 'Delivered';
-    if (delivered > 0 && delivered < ordered) return 'Partial';
-    return 'Pending';
-  }
-
-
-
-  function getStatusClass(status) {
-    const s = status.toLowerCase();
-    return s === 'delivered' ? 'status-delivered' :
-           s === 'cancelled' ? 'status-cancelled' :
-           s === 'partial' ? 'status-partial' : '';
-  }
-
-  function formatDate(value) {
-    if (!value) return '';
-    let d;
-
-    if (typeof value === 'string') {
-      const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      d = match ? new Date(match[3], match[1] - 1, match[2]) : new Date(value);
-    } else if (!isNaN(value)) {
-      d = new Date(Date.UTC(1899, 11, 30) + value * 86400000);
+      datasets = [{
+        label: "Monthly Total Sales",
+        data: dataPoints,
+        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
+        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
+        borderWidth: 2,
+        borderRadius: 6
+      }];
     }
 
-    return d instanceof Date && !isNaN(d.getTime()) ? 
-      d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-  }
-
-  function updateSummary(data) {
-    let delivered = 0, cancelled = 0, inProgress = 0;
-
-    data.forEach(row => {
-      const ordered = Number(row["Quantity Ordered"] || 0);
-      const deliveredQty = Number(row["Quantity Delivered"] || 0);
-      const cancelledQty = Number(row["Quantity Cancelled"] || 0);
-
-      if (cancelledQty > 0) cancelled++;
-      else if (deliveredQty === ordered && ordered > 0) delivered++;
-      else if (deliveredQty !== ordered && cancelledQty === 0) inProgress++;
-    });
-
-    document.getElementById('totalOrders').textContent = data.length;
-    document.getElementById('deliveredOrders').textContent = delivered;
-    document.getElementById('cancelledOrders').textContent = cancelled;
-    document.getElementById('partialOrders').textContent = inProgress;
-  }
-
-function filterTable() {
-  console.log('filterTable called');
-
-  const searchInput = document.getElementById('searchInput');
-  const statusSelect = document.getElementById('statusFilter');
-
-  const search = (searchInput?.value || '').toLowerCase();
-  const statusFilter = (statusSelect?.value || '').toLowerCase();
-
-  console.log('Search:', search, 'Status filter:', statusFilter);
-
-  const filtered = fullData.filter(row => {
-    const customerRaw = row["Customer"] ?? row["Supplier"] ?? '';
-    const productRaw = row["Product"] ?? row["Description"] ?? '';
-
-    const customer = String(customerRaw).toLowerCase();
-    const product = String(productRaw).toLowerCase();
-
-    let status = '';
-    try {
-      status = determineStatus(row).toLowerCase();
-    } catch (err) {
-      console.warn("Invalid row during status determination:", row, err);
+    else if (type === "topQty") {
+      const qtyMap = {};
+      fullData.forEach(row => {
+        const title = row[titleKey];
+        const qty = Number(row[qtyKey]);
+        qtyMap[title] = (qtyMap[title] || 0) + qty;
+      });
+      labels = Object.keys(qtyMap);
+      const dataPoints = Object.values(qtyMap);
+      datasets = [{
+        label: "Top-Selling Items by Quantity",
+        data: dataPoints,
+        backgroundColor: colors
+      }];
     }
 
-    return (customer.includes(search) || product.includes(search)) &&
-           (!statusFilter || status === statusFilter);
-  });
-
-  console.log('Filtered data count:', filtered.length);
-
-  populateTable(filtered);
-  updateSummary(filtered);
-}
-
-
-  
-
-  function submitRemarks() {
-    const newText = document.getElementById('newRemarks').value.trim();
-    const orderId = currentEditingOrderId;
-
-    if (!orderId || !currentUserId) return;
-
-    firestore.collection('orders').doc(currentUserId).collection('userOrders').doc(orderId)
-      .update({ REMARKS: newText })
-      .then(() => {
-        // Update local data and UI
-        const row = fullData.find(r => r["Number"] == orderId);
-        if (row) row["REMARKS"] = newText;
-        populateTable(fullData);
-        console.log('Remarks updated in Firestore');
-      })
-      .catch(err => console.error('Error updating remarks:', err));
-
-    const modalEl = document.getElementById('editModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    modal.hide();
-  }
-
-
-function renderCharts(data) {
-  const currency = document.getElementById("currencySelector")?.value || "ALL";
-
-  // 📦 Monthly Revenue per currency
-  const monthlySales = {};
-  const monthlyOrders = {};
-
-  data.forEach(order => {
-    const orderDate = order["Order Date"];
-    const orderCurrency = order["Currency"] || "PHP";
-    const unitPrice = parseFloat(order["Unit Price"] || 0);
-    const qty = parseFloat(order["Quantity Ordered"] || 0);
-
-    if (!orderDate || isNaN(unitPrice) || isNaN(qty)) return;
-
-    const date = new Date(orderDate);
-    const monthYear = date.toLocaleString("default", { month: "short", year: "numeric" });
-
-    // Monthly Revenue
-    if (currency === "ALL" || currency === orderCurrency) {
-      monthlySales[monthYear] = (monthlySales[monthYear] || 0) + qty * unitPrice;
+    else if (type === "topTotal") {
+      const totalMap = {};
+      fullData.forEach(row => {
+        const title = row[titleKey];
+        const total = Number(row[totalKey]);
+        totalMap[title] = (totalMap[title] || 0) + total;
+      });
+      labels = Object.keys(totalMap);
+      const dataPoints = Object.values(totalMap);
+      datasets = [{
+        label: "Top-Selling Items by Revenue",
+        data: dataPoints,
+        backgroundColor: colors
+      }];
     }
 
-    // Monthly Order Count (always counts all regardless of currency filter)
-    monthlyOrders[monthYear] = (monthlyOrders[monthYear] || 0) + 1;
-  });
-
-  const labels = [...new Set([...Object.keys(monthlySales), ...Object.keys(monthlyOrders)])].sort((a, b) => {
-    return new Date(a) - new Date(b);
-  });
-
-  const salesData = labels.map(month => monthlySales[month] || 0);
-  const ordersData = labels.map(month => monthlyOrders[month] || 0);
-
-  // 💸 Monthly Revenue Chart
-  const salesCtx = document.getElementById("chartCanvas").getContext("2d");
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(salesCtx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: `Monthly Sales (${currency})`,
-        data: salesData,
-        borderColor: "#007aff",
-        backgroundColor: "rgba(0,122,255,0.1)",
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2.5,
-        pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: false
+    else if (type === "deliveryPerformance") {
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
+      const grouped = {};
+      filtered.forEach(row => {
+        const name = row[titleKey];
+        if (!grouped[name]) grouped[name] = { ordered: 0, delivered: 0 };
+        grouped[name].ordered += Number(row[qtyKey]) || 0;
+        grouped[name].delivered += Number(row[delKey]) || 0;
+      });
+      labels = Object.keys(grouped);
+      datasets = [
+        {
+          label: "Ordered",
+          data: labels.map(name => grouped[name].ordered),
+          backgroundColor: colors[0]
         },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${currency} ${ctx.parsed.y.toFixed(2)}`
-          }
+        {
+          label: "Delivered",
+          data: labels.map(name => grouped[name].delivered),
+          backgroundColor: colors[1]
         }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: val => `${currency} ${val.toLocaleString()}`
-          }
+      ];
+    }
+
+    else if (type === "deliveryBreakdown") {
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
+      const grouped = {};
+      filtered.forEach(row => {
+        const name = row[titleKey];
+        if (!grouped[name]) grouped[name] = { delivered: 0, balance: 0, cancelled: 0 };
+        grouped[name].delivered += Number(row[delKey]) || 0;
+        grouped[name].balance += Number(row[balKey]) || 0;
+        grouped[name].cancelled += Number(row[cancelKey]) || 0;
+      });
+      labels = Object.keys(grouped);
+      datasets = [
+        {
+          label: "Delivered",
+          data: labels.map(name => grouped[name].delivered),
+          backgroundColor: colors[0]
+        },
+        {
+          label: "Balance",
+          data: labels.map(name => grouped[name].balance),
+          backgroundColor: colors[1]
+        },
+        {
+          label: "Cancelled",
+          data: labels.map(name => grouped[name].cancelled),
+          backgroundColor: colors[2]
+        }
+      ];
+    }
+
+    else if (type === "deliveryPie") {
+      let totalDelivered = 0, totalBalance = 0, totalCancelled = 0;
+      fullData.forEach(row => {
+        totalDelivered += Number(row[delKey]) || 0;
+        totalBalance += Number(row[balKey]) || 0;
+        totalCancelled += Number(row[cancelKey]) || 0;
+      });
+      labels = ["Delivered", "Balance", "Cancelled"];
+      const dataPoints = [totalDelivered, totalBalance, totalCancelled];
+      datasets = [{
+        label: "Delivery Status",
+        data: dataPoints,
+        backgroundColor: colors.slice(0, 3)
+      }];
+    }
+
+    chart = new Chart(ctx, {
+      type: selectedStyle,
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: document.getElementById('chartType').selectedOptions[0].text,
+            font: { size: 18, weight: 'bold' }
+          },
+          legend: { display: true }
+        },
+        scales: (selectedStyle === 'pie' || selectedStyle === 'doughnut') ? {} : {
+          x: { stacked: true, ticks: { font: { size: 12 } } },
+          y: { beginAtZero: true, stacked: true, title: { display: true, text: 'Quantity' } }
         }
       }
-    }
-  });
-
-  // 🧾 Orders Issued Chart
-  const ordersCtx = document.getElementById("ordersIssuedChart").getContext("2d");
-  if (ordersChartInstance) ordersChartInstance.destroy();
-  ordersChartInstance = new Chart(ordersCtx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: "Orders Issued",
-        data: ordersData,
-        backgroundColor: "#34c759", // Apple green
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.parsed.y} Orders`
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1
-          }
-        }
-      }
-    }
-  });
-}
-
-document.getElementById("currencySelector").addEventListener("change", () => {
-  renderCharts(fullData);
-});
-
-
-
-
-
-
-
-document.getElementById("btnDownloadExcel").addEventListener("click", () => {
-  const tableBody = document.getElementById("orderTableBody");
-  if (!tableBody) return;
-
-  const rows = Array.from(tableBody.querySelectorAll("tr"));
-  if (rows.length === 0) {
-    alert("No rows available to export.");
-    return;
-  }
-
-  const exportData = rows.map(row => {
-    const cells = row.querySelectorAll("td");
-    const rowData = {};
-
-    selectedColumns.forEach((col, index) => {
-      rowData[col] = cells[index]?.textContent?.trim() || "";
     });
-
-    return rowData;
-  });
-
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "FilteredOrders");
-
-  const fileName = `Filtered_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 </script>
-
 
 
 
