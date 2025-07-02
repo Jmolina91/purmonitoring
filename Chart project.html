@@ -71,6 +71,20 @@
     box-shadow: var(--shadow);
   }
 
+
+
+#productSelector.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+
+
+
+
+
+
+
   canvas {
     width: 100% !important;
     height: auto !important;
@@ -132,8 +146,46 @@
 </footer>
 
 
- 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
 <script>
+   // Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+    authDomain: "order-monitoring-purchasing.firebaseapp.com",
+    projectId: "order-monitoring-purchasing",
+    storageBucket: "order-monitoring-purchasing.appspot.com",
+    messagingSenderId: "209378598320",
+    appId: "1:209378598320:web:0c143d69bc329a994d8a75",
+    measurementId: "G-PPNWT4ECV0"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    // ❌ Redirect to index if not logged in
+    window.location.href = "index.html";
+  } else {
+    // ✅ Logged in — continue chart logic
+    initChartLogic();
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
   let fullData = [];
   let chart;
 
@@ -199,6 +251,20 @@
 
   function handleChartType() {
     const type = document.getElementById('chartType').value;
+
+// Disable item filtering for specific chart types that are not item-specific
+const productSelector = document.getElementById('productSelector');
+const productFilterDisabledCharts = ["monthlyTotal", "topQty", "topTotal", "deliveryPie"];
+if (productFilterDisabledCharts.includes(type)) {
+  productSelector.disabled = true;
+  productSelector.classList.add("disabled");
+} else {
+  productSelector.disabled = false;
+  productSelector.classList.remove("disabled");
+}
+
+
+
     const selectedProduct = document.getElementById('productSelector').value;
     const selectedStyle = document.getElementById('chartStyle').value || 'bar';
     const theme = document.getElementById('colorTheme').value || 'summer';
@@ -208,7 +274,7 @@
     const titleKey = getColumnMatch(["Description", "Title", "Product Title"], rowSample);
     const qtyKey = getColumnMatch(["Quantity Ordered", "Quantity", "Qty"], rowSample);
     const totalKey = getColumnMatch(["Amount", "Total", "Sales"], rowSample);
-    const monthKey = getColumnMatch(["Month"], rowSample);
+    const monthKey = getColumnMatch(["Month", "Order Month", "Month Ordered", "Date", "OrderDate", "Ordered On"], rowSample);
     const delKey = getColumnMatch(["Quantity Delivered"], rowSample);
     const balKey = getColumnMatch(["Balance"], rowSample);
     const cancelKey = getColumnMatch(["Quantity Cancelled"], rowSample);
@@ -219,30 +285,131 @@
 
     let labels = [], datasets = [];
 
-    if (type === "qtyOverTime") {
-      const filtered = fullData.filter(row => row[titleKey] === selectedProduct);
+    if (type === "totalOverTime") {
+      const grouped = {};
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
+
+      filtered.forEach(row => {
+        const raw = row[monthKey];
+        const date = new Date(raw);
+        const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+        const product = row[titleKey];
+        const value = Number(row[totalKey]) || 0;
+        if (!grouped[product]) grouped[product] = {};
+        if (!grouped[product][month]) grouped[product][month] = 0;
+        grouped[product][month] += value;
+      });
+
+      const allMonths = [...new Set(fullData.map(row => {
+        const raw = row[monthKey];
+        const date = new Date(raw);
+        return isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+      }))];
+
+      labels = allMonths;
+
+      datasets = Object.entries(grouped).map(([product, monthMap], idx) => {
+        const data = labels.map(month => monthMap[month] || 0);
+        return {
+          label: product,
+          data,
+          backgroundColor: colors[idx % colors.length],
+          borderColor: colors[idx % colors.length].replace('0.7', '1'),
+          borderWidth: 2,
+          borderRadius: 6
+        };
+      });
+    }
+
+
+
+
+    else if (type === "qtyOverTime") {
+  const groupedData = {};
+  fullData.forEach(row => {
+    const product = row[titleKey];
+    if (selectedProduct && product !== selectedProduct) return; // 👈 filter specific product if selected
+
+    const raw = row[monthKey];
+    const date = new Date(raw);
+    const month = isNaN(date) ? (raw?.toString().trim() || "Unknown") : date.toLocaleString('default', { month: 'long' });
+    const qty = Number(row[qtyKey]) || 0;
+
+    if (!groupedData[product]) groupedData[product] = {};
+    if (!groupedData[product][month]) groupedData[product][month] = 0;
+    groupedData[product][month] += qty;
+  });
+
+  const allMonths = [...new Set(Object.values(groupedData).flatMap(obj => Object.keys(obj)))];
+  const monthOrder = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  labels = allMonths.sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+
+  datasets = Object.keys(groupedData).map((product, idx) => {
+    const monthlyQty = labels.map(month => groupedData[product][month] || 0);
+    return {
+      label: product,
+      data: monthlyQty,
+      backgroundColor: colors[idx % colors.length],
+      borderColor: colors[idx % colors.length].replace('0.7', '1'),
+      borderWidth: 2,
+      borderRadius: 6
+    };
+  });
+}
+
+
+
+
+
+    else if (type === "totalOverTime") {
+      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
       labels = filtered.map(row => row[monthKey]?.trim() || "Unknown");
-      const dataPoints = filtered.map(row => Number(row[qtyKey]));
-      datasets = [{ label: `Quantity Ordered: ${selectedProduct}`, data: dataPoints, backgroundColor: colors }];
-    } else if (type === "totalOverTime") {
-      const filtered = fullData.filter(row => row[titleKey] === selectedProduct);
-      labels = filtered.map(row => row[monthKey]?.trim() || "Unknown");
-      const dataPoints = filtered.map(row => Number(row[totalKey]));
-      datasets = [{ label: `Total Sales: ${selectedProduct}`, data: dataPoints, backgroundColor: colors }];
-    } else if (type === "monthlyTotal") {
+      const dataPoints = filtered.map(row => Number(row[totalKey]) || 0);
+      datasets = [{
+        label: `Total Sales${selectedProduct ? ": " + selectedProduct : ""}`,
+        data: dataPoints,
+        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
+        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
+        borderWidth: 2,
+        borderRadius: 6
+      }];
+    }
+
+    else if (type === "monthlyTotal") {
       const monthMap = {};
       fullData.forEach(row => {
-        const month = row[monthKey]?.trim();
+        const raw = row[monthKey];
+const date = new Date(raw);
+const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
+
         const total = Number(row[totalKey]);
         if (month && !isNaN(total)) {
           monthMap[month] = (monthMap[month] || 0) + total;
         }
       });
-      const monthOrder = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+      const monthOrder = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+
       labels = Object.keys(monthMap).sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
       const dataPoints = labels.map(month => monthMap[month]);
-      datasets = [{ label: "Monthly Total Sales", data: dataPoints, backgroundColor: colors }];
-    } else if (type === "topQty") {
+
+      datasets = [{
+        label: "Monthly Total Sales",
+        data: dataPoints,
+        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
+        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
+        borderWidth: 2,
+        borderRadius: 6
+      }];
+    }
+
+    else if (type === "topQty") {
       const qtyMap = {};
       fullData.forEach(row => {
         const title = row[titleKey];
@@ -251,8 +418,14 @@
       });
       labels = Object.keys(qtyMap);
       const dataPoints = Object.values(qtyMap);
-      datasets = [{ label: "Top-Selling Items by Quantity", data: dataPoints, backgroundColor: colors }];
-    } else if (type === "topTotal") {
+      datasets = [{
+        label: "Top-Selling Items by Quantity",
+        data: dataPoints,
+        backgroundColor: colors
+      }];
+    }
+
+    else if (type === "topTotal") {
       const totalMap = {};
       fullData.forEach(row => {
         const title = row[titleKey];
@@ -261,8 +434,14 @@
       });
       labels = Object.keys(totalMap);
       const dataPoints = Object.values(totalMap);
-      datasets = [{ label: "Top-Selling Items by Revenue", data: dataPoints, backgroundColor: colors }];
-    } else if (type === "deliveryPerformance") {
+      datasets = [{
+        label: "Top-Selling Items by Revenue",
+        data: dataPoints,
+        backgroundColor: colors
+      }];
+    }
+
+    else if (type === "deliveryPerformance") {
       const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
       const grouped = {};
       filtered.forEach(row => {
@@ -284,7 +463,9 @@
           backgroundColor: colors[1]
         }
       ];
-    } else if (type === "deliveryBreakdown") {
+    }
+
+    else if (type === "deliveryBreakdown") {
       const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
       const grouped = {};
       filtered.forEach(row => {
@@ -312,7 +493,9 @@
           backgroundColor: colors[2]
         }
       ];
-    } else if (type === "deliveryPie") {
+    }
+
+    else if (type === "deliveryPie") {
       let totalDelivered = 0, totalBalance = 0, totalCancelled = 0;
       fullData.forEach(row => {
         totalDelivered += Number(row[delKey]) || 0;
@@ -321,7 +504,11 @@
       });
       labels = ["Delivered", "Balance", "Cancelled"];
       const dataPoints = [totalDelivered, totalBalance, totalCancelled];
-      datasets = [{ label: "Delivery Status", data: dataPoints, backgroundColor: colors.slice(0, 3) }];
+      datasets = [{
+        label: "Delivery Status",
+        data: dataPoints,
+        backgroundColor: colors.slice(0, 3)
+      }];
     }
 
     chart = new Chart(ctx, {
@@ -345,6 +532,7 @@
     });
   }
 </script>
+
 
 
 
