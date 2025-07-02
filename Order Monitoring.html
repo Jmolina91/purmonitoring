@@ -2,157 +2,811 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Order Chart Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order Monitoring Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
   :root {
-    --bg: #fff;
-    --fg: #000;
-    --subtle-text: #888;
-    --primary: #0071e3;
-    --radius: 12px;
-    --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
-    --card-bg: #f9f9f9;
-  }
+  --apple-blue: #007aff;
+  --sidebar-bg: #f9fafc;
+  --sidebar-border: #dce1e6;
+  --text-main: #1c1c1e;
+  --text-muted: #8e8e93;
+  --highlight: #0a84ff;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.06);
+  --hover-shadow: rgba(0, 0, 0, 0.1);
+  --transition-fast: 0.25s ease;
+}
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    margin: 0;
-    padding: 60px 20px;
-    text-align: center;
-  }
-
-  h1 {
-    font-size: 36px;
-    margin-bottom: 10px;
-    font-weight: 600;
-  }
-
-  p {
-    color: var(--subtle-text);
-    font-size: 16px;
-    margin-bottom: 40px;
-  }
-
-  section.controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 40px;
-  }
-
-  input[type="file"], select {
-    padding: 10px 18px;
-    font-size: 15px;
-    border: 1px solid #ccc;
-    border-radius: var(--radius);
-    background: #fff;
-    transition: var(--transition);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
-  }
-
-  input[type="file"]:hover,
-  select:hover {
-    border-color: var(--primary);
-  }
-
-  .chart-container {
-    max-width: 960px;
-    margin: 0 auto;
-    background: var(--card-bg);
-    padding: 40px 30px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f2f4f8;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 
 
+/* === Apple-Style Sidebar (Fixed to avoid collision with navbar) === */
+.sidebar {
+  position: fixed;
+  top: 56px; /* Leaves space for the navbar */
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 56px); /* Subtract navbar height */
+  background: rgba(255, 255, 255, 0.65); /* Glassmorphism */
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  z-index: 999;
+  overflow-y: auto;
+}
 
-#productSelector.disabled {
-  opacity: 0.6;
+
+/* ✨ Sidebar Title — Improved Readability and Padding */
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
+
+/* 🚪 Slide-In Sidebar Effect (Apple-like animation) */
+.sidebar {
+  position: fixed;
+  top: 56px; /* height of your navbar */
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 56px); /* full height minus navbar */
+  background-color: #fff;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+  z-index: 1050;
+  overflow-y: auto;
+  padding: 1rem;
+  border-top-right-radius: 12px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hidden (slide-out) */
+.sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
   pointer-events: none;
 }
 
 
+/* 🍎 Sidebar Button — Apple-style Friendly UI */
+.sidebar-btn {
+  background: linear-gradient(135deg, #007aff, #0a84ff);
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 18px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sidebar-btn:hover {
+  background: linear-gradient(135deg, #005ecb, #007aff);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
+}
+
+.sidebar-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.2);
+}
+
+.sidebar-btn.active {
+  background: #004ba0;
+  box-shadow: inset 0 0 0 2px #ffffff33;
+}
+
+
+/* 🧑‍💻 Optional: Add icons to buttons if needed */
+.sidebar-btn::before {
+  content: '🛠️';
+  font-size: 1.1rem;
+}
 
 
 
+/* === Main Content === */
+.main-content {
+  margin-left: 260px;
+  padding: 2rem;
+  transition: margin-left var(--transition-fast);
+}
+
+/* === Card Summary === */
+.card-summary {
+  background: var(--card-bg);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px var(--card-shadow);
+  border-left: 5px solid var(--highlight);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-summary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px var(--hover-shadow);
+}
+
+/* === Upload Zone === */
+.upload-zone {
+  border: 2px dashed #c7c7cc;
+  background-color: #f4f4f7;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: var(--highlight);
+  color: var(--highlight);
+  background-color: #e6f0ff;
+}
+
+/* === Table Wrapper === */
+.table-wrapper {
+  max-height: 500px; /* Set scrollable height */
+  overflow-y: auto;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  margin-top: 2rem;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+}
+
+/* === Table === */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.93rem;
+  color: #1c1c1e;
+  background: #fff;
+}
+
+/* === Table Header === */
+/* 🍏 Apple Card Styling */
+.apple-card {
+  background: #ffffffcc;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  border: 1px solid #e0e0e5;
+  transition: all 0.3s ease;
+}
+
+/* Header */
+.apple-card-header {
+  background: linear-gradient(to right, #007aff, #0a84ff);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Body Padding */
+.apple-card-body {
+  padding: 0;
+}
+
+/* Scrollable Table Container */
+.apple-table-wrapper {
+  max-height: 600px;
+  overflow-y: auto;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Table */
+.apple-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px;
+  font-size: 0.95rem;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Table Head */
+.apple-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fb;
+  font-weight: 600;
+  color: #1c1c1e;
+  padding: 0.85rem 1.2rem;
+  border-bottom: 1px solid #d1d1d6;
+  backdrop-filter: blur(12px);
+  z-index: 5;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Table Rows */
+.apple-table tbody tr:hover {
+  background-color: #f2f4f8;
+  transition: background-color 0.2s ease;
+}
+
+.apple-table td {
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #ebedf0;
+  color: #2c2c2e;
+  background: #fff;
+  vertical-align: middle;
+  transition: background 0.3s ease;
+}
+
+/* Scrollbar (optional styling) */
+.apple-table-wrapper::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.apple-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cfd3d6;
+  border-radius: 10px;
+}
+
+.apple-table th:first-child,
+.apple-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: #f8f9fb;
+  z-index: 3;
+}
 
 
 
-  canvas {
-    width: 100% !important;
-    height: auto !important;
+/* === Chart Styling === */
+.chart-wrapper {
+  height: 240px;
+}
+
+#chartCanvas,
+#ordersIssuedChart {
+  width: 100% !important;
+  height: 240px !important;
+}
+
+/* === Side-by-side Charts === */
+.chart-duo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-box {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Divider */
+.chart-divider {
+  width: 1px;
+  background-color: #e0e0e0;
+  margin: 0 10px;
+}
+
+@media (max-width: 992px) {
+  .chart-duo {
+    flex-direction: column;
   }
-
-  footer {
-    margin-top: 60px;
-    font-size: 14px;
-    color: var(--subtle-text);
+  .chart-divider {
+    display: none;
   }
+}
 
-  @media (max-width: 600px) {
-    h1 {
-      font-size: 28px;
-    }
+/* === Status Tags === */
+.status-delivered {
+  color: #34c759;
+  font-weight: 600;
+}
 
-    section.controls {
-      flex-direction: column;
-      gap: 10px;
-    }
+.status-cancelled {
+  color: #ff3b30;
+  font-weight: 600;
+}
 
-    .chart-container {
-      padding: 20px 15px;
-    }
+.status-partial {
+  color: #ff9500;
+  font-weight: 600;
+}
+
+/* === Fade Animation === */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out both;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apple-style-btn {
+  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* Apple-style gray gradient */
+  color: #1c1c1e;
+  border: 1px solid #c7c7cc;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  backdrop-filter: blur(10px);
+}
+
+.apple-style-btn:hover {
+  background: linear-gradient(to bottom, #e0e0e5, #c7c7cc);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+
+.apple-style-btn:active {
+  background: #d1d1d6;
+  transform: scale(0.98);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.apple-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* macOS-style gray gradient */
+  color: #1c1c1e;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 1px solid #c7c7cc;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.apple-logout-btn:hover {
+  background: linear-gradient(to bottom, #e5e5ea, #c7c7cc);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.apple-logout-btn:active {
+  background: linear-gradient(to bottom, #d1d1d6, #a1a1aa);
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.apple-logout-btn .icon {
+  width: 18px;
+  height: 18px;
+  stroke: #1c1c1e;
+}
+
+.apple-footer {
+  background: linear-gradient(to top, #f2f2f7, #ffffff);
+  padding: 40px 20px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1c1c1e;
+  border-top: 1px solid #e5e5ea;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-section {
+  margin-bottom: 20px;
+}
+
+.footer-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.footer-subtext {
+  font-size: 0.95rem;
+  color: #6e6e73;
+  margin: 4px 0 0;
+}
+
+.footer-links {
+  margin: 20px 0;
+}
+
+.footer-links a {
+  margin: 0 12px;
+  font-size: 0.95rem;
+  color: #0071e3;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #004ba0;
+}
+
+.footer-copy {
+  font-size: 0.85rem;
+  color: #8e8e93;
+}
+
+
+
 </style>
 
 
 </head>
 <body>
-  <header>
-  <h1>📊 Smart Order Dashboard</h1>
-  <p>Upload your Excel file to visualize item downtime, sales trends, or performance data.</p>
-</header>
+  <!-- NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">📦 Order Monitor</a>
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
+<li class="nav-item">
+  <a class="nav-link" href="#" id="toggleSidebar">Update</a>
+</li>
 
-<section class="controls">
-  <input type="file" id="excelFile" accept=".xlsx, .xls" />
-  <select id="chartType" style="display: none;"></select>
-  <select id="productSelector" style="display: none;"></select>
-  <select id="chartStyle">
-    <option value="bar">📊 Bar</option>
-    <option value="line">📈 Line</option>
-    <option value="pie">🥧 Pie</option>
-    <option value="doughnut">🍩 Doughnut</option>
-  </select>
-  <select id="colorTheme">
-    <option value="summer">🌞 Summer</option>
-    <option value="winter">❄️ Winter</option>
-    <option value="fall">🍂 Fall</option>
-  </select>
-</section>
+      </ul>
+      
+      <span id="userEmailDisplay" class="navbar-text text-white ms-auto"></span>
+    </div>
 
-<section class="chart-container">
-  <canvas id="chartCanvas"></canvas>
-</section>
+     <button id="logoutBtn" class="apple-logout-btn">
+  <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 002 2h3a2 2 0 002-2V7a2 2 0 00-2-2h-3a2 2 0 00-2 2v1" />
+  </svg>
 
-<footer>
-  &copy; 2025 Hans Analytics. Inspired by Apple-style UX.
+  Logout
+</button>
+  </nav>
+
+  <!-- SIDEBAR -->
+<div id="functionSidebar" class="sidebar hidden">
+  <h5 class="sidebar-title">Functions</h5>
+  <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">UPDATE ORDER DETAILS</button>
+  <button id="btnCustomizeTable" class="btn btn-primary sidebar-btn w-100 mb-3">Customize Table</button>
+  <button id="btnCustomizeCharts" class="btn btn-secondary sidebar-btn w-100 mb-3">Customize Charts</button>
+    </div>
+  
+
+
+
+
+  <!-- MAIN CONTENT -->
+  <div id="mainContent" style="margin-left: 270px; padding: 20px;">
+
+    <!-- DASHBOARD SUMMARY -->
+    <div class="container-fluid p-0 mb-4">
+      <div class="row text-center gx-3">
+        <div class="col-md-3 mb-3">
+          <div class="card card-summary">
+            <div class="card-body">
+              <h5>Total Orders</h5>
+              <h3 id="totalOrders">--</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card card-summary">
+            <div class="card-body">
+              <h5>Delivered</h5>
+              <h3 class="text-success" id="deliveredOrders">--</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card card-summary">
+            <div class="card-body">
+              <h5>Cancelled</h5>
+              <h3 class="text-danger" id="cancelledOrders">--</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card card-summary">
+            <div class="card-body">
+              <h5>In Progress</h5>
+              <h3 class="text-warning" id="partialOrders">--</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERS + UPLOAD -->
+    <div class="container-fluid p-0 mb-4">
+      <div class="row gx-3">
+        <div class="col-md-3">
+          <input type="text" class="form-control" placeholder="Search Customer/Product..." id="searchInput">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="statusFilter">
+            <option value="">All Status</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Partial">Partial</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="upload-zone" for="excelFile">
+            📁 Click or drag Excel file to upload
+            <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
+          </label>
+
+
+
+  <button id="btnDownloadExcel" class="apple-style-btn">
+    📥 Download Excel
+  </button>
+
+
+        </div>
+
+
+
+      </div>
+    </div>
+
+
+
+
+<!-- 📊 Side-by-Side Charts -->
+<div class="container-fluid p-0 mb-4">
+  <div class="d-flex flex-wrap justify-content-between chart-duo">
+
+    <!-- Left Chart: Monthly Sales -->
+    <div class="chart-box me-md-3 mb-3 mb-md-0">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">📊 Monthly Sales Overview</h5>
+            <select id="currencySelector" class="form-select form-select-sm" style="max-width: 150px; border-radius: 12px;">
+              <option value="ALL">All Currencies</option>
+              <option value="PHP">PHP</option>
+              <option value="USD">USD</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Divider Line -->
+    <div class="chart-divider d-none d-md-block"></div>
+
+    <!-- Right Chart: Orders Issued -->
+    <div class="chart-box ms-md-3">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <h5 class="mb-3" style="font-weight: 600; color: #1d1d1f;">🧾 Total Orders Issued Per Month</h5>
+          <div class="chart-wrapper">
+            <canvas id="ordersIssuedChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 🍏 Apple-Style Order Table -->
+<div class="container-fluid p-0 mb-5">
+  <div class="apple-card">
+    <div class="apple-card-header">
+      <h5 class="mb-0">📋 Order List</h5>
+    </div>
+    <div class="apple-card-body">
+      <div class="apple-table-wrapper">
+        <table class="apple-table">
+          <thead id="orderTableHead" class="sticky-top">
+            <!-- JavaScript will insert dynamic headers -->
+          </thead>
+          <tbody id="orderTableBody">
+            <!-- JavaScript will populate rows here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <!-- UPDATE ORDER MODAL -->
+  <div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow-lg border-0">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title" id="updateOrderModalLabel">
+            Update Order <span id="modalOrderNumber" class="text-primary"></span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <div id="multiItemContainer">
+            <table class="table table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Qty Ordered</th>
+                  <th>Qty Delivered</th>
+                  <th>Qty Cancelled</th>
+                  <th>Unit Price</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="multiItemTableBody">
+                <!-- JavaScript will inject rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMIZE TABLE MODAL -->
+  <div class="modal fade" id="customizeTableModal" tabindex="-1" aria-labelledby="customizeTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="customizeTableModalLabel">Select Columns to Display</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="columnCheckboxContainer">
+          <!-- Checkbox list rendered by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirmColumnsBtn" class="btn btn-success">Apply</button>
+          <button type="button" class="btn btn-secondary" onclick="resetColumns()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+<!-- CUSTOMIZE CHART MODAL -->
+<div class="modal fade" id="customizeChartModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Customize Chart Types</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="chart1Type" class="form-label">Chart 1 (Sales)</label>
+        <select id="chart1Type" class="form-select mb-3">
+          <option value="line">📈 Line</option>
+          <option value="bar">📊 Bar</option>
+          <option value="area">🌊 Area</option>
+        </select>
+
+        <label for="chart2Type" class="form-label">Chart 2 (Orders)</label>
+        <select id="chart2Type" class="form-select">
+          <option value="bar">📦 Bar</option>
+          <option value="line">📈 Line</option>
+          <option value="area">🌊 Area</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmChartChoices" class="btn btn-primary">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<footer class="apple-footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <p class="footer-title">Order Monitoring</p>
+      <p class="footer-subtext">Built for performance and simplicity.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Support</a>
+      <a href="#">About</a>
+    </div>
+    <div class="footer-copy">
+      &copy; <span id="currentYear"></span> Hans Technologies. All rights reserved.
+    </div>
+  </div>
 </footer>
 
 
+
+
+
+
+
+
+
+</body>
+
+
+
+ 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
 <script>
-   // Your Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
     authDomain: "order-monitoring-purchasing.firebaseapp.com",
@@ -164,14 +818,175 @@
   };
 
   firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
 
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) {
-    // ❌ Redirect to index if not logged in
-    window.location.href = "index.html";
-  } else {
-    // ✅ Logged in — continue chart logic
-    initChartLogic();
+  const auth = firebase.auth();
+  const firestore = firebase.firestore();
+
+const btnCustomizeTable = document.getElementById('btnCustomizeTable');
+const customizeTableModal = new bootstrap.Modal(document.getElementById('customizeTableModal'));
+const columnCheckboxContainer = document.getElementById('columnCheckboxContainer');
+const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
+const updateNavLink = document.getElementById("toggleSidebar");
+
+
+  let fullData = [];
+  let currentEditingOrderId = '';
+  let currentUserId = null; // Use UID for Firestore path
+  let chartInstance = null;
+  let selectedColumns = [];  // Store which columns are selected
+  let draggedColumnIndex = null;
+  let ordersChartInstance = null; // Global chart variable
+  let fullColumnOrder = [];
+  let chart1Type = localStorage.getItem('chart1Type') || 'line';
+  let chart2Type = localStorage.getItem('chart2Type') || 'bar';
+
+ document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+
+const storedSelected = localStorage.getItem('selectedColumns');
+if (storedSelected) {
+  try {
+    selectedColumns = JSON.parse(storedSelected);
+  } catch (e) {
+    selectedColumns = [];
+  }
+}
+
+if (selectedColumns.length > 0) {
+  // Filter fullColumnOrder to only include saved selectedColumns
+  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+btnCustomizeTable.addEventListener('click', () => {
+  columnCheckboxContainer.innerHTML = '';
+
+  const allColumns = fullColumnOrder.length > 0
+    ? fullColumnOrder
+    : fullData.length > 0
+      ? Object.keys(fullData[0])
+      : [];
+
+  allColumns.forEach(col => {
+    const isChecked = selectedColumns.includes(col);
+
+    const div = document.createElement('div');
+    div.className = 'form-check';
+
+    div.innerHTML = `
+  <input class="form-check-input" type="checkbox" value="${col}" id="col-${col}" ${isChecked ? 'checked' : ''}>
+  <label class="form-check-label" for="col-${col}">${col}</label>
+`;
+
+
+    columnCheckboxContainer.appendChild(div);
+  });
+
+  customizeTableModal.show(); // open modal manually
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 👇 ADD THIS BLOCK RIGHT AFTER selectedColumns
+const storedOrder = localStorage.getItem('fullColumnOrder');
+if (storedOrder) {
+  try {
+    fullColumnOrder = JSON.parse(storedOrder);
+  } catch (e) {
+    fullColumnOrder = [];
+  }
+}
+
+
+
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  const checkedCols = Array.from(checkboxes)
+                           .filter(cb => cb.checked)
+                           .map(cb => cb.value);
+
+  if (checkedCols.length === 0) {
+    alert('Select at least one column to display.');
+    return;
+  }
+
+  selectedColumns = fullColumnOrder.filter(col => checkedCols.includes(col));
+  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+
+  customizeTableModal.hide();
+  populateTable(fullData);
+});
+
+
+
+
+
+
+
+
+
+function resetColumns() {
+  selectedColumns = [];
+  fullColumnOrder = [];
+
+  localStorage.removeItem('selectedColumns');
+  localStorage.removeItem('fullColumnOrder');
+
+  customizeTableModal.hide();
+  populateTable(fullData);
+}
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const updateNavLink = document.getElementById("toggleSidebar");
+  const sidebar = document.getElementById("functionSidebar");
+
+  if (updateNavLink && sidebar) {
+    updateNavLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      
+      // Toggle slide animation
+      sidebar.classList.toggle("translate-x-0");      // Slide in
+      sidebar.classList.toggle("translate-x-full");   // Slide out
+      sidebar.classList.toggle("hidden");             // Optional if you want full hide
+    });
   }
 });
 
@@ -186,352 +1001,823 @@ firebase.auth().onAuthStateChanged(user => {
 
 
 
-  let fullData = [];
-  let chart;
+
+
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUserId = user.uid;
+
+      // Display user email in navbar (make sure you have element with this ID)
+      const emailElem = document.getElementById('userEmailDisplay');
+      if(emailElem) emailElem.textContent = user.email || 'User';
+
+      // Load orders from Firestore collection
+      loadOrdersFromFirestore(currentUserId);
+    } else {
+      // If no user, redirect to login
+      window.location.href = "login.html";
+    }
+  });
 
   document.getElementById('excelFile').addEventListener('change', handleFile, false);
-  document.getElementById('chartType').addEventListener('change', handleChartType);
-  document.getElementById('productSelector').addEventListener('change', handleChartType);
-  document.getElementById('chartStyle').addEventListener('change', handleChartType);
+  document.getElementById('searchInput').addEventListener('input', filterTable);
+  document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+ async function loadOrdersFromFirestore(userId) {
+  try {
+    console.log("Loading orders for user:", userId); // ✅ Add this line
+
+    const ordersSnapshot = await firestore
+      .collection('orders')
+      .doc(userId)
+      .collection('userOrders')
+      .get();
+
+    fullData = [];
+    ordersSnapshot.forEach(doc => {
+      const data = doc.data();
+      data["docId"] = doc.id;
+      fullData.push(data);
+    });
+
+    console.log("Loaded fullData:", fullData); // ✅ Log the loaded data
+
+    populateTable(fullData);
+    updateSummary(fullData);
+    renderCharts(fullData);
+  } catch (error) {
+    console.error("Error loading user orders:", error);
+    fullData = [];
+    populateTable(fullData);
+    updateSummary(fullData);
+  }
+}
+
 
   function handleFile(e) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      fullData = XLSX.utils.sheet_to_json(worksheet);
-      if (!fullData || fullData.length === 0) return alert("Excel sheet is empty.");
-      showChartOptions(fullData);
-    };
-    reader.readAsArrayBuffer(e.target.files[0]);
-  }
+  const file = e.target.files[0];
+  if (!file || !currentUserId) return;
 
-  function getColumnMatch(possibleKeys, sampleRow) {
-    for (let key of possibleKeys) {
-      for (let actualKey in sampleRow) {
-        if (actualKey.trim().toLowerCase() === key.toLowerCase()) {
-          return actualKey;
-        }
-      }
+  const reader = new FileReader();
+
+  reader.onload = async function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    fullData = XLSX.utils.sheet_to_json(worksheet);
+    console.log("Excel parsed data:", fullData); // ✅ Log parsed result
+
+    // ✅ Auto-detect and store headers
+    if (fullData.length > 0) {
+      fullColumnOrder = Object.keys(fullData[0]); // Detect headers from first row
+      selectedColumns = [...fullColumnOrder];     // Select all by default
+
+      // ✅ Save selections to localStorage
+      localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+      localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+    } else {
+      alert("Excel is empty or has no valid header row.");
+      return;
     }
-    return null;
-  }
 
-  function getThemeColors(theme) {
-    const themes = {
-      summer: ['rgba(255, 183, 77, 0.7)', 'rgba(255, 138, 101, 0.7)', 'rgba(255, 213, 79, 0.7)', 'rgba(255, 234, 167, 0.7)', 'rgba(255, 241, 118, 0.7)'],
-      winter: ['rgba(173, 216, 230, 0.7)', 'rgba(0, 123, 255, 0.7)', 'rgba(100, 181, 246, 0.7)', 'rgba(187, 222, 251, 0.7)', 'rgba(144, 202, 249, 0.7)'],
-      fall: ['rgba(205, 133, 63, 0.7)', 'rgba(139, 69, 19, 0.7)', 'rgba(255, 152, 0, 0.7)', 'rgba(255, 204, 128, 0.7)', 'rgba(255, 112, 67, 0.7)']
-    };
-    return themes[theme] || themes.summer;
-  }
-
-  function showChartOptions(data) {
-    const chartType = document.getElementById('chartType');
-    chartType.innerHTML = `
-      <option value="">Select Chart Type</option>
-      <option value="qtyOverTime">📈 Quantity Over Time (by Product)</option>
-      <option value="totalOverTime">💰 Total Sales Over Time (by Product)</option>
-      <option value="monthlyTotal">📊 Monthly Total Sales</option>
-      <option value="topQty">🥇 Top-Selling Items (Quantity)</option>
-      <option value="topTotal">💵 Top-Selling Items (Revenue)</option>
-      <option value="deliveryPerformance">🚚 Delivery Performance (Ordered vs Delivered)</option>
-      <option value="deliveryBreakdown">📦 Delivery Breakdown (Delivered, Cancelled, Balance)</option>
-      <option value="deliveryPie">🥰 Delivery Pie Chart</option>
-    `;
-    chartType.style.display = 'inline';
-
-    const titleKey = getColumnMatch(["Description", "Title", "Product Title"], data[0]);
-    const productSet = new Set(data.map(row => row[titleKey]));
-    const productSelector = document.getElementById('productSelector');
-    productSelector.innerHTML = '<option value="">All Items</option>' + [...productSet].map(title => `<option value="${title}">${title}</option>`).join('');
-    productSelector.style.display = 'inline';
-  }
-
-  function handleChartType() {
-    const type = document.getElementById('chartType').value;
-
-// Disable item filtering for specific chart types that are not item-specific
-const productSelector = document.getElementById('productSelector');
-const productFilterDisabledCharts = ["monthlyTotal", "topQty", "topTotal", "deliveryPie"];
-if (productFilterDisabledCharts.includes(type)) {
-  productSelector.disabled = true;
-  productSelector.classList.add("disabled");
-} else {
-  productSelector.disabled = false;
-  productSelector.classList.remove("disabled");
-}
-
-
-
-    const selectedProduct = document.getElementById('productSelector').value;
-    const selectedStyle = document.getElementById('chartStyle').value || 'bar';
-    const theme = document.getElementById('colorTheme').value || 'summer';
-    const colors = getThemeColors(theme);
-
-    const rowSample = fullData[0];
-    const titleKey = getColumnMatch(["Description", "Title", "Product Title"], rowSample);
-    const qtyKey = getColumnMatch(["Quantity Ordered", "Quantity", "Qty"], rowSample);
-    const totalKey = getColumnMatch(["Amount", "Total", "Sales"], rowSample);
-    const monthKey = getColumnMatch(["Month", "Order Month", "Month Ordered", "Date", "OrderDate", "Ordered On"], rowSample);
-    const delKey = getColumnMatch(["Quantity Delivered"], rowSample);
-    const balKey = getColumnMatch(["Balance"], rowSample);
-    const cancelKey = getColumnMatch(["Quantity Cancelled"], rowSample);
-
-    if (!type) return;
-    if (chart) chart.destroy();
-    const ctx = document.getElementById('chartCanvas').getContext('2d');
-
-    let labels = [], datasets = [];
-
-    if (type === "totalOverTime") {
-      const grouped = {};
-      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
-
-      filtered.forEach(row => {
-        const raw = row[monthKey];
-        const date = new Date(raw);
-        const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
-        const product = row[titleKey];
-        const value = Number(row[totalKey]) || 0;
-        if (!grouped[product]) grouped[product] = {};
-        if (!grouped[product][month]) grouped[product][month] = 0;
-        grouped[product][month] += value;
+    // ✅ Optional date formatting
+    const dateFields = ["Order Date", "Need By Date", "Approved Date"];
+    fullData = fullData.map(row => {
+      dateFields.forEach(field => {
+        if (row[field]) row[field] = formatDate(row[field]);
       });
-
-      const allMonths = [...new Set(fullData.map(row => {
-        const raw = row[monthKey];
-        const date = new Date(raw);
-        return isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
-      }))];
-
-      labels = allMonths;
-
-      datasets = Object.entries(grouped).map(([product, monthMap], idx) => {
-        const data = labels.map(month => monthMap[month] || 0);
-        return {
-          label: product,
-          data,
-          backgroundColor: colors[idx % colors.length],
-          borderColor: colors[idx % colors.length].replace('0.7', '1'),
-          borderWidth: 2,
-          borderRadius: 6
-        };
-      });
-    }
-
-
-
-
-    else if (type === "qtyOverTime") {
-  const groupedData = {};
-  fullData.forEach(row => {
-    const product = row[titleKey];
-    if (selectedProduct && product !== selectedProduct) return; // 👈 filter specific product if selected
-
-    const raw = row[monthKey];
-    const date = new Date(raw);
-    const month = isNaN(date) ? (raw?.toString().trim() || "Unknown") : date.toLocaleString('default', { month: 'long' });
-    const qty = Number(row[qtyKey]) || 0;
-
-    if (!groupedData[product]) groupedData[product] = {};
-    if (!groupedData[product][month]) groupedData[product][month] = 0;
-    groupedData[product][month] += qty;
-  });
-
-  const allMonths = [...new Set(Object.values(groupedData).flatMap(obj => Object.keys(obj)))];
-  const monthOrder = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  labels = allMonths.sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
-
-  datasets = Object.keys(groupedData).map((product, idx) => {
-    const monthlyQty = labels.map(month => groupedData[product][month] || 0);
-    return {
-      label: product,
-      data: monthlyQty,
-      backgroundColor: colors[idx % colors.length],
-      borderColor: colors[idx % colors.length].replace('0.7', '1'),
-      borderWidth: 2,
-      borderRadius: 6
-    };
-  });
-}
-
-
-
-
-
-    else if (type === "totalOverTime") {
-      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
-      labels = filtered.map(row => row[monthKey]?.trim() || "Unknown");
-      const dataPoints = filtered.map(row => Number(row[totalKey]) || 0);
-      datasets = [{
-        label: `Total Sales${selectedProduct ? ": " + selectedProduct : ""}`,
-        data: dataPoints,
-        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
-        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
-        borderWidth: 2,
-        borderRadius: 6
-      }];
-    }
-
-    else if (type === "monthlyTotal") {
-      const monthMap = {};
-      fullData.forEach(row => {
-        const raw = row[monthKey];
-const date = new Date(raw);
-const month = isNaN(date) ? (raw?.toString().trim()) : date.toLocaleString('default', { month: 'long' });
-
-        const total = Number(row[totalKey]);
-        if (month && !isNaN(total)) {
-          monthMap[month] = (monthMap[month] || 0) + total;
-        }
-      });
-
-      const monthOrder = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-      ];
-
-      labels = Object.keys(monthMap).sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
-      const dataPoints = labels.map(month => monthMap[month]);
-
-      datasets = [{
-        label: "Monthly Total Sales",
-        data: dataPoints,
-        backgroundColor: dataPoints.map((_, i) => colors[i % colors.length]),
-        borderColor: dataPoints.map((_, i) => colors[i % colors.length].replace('0.7', '1')),
-        borderWidth: 2,
-        borderRadius: 6
-      }];
-    }
-
-    else if (type === "topQty") {
-      const qtyMap = {};
-      fullData.forEach(row => {
-        const title = row[titleKey];
-        const qty = Number(row[qtyKey]);
-        qtyMap[title] = (qtyMap[title] || 0) + qty;
-      });
-      labels = Object.keys(qtyMap);
-      const dataPoints = Object.values(qtyMap);
-      datasets = [{
-        label: "Top-Selling Items by Quantity",
-        data: dataPoints,
-        backgroundColor: colors
-      }];
-    }
-
-    else if (type === "topTotal") {
-      const totalMap = {};
-      fullData.forEach(row => {
-        const title = row[titleKey];
-        const total = Number(row[totalKey]);
-        totalMap[title] = (totalMap[title] || 0) + total;
-      });
-      labels = Object.keys(totalMap);
-      const dataPoints = Object.values(totalMap);
-      datasets = [{
-        label: "Top-Selling Items by Revenue",
-        data: dataPoints,
-        backgroundColor: colors
-      }];
-    }
-
-    else if (type === "deliveryPerformance") {
-      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row[titleKey];
-        if (!grouped[name]) grouped[name] = { ordered: 0, delivered: 0 };
-        grouped[name].ordered += Number(row[qtyKey]) || 0;
-        grouped[name].delivered += Number(row[delKey]) || 0;
-      });
-      labels = Object.keys(grouped);
-      datasets = [
-        {
-          label: "Ordered",
-          data: labels.map(name => grouped[name].ordered),
-          backgroundColor: colors[0]
-        },
-        {
-          label: "Delivered",
-          data: labels.map(name => grouped[name].delivered),
-          backgroundColor: colors[1]
-        }
-      ];
-    }
-
-    else if (type === "deliveryBreakdown") {
-      const filtered = selectedProduct ? fullData.filter(row => row[titleKey] === selectedProduct) : fullData;
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row[titleKey];
-        if (!grouped[name]) grouped[name] = { delivered: 0, balance: 0, cancelled: 0 };
-        grouped[name].delivered += Number(row[delKey]) || 0;
-        grouped[name].balance += Number(row[balKey]) || 0;
-        grouped[name].cancelled += Number(row[cancelKey]) || 0;
-      });
-      labels = Object.keys(grouped);
-      datasets = [
-        {
-          label: "Delivered",
-          data: labels.map(name => grouped[name].delivered),
-          backgroundColor: colors[0]
-        },
-        {
-          label: "Balance",
-          data: labels.map(name => grouped[name].balance),
-          backgroundColor: colors[1]
-        },
-        {
-          label: "Cancelled",
-          data: labels.map(name => grouped[name].cancelled),
-          backgroundColor: colors[2]
-        }
-      ];
-    }
-
-    else if (type === "deliveryPie") {
-      let totalDelivered = 0, totalBalance = 0, totalCancelled = 0;
-      fullData.forEach(row => {
-        totalDelivered += Number(row[delKey]) || 0;
-        totalBalance += Number(row[balKey]) || 0;
-        totalCancelled += Number(row[cancelKey]) || 0;
-      });
-      labels = ["Delivered", "Balance", "Cancelled"];
-      const dataPoints = [totalDelivered, totalBalance, totalCancelled];
-      datasets = [{
-        label: "Delivery Status",
-        data: dataPoints,
-        backgroundColor: colors.slice(0, 3)
-      }];
-    }
-
-    chart = new Chart(ctx, {
-      type: selectedStyle,
-      data: { labels: labels, datasets: datasets },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: document.getElementById('chartType').selectedOptions[0].text,
-            font: { size: 18, weight: 'bold' }
-          },
-          legend: { display: true }
-        },
-        scales: (selectedStyle === 'pie' || selectedStyle === 'doughnut') ? {} : {
-          x: { stacked: true, ticks: { font: { size: 12 } } },
-          y: { beginAtZero: true, stacked: true, title: { display: true, text: 'Quantity' } }
-        }
-      }
+      return row;
     });
+
+    try {
+      await saveOrdersToFirestore(currentUserId, fullData);
+      console.log("Data saved to Firestore.");
+      await loadOrdersFromFirestore(currentUserId); // ✅ Reload from Firestore
+    } catch (error) {
+      console.error("Error saving to Firestore:", error);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const btnShowUpdate = document.getElementById('btnShowUpdate');
+const updateOrderModal = new bootstrap.Modal(document.getElementById('updateOrderModal'));
+const modalOrderNumber = document.getElementById('modalOrderNumber');
+const saveUpdateBtn = document.getElementById('saveUpdateBtn');
+
+
+
+
+
+
+
+
+
+// On confirm, update selected columns and re-render table
+confirmColumnsBtn.addEventListener('click', () => {
+  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
+  selectedColumns = Array.from(checkboxes)
+                         .filter(cb => cb.checked)
+                         .map(cb => cb.value);
+
+  if (selectedColumns.length === 0) {
+    alert('Select at least one column to display.');
+    return;
   }
+
+  customizeTableModal.hide();          // ✅ Close modal
+  populateTable(fullData);             // ✅ Re-render table with new columns
+});
+
+
+// Modify populateTable to respect selectedColumns
+
+function populateTable(data) {
+  console.log("🚀 Populating table with data:", data);
+
+  const tbody = document.getElementById('orderTableBody');
+  const thead = document.getElementById('orderTableHead');
+
+  if (!tbody || !thead) {
+    console.error("❌ Table elements not found.");
+    return;
+  }
+
+  tbody.innerHTML = '';
+  thead.innerHTML = '';
+
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("⚠️ No data to populate in table.");
+    return;
+  }
+
+  // ✅ Load or initialize selectedColumns
+  if (!Array.isArray(selectedColumns) || selectedColumns.length === 0) {
+    const storedSelected = localStorage.getItem('selectedColumns');
+    if (storedSelected) {
+      try {
+        selectedColumns = JSON.parse(storedSelected);
+        // Filter to remove outdated columns
+        selectedColumns = selectedColumns.filter(col => Object.keys(data[0]).includes(col));
+      } catch (e) {
+        selectedColumns = Object.keys(data[0]).filter(key => key);
+      }
+    } else {
+      selectedColumns = Object.keys(data[0]).filter(key => key);
+    }
+  }
+
+  // ✅ Fallback if filtered columns are now empty
+  if (!selectedColumns || selectedColumns.length === 0) {
+    selectedColumns = Object.keys(data[0]).filter(key => key);
+  }
+
+  const columns = selectedColumns;
+
+  // ✅ Build header
+  const headerRow = document.createElement('tr');
+  columns.forEach((col) => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    th.setAttribute('draggable', true);
+    th.dataset.columnName = col;
+
+    const resizer = document.createElement('div');
+    resizer.classList.add('resizer');
+    th.appendChild(resizer);
+
+    if (typeof enableResize === 'function') enableResize(th, resizer);
+
+    th.addEventListener('dragstart', handleDragStart);
+    th.addEventListener('dragover', handleDragOver);
+    th.addEventListener('drop', handleDrop);
+
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // ✅ Build rows
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      let value = row[col] ?? '';
+
+      if (typeof value === 'object') {
+        value = JSON.stringify(value);
+      }
+
+      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
+        value = Number(value || 0).toFixed(2);
+      }
+
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  console.log("✅ Table populated with", data.length, "rows.");
+}
+
+
+
+
+
+
+
+
+
+
+function handleDragStart(e) {
+  draggedColumnName = e.target.dataset.columnName;
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const dropColumnName = e.target.closest('th')?.dataset.columnName;
+  if (!draggedColumnName || !dropColumnName || draggedColumnName === dropColumnName) return;
+
+  const fromIndex = selectedColumns.indexOf(draggedColumnName);
+  const toIndex = selectedColumns.indexOf(dropColumnName);
+
+  if (fromIndex === -1 || toIndex === -1) return;
+
+  const [moved] = selectedColumns.splice(fromIndex, 1);
+  selectedColumns.splice(toIndex, 0, moved);
+
+  // Update fullColumnOrder accordingly
+  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
+
+  localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+  localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+
+  populateTable(fullData);
+}
+
+
+
+
+function enableResize(th, resizer) {
+  let startX, startWidth;
+
+  resizer.addEventListener('mousedown', function (e) {
+    startX = e.pageX;
+    startWidth = th.offsetWidth;
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    e.preventDefault();
+  });
+
+  function onMouseMove(e) {
+    const newWidth = startWidth + (e.pageX - startX);
+    th.style.width = newWidth + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+// Form fields inside modal
+const updateProduct = document.getElementById('updateProduct');
+const updateQtyOrdered = document.getElementById('updateQtyOrdered');
+const updateQtyDelivered = document.getElementById('updateQtyDelivered');
+const updateQtyCancelled = document.getElementById('updateQtyCancelled');
+const updateUnitPrice = document.getElementById('updateUnitPrice');
+const updateRemarks = document.getElementById('updateRemarks');
+
+let currentOrderId = null;
+let currentItem = null;
+
+
+
+
+
+
+
+
+btnShowUpdate.addEventListener('click', () => {
+  // Ask for Order ID with prompt
+  const orderId = prompt("Enter Order ID to update:");
+  if (!orderId) {
+    alert("No Order ID entered.");
+    return;
+  }
+
+  // Search order by ID
+  const matchingItems = fullData.filter(item => item["Number"] && item["Number"].toString() === orderId);
+
+  if (matchingItems.length === 0) {
+    alert("No order found with this ID.");
+    return;
+  }
+
+  currentOrderId = orderId;
+  currentItem = [...matchingItems]; // store full array
+modalOrderNumber.textContent = orderId;
+
+// Clear any previous rows in modal
+const tableBody = document.getElementById("multiItemTableBody");
+tableBody.innerHTML = "";
+
+// Inject a row per item
+matchingItems.forEach((item, index) => {
+  const row = document.createElement("tr");
+ row.innerHTML = `
+  <td><input type="text" class="form-control" value="${item["Description"] || ''}" data-field="Description" data-index="${index}" /></td>
+  <td><input type="number" class="form-control" value="${item["Quantity Ordered"] || 0}" data-field="Quantity Ordered" data-index="${index}" /></td>
+  <td><input type="number" class="form-control" value="${item["Quantity Delivered"] || 0}" data-field="Quantity Delivered" data-index="${index}" /></td>
+  <td><input type="number" class="form-control" value="${item["Quantity Cancelled"] || 0}" data-field="Quantity Cancelled" data-index="${index}" /></td>
+  <td><input type="number" class="form-control" value="${item["Unit Price"] || 0}" step="0.01" data-field="Unit Price" data-index="${index}" /></td>
+  <td><input type="text" class="form-control" value="${item["REMARKS"] || ''}" data-field="REMARKS" data-index="${index}" /></td>
+`;
+
+  tableBody.appendChild(row);
+});
+
+
+  updateOrderModal.show();
+});
+
+// You can now remove the old btnSearchOrder listener since the search happens on btnShowUpdate
+
+saveUpdateBtn.addEventListener('click', () => {
+  if (!currentUserId) {
+    alert('User not authenticated');
+    return;
+  }
+
+  if (!currentOrderId || !currentItem || !Array.isArray(currentItem)) {
+    alert('No order loaded');
+    return;
+  }
+
+  // Loop through each row to gather updated values
+  const inputs = document.querySelectorAll('#multiItemTableBody input');
+  inputs.forEach(input => {
+    const index = parseInt(input.dataset.index);
+    const field = input.dataset.field;
+    let value = input.value;
+
+    if (["Quantity Ordered", "Quantity Delivered", "Quantity Cancelled", "Unit Price"].includes(field)) {
+      value = Number(value) || 0;
+    }
+
+    currentItem[index][field] = value;
+  });
+
+  // Recalculate balance and update Firestore
+  saveUpdateBtn.disabled = true;
+  saveUpdateBtn.textContent = "Saving...";
+
+  const batch = firestore.batch();
+
+  currentItem.forEach(item => {
+    item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
+    const docRef = firestore.collection("orders")
+      .doc(currentUserId)
+      .collection("userOrders")
+      .doc(item["docId"]);
+
+    console.log("Updating document:", item["docId"]); // <-- Log docId before update
+
+    batch.update(docRef, item);
+  });
+
+  batch.commit()
+    .then(() => {
+      alert("Order items updated successfully.");
+
+      // Update fullData in memory
+      currentItem.forEach(updated => {
+        const index = fullData.findIndex(item => item["ID"] === updated["ID"] || item["docId"] === updated["docId"]);
+        if (index !== -1) {
+          fullData[index] = { ...updated };
+        }
+      });
+
+      populateTable(fullData);
+      updateSummary(fullData);
+      updateOrderModal.hide();
+    })
+    .catch(error => {
+      console.error("Update failed:", error);
+      alert("Failed to update. See console for details.");
+    })
+    .finally(() => {
+      saveUpdateBtn.disabled = false;
+      saveUpdateBtn.textContent = "Save";
+    });
+});
+
+
+
+async function saveOrdersToFirestore(userId, ordersArray) {
+  console.log("Saving to Firestore:", ordersArray); // ✅ log this
+
+  const batch = firestore.batch();
+  const ordersCollection = firestore.collection('orders').doc(userId).collection('userOrders');
+
+  // Optional: delete existing first (up to 500 only)
+  const existingOrders = await ordersCollection.get();
+  existingOrders.forEach(doc => batch.delete(doc.ref));
+
+  ordersArray.forEach((order, index) => {
+    const uniqueId = `${order.Number || 'order'}-${index}`;
+    order["docId"] = uniqueId;
+    const docRef = ordersCollection.doc(uniqueId);
+    batch.set(docRef, order);
+  });
+
+  await batch.commit();
+}
+
+
+
+
+
+
+
+  function determineStatus(row) {
+    const delivered = Number(row["Quantity Delivered"] || 0);
+    const ordered = Number(row["Quantity Ordered"] || 0);
+    const cancelled = Number(row["Quantity Cancelled"] || 0);
+
+    if (cancelled > 0) return 'Cancelled';
+    if (delivered === ordered && ordered > 0) return 'Delivered';
+    if (delivered > 0 && delivered < ordered) return 'Partial';
+    return 'Pending';
+  }
+
+
+
+  function getStatusClass(status) {
+    const s = status.toLowerCase();
+    return s === 'delivered' ? 'status-delivered' :
+           s === 'cancelled' ? 'status-cancelled' :
+           s === 'partial' ? 'status-partial' : '';
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    let d;
+
+    if (typeof value === 'string') {
+      const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      d = match ? new Date(match[3], match[1] - 1, match[2]) : new Date(value);
+    } else if (!isNaN(value)) {
+      d = new Date(Date.UTC(1899, 11, 30) + value * 86400000);
+    }
+
+    return d instanceof Date && !isNaN(d.getTime()) ? 
+      d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  }
+
+  function updateSummary(data) {
+    let delivered = 0, cancelled = 0, inProgress = 0;
+
+    data.forEach(row => {
+      const ordered = Number(row["Quantity Ordered"] || 0);
+      const deliveredQty = Number(row["Quantity Delivered"] || 0);
+      const cancelledQty = Number(row["Quantity Cancelled"] || 0);
+
+      if (cancelledQty > 0) cancelled++;
+      else if (deliveredQty === ordered && ordered > 0) delivered++;
+      else if (deliveredQty !== ordered && cancelledQty === 0) inProgress++;
+    });
+
+    document.getElementById('totalOrders').textContent = data.length;
+    document.getElementById('deliveredOrders').textContent = delivered;
+    document.getElementById('cancelledOrders').textContent = cancelled;
+    document.getElementById('partialOrders').textContent = inProgress;
+  }
+
+function filterTable() {
+  console.log('filterTable called');
+
+  const searchInput = document.getElementById('searchInput');
+  const statusSelect = document.getElementById('statusFilter');
+
+  const search = (searchInput?.value || '').toLowerCase();
+  const statusFilter = (statusSelect?.value || '').toLowerCase();
+
+  console.log('Search:', search, 'Status filter:', statusFilter);
+
+  const filtered = fullData.filter(row => {
+    const customerRaw = row["Customer"] ?? row["Supplier"] ?? '';
+    const productRaw = row["Product"] ?? row["Description"] ?? '';
+
+    const customer = String(customerRaw).toLowerCase();
+    const product = String(productRaw).toLowerCase();
+
+    let status = '';
+    try {
+      status = determineStatus(row).toLowerCase();
+    } catch (err) {
+      console.warn("Invalid row during status determination:", row, err);
+    }
+
+    return (customer.includes(search) || product.includes(search)) &&
+           (!statusFilter || status === statusFilter);
+  });
+
+  console.log('Filtered data count:', filtered.length);
+
+  populateTable(filtered);
+  updateSummary(filtered);
+}
+
+
+
+  function submitRemarks() {
+    const newText = document.getElementById('newRemarks').value.trim();
+    const orderId = currentEditingOrderId;
+
+    if (!orderId || !currentUserId) return;
+
+    firestore.collection('orders').doc(currentUserId).collection('userOrders').doc(orderId)
+      .update({ REMARKS: newText })
+      .then(() => {
+        // Update local data and UI
+        const row = fullData.find(r => r["Number"] == orderId);
+        if (row) row["REMARKS"] = newText;
+        populateTable(fullData);
+        console.log('Remarks updated in Firestore');
+      })
+      .catch(err => console.error('Error updating remarks:', err));
+
+    const modalEl = document.getElementById('editModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+  }
+
+
+function renderCharts(data) {
+  const currency = document.getElementById("currencySelector")?.value || "ALL";
+
+// chart1Type and chart2Type are already defined globally and updated
+
+  // 📦 Monthly Revenue per currency
+  const monthlySales = {};
+  const monthlyOrders = {};
+
+  data.forEach(order => {
+    const orderDate = order["Order Date"];
+    const orderCurrency = order["Currency"] || "PHP";
+    const unitPrice = parseFloat(order["Unit Price"] || 0);
+    const qty = parseFloat(order["Quantity Ordered"] || 0);
+
+    if (!orderDate || isNaN(unitPrice) || isNaN(qty)) return;
+
+    const date = new Date(orderDate);
+    const monthYear = date.toLocaleString("default", { month: "short", year: "numeric" });
+
+    // Monthly Revenue
+    if (currency === "ALL" || currency === orderCurrency) {
+      monthlySales[monthYear] = (monthlySales[monthYear] || 0) + qty * unitPrice;
+    }
+
+    // Monthly Order Count (always counts all regardless of currency filter)
+    monthlyOrders[monthYear] = (monthlyOrders[monthYear] || 0) + 1;
+  });
+
+  const labels = [...new Set([...Object.keys(monthlySales), ...Object.keys(monthlyOrders)])].sort((a, b) => {
+    return new Date(a) - new Date(b);
+  });
+
+  const salesData = labels.map(month => monthlySales[month] || 0);
+  const ordersData = labels.map(month => monthlyOrders[month] || 0);
+
+  // 💸 Monthly Revenue Chart
+  const salesCtx = document.getElementById("chartCanvas").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+  const isAreaChart = chart1Type === 'area';
+const actualChartType = chart1Type === 'area' ? 'line' : chart1Type;
+
+chartInstance = new Chart(salesCtx, {
+  type: actualChartType,
+
+  data: {
+    labels,
+    datasets: [{
+      label: `Monthly Sales (${currency})`,
+      data: salesData,
+      borderColor: "#007aff",
+      backgroundColor: isAreaChart ? "rgba(0,122,255,0.2)" : "transparent",
+      fill: isAreaChart,
+      tension: 0.4,
+      borderWidth: 2.5,
+      pointRadius: 4
+    }]
+  },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${currency} ${ctx.parsed.y.toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: val => `${currency} ${val.toLocaleString()}`
+          }
+        }
+      }
+    }
+  });
+
+  // 🧾 Orders Issued Chart
+  const ordersCtx = document.getElementById("ordersIssuedChart").getContext("2d");
+  if (ordersChartInstance) ordersChartInstance.destroy();
+const isOrdersArea = chart2Type === 'area';
+const actualOrdersChartType = isOrdersArea ? 'line' : chart2Type;
+
+ordersChartInstance = new Chart(ordersCtx, {
+  type: actualOrdersChartType,
+
+
+    data: {
+      labels,
+      datasets: [{
+  label: "Orders Issued",
+  data: ordersData,
+  backgroundColor: isOrdersArea ? "rgba(52, 199, 89, 0.3)" : "#34c759",
+  borderColor: "#34c759",
+  fill: isOrdersArea, // This fills the area under the line only if it's an area chart
+  tension: 0.4,
+  borderWidth: 2.5,
+  pointRadius: 4,
+  borderRadius: isOrdersArea ? 0 : 8  // Only apply borderRadius if bar chart
+}]
+
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y} Orders`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+
+
+
+// 🎛️ Customize Chart Modal Functionality
+document.getElementById('btnCustomizeCharts').addEventListener('click', () => {
+  // Load stored values or set default
+  const storedChart1 = localStorage.getItem('chart1Type') || 'line';
+  const storedChart2 = localStorage.getItem('chart2Type') || 'bar';
+
+  document.getElementById('chart1Type').value = storedChart1;
+  document.getElementById('chart2Type').value = storedChart2;
+
+  const modal = new bootstrap.Modal(document.getElementById('customizeChartModal'));
+  modal.show();
+});
+
+document.getElementById('confirmChartChoices').addEventListener('click', () => {
+chart1Type = document.getElementById('chart1Type').value;
+chart2Type = document.getElementById('chart2Type').value;
+
+localStorage.setItem('chart1Type', chart1Type);
+localStorage.setItem('chart2Type', chart2Type);
+
+renderCharts(fullData);
+
+
+  const modalEl = document.getElementById('customizeChartModal');
+  const modal = bootstrap.Modal.getInstance(modalEl);
+  modal.hide();
+});
+
+
+
+
+
+
+
+
+
+
+document.getElementById("currencySelector").addEventListener("change", () => {
+  renderCharts(fullData);
+});
+
+
+
+document.getElementById("btnDownloadExcel").addEventListener("click", () => {
+  const tableBody = document.getElementById("orderTableBody");
+  if (!tableBody) return;
+
+  const rows = Array.from(tableBody.querySelectorAll("tr"));
+  if (rows.length === 0) {
+    alert("No rows available to export.");
+    return;
+  }
+
+  const exportData = rows.map(row => {
+    const cells = row.querySelectorAll("td");
+    const rowData = {};
+
+    selectedColumns.forEach((col, index) => {
+      rowData[col] = cells[index]?.textContent?.trim() || "";
+    });
+
+    return rowData;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "FilteredOrders");
+
+  const fileName = `Filtered_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+});
+
+
+
+
+
+ document.getElementById("logoutBtn").addEventListener("click", () => {
+    firebase.auth().signOut()
+      .then(() => {
+        // Redirect to login/index after logout
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        console.error("Logout error:", error.message);
+        alert("Failed to logout. Please try again.");
+      });
+  });
+
+
 </script>
+
 
 
 
