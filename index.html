@@ -1,109 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign Up - Order Monitoring</title>
-
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-      background: #f5f7fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 320px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 24px;
-      font-weight: 600;
-      color: #333;
-    }
-    input[type="text"],
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 14px;
-      margin: 10px 0 20px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="password"]:focus {
-      border-color: #0071e3;
-      outline: none;
-      box-shadow: 0 0 6px #0071e3;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      background-color: #0071e3;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #005bb5;
-    }
-    .message {
-      margin-top: 16px;
-      color: red;
-      font-size: 14px;
-      height: 18px;
-    }
-    .success {
-      color: green;
-    }
-    .redirect-login {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #666;
-    }
-    .redirect-login a {
-      color: #0071e3;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .redirect-login a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up – Order Monitoring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="h-full">
+  <div class="flex h-screen overflow-hidden">
 
-  <div class="container">
-    <h2>Create your account</h2>
-    <form id="signupForm" novalidate>
-      <input type="text" id="fullName" placeholder="Full Name" required />
-      <input type="email" id="email" placeholder="Email address" required />
-      <input type="password" id="password" placeholder="Password" required minlength="6" />
-      <input type="password" id="confirmPassword" placeholder="Confirm password" required minlength="6" />
-      <button type="submit">Sign Up</button>
-    </form>
-    <div class="message" id="errorMessage"></div>
-    <div class="redirect-login">
-      Already have an account? <a href="loginindex.html">Log in</a>
+    <!-- Left Panel -->
+    <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 text-white items-center justify-center px-12">
+      <div class="max-w-md text-center animate-fadeIn">
+        <h1 class="text-4xl font-bold mb-4 leading-tight">Join Our Team</h1>
+        <p class="text-lg mb-6">Sign up and start monitoring your orders with ease and confidence.</p>
+        <img src="https://images.unsplash.com/photo-1630699689301-2b2632ec30e4?auto=format&fit=crop&w=700&q=80"
+             alt="Signup Banner"
+             class="rounded-xl shadow-lg max-w-full" />
+      </div>
+    </div>
+
+    <!-- Right Panel: Sign Up Form -->
+    <div class="flex flex-col justify-center items-center w-full lg:w-1/2 px-6 lg:px-24">
+      <div class="w-full max-w-md space-y-8">
+        <div>
+          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <p class="mt-2 text-center text-sm text-gray-600">Please fill in the details below</p>
+        </div>
+
+        <form id="signupForm" class="space-y-6">
+          <div class="space-y-4">
+            <div>
+              <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+              <input id="fullName" name="fullName" type="text" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+              <input id="email" name="email" type="email" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+              <input id="password" name="password" type="password" required minlength="6"
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <div>
+              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+              <input id="confirmPassword" name="confirmPassword" type="password" required minlength="6"
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+          </div>
+
+          <p id="errorMessage" class="text-center text-sm mt-2 text-red-600"></p>
+
+          <div>
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium">
+              Sign Up
+            </button>
+          </div>
+        </form>
+
+        <div class="text-center text-sm mt-6">
+          Already have an account?
+          <a href="login.html" class="text-blue-600 hover:text-blue-500 font-medium">Back to Login</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase Signup Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
@@ -113,12 +83,10 @@
       apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
       authDomain: "order-monitoring-purchasing.firebaseapp.com",
       projectId: "order-monitoring-purchasing",
-      storageBucket: "order-monitoring-purchasing.firebasestorage.app",
+      storageBucket: "order-monitoring-purchasing.appspot.com",
       messagingSenderId: "209378598320",
-      appId: "1:209378598320:web:0c143d69bc329a994d8a75",
-      measurementId: "G-PPNWT4ECV0"
+      appId: "1:209378598320:web:0c143d69bc329a994d8a75"
     };
-
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -130,7 +98,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorMessage.textContent = '';
-      errorMessage.classList.remove('success');
+      errorMessage.classList.remove('text-green-600', 'text-red-600');
 
       const fullName = form.fullName.value.trim();
       const email = form.email.value.trim();
@@ -139,35 +107,36 @@
 
       if (!fullName) {
         errorMessage.textContent = "Please enter your full name.";
+        errorMessage.classList.add('text-red-600');
         return;
       }
 
       if (password !== confirmPassword) {
-        errorMessage.textContent = "Passwords do not match.";
+        errorMessage.textContent = "❌ Passwords do not match.";
+        errorMessage.classList.add('text-red-600');
         return;
       }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCred.user;
 
         await setDoc(doc(db, "users", user.uid), {
-          fullName: fullName,
-          email: user.email,
+          fullName,
+          email,
           createdAt: new Date().toISOString(),
           approved: false,
           role: "user"
         });
 
-        errorMessage.textContent = "Signup successful! Please wait for admin approval.";
-        errorMessage.classList.add('success');
-
+        errorMessage.textContent = "✅ Signup successful! Please wait for admin approval.";
+        errorMessage.classList.add('text-green-600');
         form.reset();
-      } catch (error) {
-        errorMessage.textContent = error.message;
+      } catch (err) {
+        errorMessage.textContent = err.message;
+        errorMessage.classList.add('text-red-600');
       }
     });
   </script>
-
 </body>
 </html>
