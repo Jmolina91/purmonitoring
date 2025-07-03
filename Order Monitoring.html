@@ -225,7 +225,10 @@ table {
   max-height: 600px;
   overflow-y: auto;
   border-radius: 0 0 16px 16px;
+  position: relative; /* ✅ add this */
+  z-index: 1;          /* ✅ to establish stacking context */
 }
+
 
 /* Table */
 .apple-table {
@@ -247,10 +250,11 @@ table {
   padding: 0.85rem 1.2rem;
   border-bottom: 1px solid #d1d1d6;
   backdrop-filter: blur(12px);
-  z-index: 5;
+  z-index: 10; /* ✅ make sure this is high */
   white-space: nowrap;
   text-align: left;
 }
+
 
 /* Table Rows */
 .apple-table tbody tr:hover {
@@ -283,6 +287,11 @@ table {
   left: 0;
   background: #f8f9fb;
   z-index: 3;
+}
+
+
+.apple-table thead th:first-child {
+  z-index: 11; /* higher than normal header row and left column */
 }
 
 
@@ -418,6 +427,103 @@ table {
   stroke: #1c1c1e;
 }
 
+
+/* World-Class Apple-Inspired Table Design */
+.apple-style-report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.apple-style-report-table thead th {
+  background: linear-gradient(to bottom, #f9f9fb, #e8e8f0);
+  color: #1c1c1e;
+  font-weight: 600;
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid #d1d1d6;
+  letter-spacing: 0.3px;
+  font-size: 0.96rem;
+}
+
+.apple-style-report-table tbody td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #eaeaf0;
+  color: #2c2c2e;
+  vertical-align: middle;
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
+}
+
+.apple-style-report-table tbody tr:nth-child(even) td {
+  background-color: #fafafa;
+}
+
+.apple-style-report-table tbody tr:hover td {
+  background-color: #f2f2f7;
+  cursor: pointer;
+}
+
+.apple-style-report-table .text-success {
+  color: #30d158;
+  font-weight: 600;
+}
+
+.apple-style-report-table .text-danger {
+  color: #ff3b30;
+  font-weight: 600;
+}
+
+.apple-style-report-table .text-warning {
+  color: #ff9f0a;
+  font-weight: 600;
+}
+
+/* Updated Remarks Column Styling for Full Visibility */
+.apple-style-report-table td.remarks-cell {
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* For resizable column headers */
+.resizable-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 10px;
+}
+
+.resizable-header::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+
+
+
+
+
+
+
+
 .apple-footer {
   background: linear-gradient(to top, #f2f2f7, #ffffff);
   padding: 40px 20px 20px;
@@ -477,30 +583,50 @@ table {
 
 </head>
 <body>
+ 
   <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">📦 Order Monitor</a>
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
-<li class="nav-item">
-  <a class="nav-link" href="#" id="toggleSidebar">Update</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">📦 Order Monitor</a>
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" id="toggleSidebar">Update</a></li>
+
+      <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Generate Report
+  </a>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
+    <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
+  </ul>
 </li>
 
-      </ul>
-      
-      <span id="userEmailDisplay" class="navbar-text text-white ms-auto"></span>
-    </div>
+</li>
 
-     <button id="logoutBtn" class="apple-logout-btn">
-  <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 002 2h3a2 2 0 002-2V7a2 2 0 00-2-2h-3a2 2 0 00-2 2v1" />
-  </svg>
+    </ul>
 
-  Logout
-</button>
-  </nav>
+<!-- MY ACCOUNT DROPDOWN MENU -->
+<div class="dropdown ms-auto">
+  <button class="btn btn-outline-light dropdown-toggle" type="button" id="myAccountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+    My Account
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="myAccountDropdown">
+    <li>
+      <span class="dropdown-item-text">
+        <strong>Name:</strong><br>
+        <span id="userEmailDisplay">Loading...</span>
+      </span>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+  </ul>
+</div>
+
+  </div>
+</nav>
+
 
   <!-- SIDEBAR -->
 <div id="functionSidebar" class="sidebar hidden">
@@ -648,6 +774,9 @@ table {
 
 
 
+
+
+
 <!-- 🍏 Apple-Style Order Table -->
 <div class="container-fluid p-0 mb-5">
   <div class="apple-card">
@@ -727,6 +856,89 @@ table {
       </div>
     </div>
   </div>
+
+
+
+
+
+
+
+<!-- Supplier Selection Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reportModalLabel">Select Supplier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <select id="supplierDropdown" class="form-select mb-3">
+          <option value="" disabled selected>Select a supplier</option>
+          <!-- Populated by JS -->
+        </select>
+        <button class="btn btn-primary w-100" id="generateFollowUpReport">Generate Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- Report Output Modal -->
+<div class="modal fade" id="reportOutputModal" tabindex="-1" aria-labelledby="reportOutputModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content rounded-4 shadow-lg border-0">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          📄 Follow-Up Report for <span id="selectedSupplierName"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- ✅ Download Button -->
+        <div class="d-flex justify-content-end mb-3">
+          <button id="downloadFollowUpReport" class="btn btn-outline-success rounded-pill px-4">
+            ⬇️ Download Report
+          </button>
+        </div>
+
+        <!-- ✅ Report Table -->
+        <div class="table-responsive">
+          <table class="table apple-style-report-table" id="followUpReportTable">
+            <thead>
+              <tr>
+                <th><div class="resizable-header">Order Number</div></th>
+                <th><div class="resizable-header">Product</div></th>
+                <th><div class="resizable-header">Qty Ordered</div></th>
+                <th><div class="resizable-header">Qty Delivered</div></th>
+                <th><div class="resizable-header">Qty Cancelled</div></th>
+                <th><div class="resizable-header">Balance</div></th>
+                <th><div class="resizable-header">Need By Date</div></th>
+                <th><div class="resizable-header">Remarks</div></th>
+              </tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -828,6 +1040,21 @@ const customizeTableModal = new bootstrap.Modal(document.getElementById('customi
 const columnCheckboxContainer = document.getElementById('columnCheckboxContainer');
 const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
 const updateNavLink = document.getElementById("toggleSidebar");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   let fullData = [];
@@ -1001,24 +1228,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUserId = user.uid;
+
+    // Fetch fullName from Firestore compat
+    firestore.collection('users')
+      .doc(currentUserId)
+      .get()
+      .then(docSnap => {
+        const nameElem = document.getElementById('userEmailDisplay');
+        if (nameElem) {
+          const data = docSnap.exists && docSnap.data();
+          nameElem.textContent = data?.fullName || user.email;
+        }
+      })
+      .catch(err => console.error("Error fetching profile:", err));
+
+    // Then load your orders
+    loadOrdersFromFirestore(currentUserId);
+
+  } else {
+    window.location.href = "login.html";
+  }
+});
 
 
-
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUserId = user.uid;
-
-      // Display user email in navbar (make sure you have element with this ID)
-      const emailElem = document.getElementById('userEmailDisplay');
-      if(emailElem) emailElem.textContent = user.email || 'User';
-
-      // Load orders from Firestore collection
-      loadOrdersFromFirestore(currentUserId);
-    } else {
-      // If no user, redirect to login
-      window.location.href = "login.html";
-    }
-  });
 
   document.getElementById('excelFile').addEventListener('change', handleFile, false);
   document.getElementById('searchInput').addEventListener('input', filterTable);
@@ -1369,8 +1604,8 @@ matchingItems.forEach((item, index) => {
   <td><input type="number" class="form-control" value="${item["Quantity Delivered"] || 0}" data-field="Quantity Delivered" data-index="${index}" /></td>
   <td><input type="number" class="form-control" value="${item["Quantity Cancelled"] || 0}" data-field="Quantity Cancelled" data-index="${index}" /></td>
   <td><input type="number" class="form-control" value="${item["Unit Price"] || 0}" step="0.01" data-field="Unit Price" data-index="${index}" /></td>
-  <td><input type="text" class="form-control" value="${item["REMARKS"] || ''}" data-field="REMARKS" data-index="${index}" /></td>
-`;
+  <td><input type="text" class="form-control" value="${item["Remarks"] || ''}" data-field="Remarks" data-index="${index}" /></td>
+`;	
 
   tableBody.appendChild(row);
 });
@@ -1413,16 +1648,22 @@ saveUpdateBtn.addEventListener('click', () => {
   const batch = firestore.batch();
 
   currentItem.forEach(item => {
-    item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
-    const docRef = firestore.collection("orders")
-      .doc(currentUserId)
-      .collection("userOrders")
-      .doc(item["docId"]);
+  item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
 
-    console.log("Updating document:", item["docId"]); // <-- Log docId before update
+  if (!item["docId"]) {
+    console.error("❌ Missing docId for item:", item);
+    return;
+  }
 
-    batch.update(docRef, item);
-  });
+  const docRef = firestore.collection("orders")
+    .doc(currentUserId)
+    .collection("userOrders")
+    .doc(item["docId"]);
+
+  console.log("✅ Updating document:", item["docId"]);
+  batch.update(docRef, item);
+});
+
 
   batch.commit()
     .then(() => {
@@ -1430,7 +1671,9 @@ saveUpdateBtn.addEventListener('click', () => {
 
       // Update fullData in memory
       currentItem.forEach(updated => {
-        const index = fullData.findIndex(item => item["ID"] === updated["ID"] || item["docId"] === updated["docId"]);
+        const index = fullData.findIndex(item => item["docId"] === updated["docId"]);
+
+
         if (index !== -1) {
           fullData[index] = { ...updated };
         }
@@ -1814,6 +2057,158 @@ document.getElementById("btnDownloadExcel").addEventListener("click", () => {
         alert("Failed to logout. Please try again.");
       });
   });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // STEP 1: When user clicks "📄 To Follow-Up Report"
+  document.getElementById("toFollowUpBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // Populate Supplier Dropdown
+    const dropdown = document.getElementById("supplierDropdown");
+    dropdown.innerHTML = '<option value="" disabled selected>Select a supplier</option>';
+
+    const suppliers = [...new Set(fullData.map(item => item["Supplier"]).filter(Boolean))];
+    suppliers.forEach(supplier => {
+      const option = document.createElement("option");
+      option.value = supplier;
+      option.textContent = supplier;
+      dropdown.appendChild(option);
+    });
+
+    // Show Supplier Selection Modal
+    const supplierModal = new bootstrap.Modal(document.getElementById("reportModal"));
+    supplierModal.show();
+  });
+
+  // STEP 2: When user clicks "Generate Report" button in the Supplier Modal
+  document.getElementById("generateFollowUpReport").addEventListener("click", () => {
+    const selectedSupplier = document.getElementById("supplierDropdown").value;
+    if (!selectedSupplier) return;
+
+    const reportTableBody = document.getElementById("reportTableBody");
+    const supplierNameDisplay = document.getElementById("selectedSupplierName");
+
+    const inProgressOrders = fullData.filter(order => {
+      const delivered = Number(order["Quantity Delivered"] || 0);
+      const ordered = Number(order["Quantity Ordered"] || 0);
+      const cancelled = Number(order["Quantity Cancelled"] || 0);
+      const isInProgress = cancelled === 0 && delivered < ordered;
+      return order["Supplier"] === selectedSupplier && isInProgress;
+    });
+
+    supplierNameDisplay.textContent = selectedSupplier;
+    reportTableBody.innerHTML = '';
+
+ inProgressOrders.forEach(order => {
+  const balance = (order["Quantity Ordered"] || 0) - (order["Quantity Delivered"] || 0);
+const remarks = order["Remarks"] || '';
+const row = document.createElement("tr");
+row.innerHTML = `
+  <td>${order["Number"] || ''}</td>
+  <td>${order["Product"] || order["Description"] || ''}</td>
+  <td>${order["Quantity Ordered"] || 0}</td>
+  <td>${order["Quantity Delivered"] || 0}</td>
+  <td>${order["Quantity Cancelled"] || 0}</td>
+  <td>${balance}</td>
+  <td>${order["Need By Date"] || ''}</td>
+  <td class="remarks-cell" data-full-text="${remarks.replace(/"/g, '&quot;')}">${remarks}</td>
+`;
+  reportTableBody.appendChild(row);
+});
+
+function makeTableResizable(tableSelector) {
+  const table = document.querySelector(tableSelector);
+  const thElements = table.querySelectorAll('th');
+
+  thElements.forEach((th, index) => {
+    // 🔁 Remove old resizer if it exists
+    const oldResizer = th.querySelector('.column-resizer');
+    if (oldResizer) oldResizer.remove();
+
+    const resizer = document.createElement('div');
+    resizer.classList.add('column-resizer');
+    resizer.style.width = '5px';
+    resizer.style.height = '100%';
+    resizer.style.position = 'absolute';
+    resizer.style.right = '0';
+    resizer.style.top = '0';
+    resizer.style.cursor = 'col-resize';
+    resizer.style.userSelect = 'none';
+    resizer.style.zIndex = '1';
+
+    th.style.position = 'relative';
+    th.appendChild(resizer);
+
+    resizer.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const startX = e.pageX;
+      const startWidth = th.offsetWidth;
+
+      const onMouseMove = (e) => {
+        const newWidth = startWidth + (e.pageX - startX);
+        th.style.width = `${newWidth}px`;
+        table.querySelectorAll('tr').forEach(row => {
+          const cell = row.children[index];
+          if (cell) cell.style.width = `${newWidth}px`;
+        });
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
+}
+
+// Call this after the Follow-Up Report table is generated
+makeTableResizable('.apple-style-report-table');
+
+
+
+
+function downloadTableAsCSV(tableId, filename = 'follow_up_report.csv') {
+    const table = document.getElementById(tableId);
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = rows.map(row =>
+      Array.from(row.querySelectorAll('th, td'))
+        .map(cell => `"${cell.innerText.replace(/"/g, '""')}"`)
+        .join(',')
+    ).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
+  document.getElementById("downloadFollowUpReport").addEventListener("click", () => {
+    downloadTableAsCSV("followUpReportTable");
+  });
+
+
+
+
+
+
+
+
+    // Show Follow-Up Report Output Modal
+    const reportOutputModal = new bootstrap.Modal(document.getElementById("reportOutputModal"));
+    reportOutputModal.show();
+
+    // Close Supplier Modal
+    const reportModal = bootstrap.Modal.getInstance(document.getElementById("reportModal"));
+    reportModal.hide();
+  });
+});
+
+
 
 
 </script>
