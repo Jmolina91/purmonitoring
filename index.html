@@ -6,7 +6,6 @@
   <title>Sign Up - Order Monitoring</title>
 
   <style>
-    /* Apple-style clean UI */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
         Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -30,6 +29,7 @@
       font-weight: 600;
       color: #333;
     }
+    input[type="text"],
     input[type="email"],
     input[type="password"] {
       width: 100%;
@@ -38,8 +38,9 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
-      transition: border-color 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
+    input[type="text"]:focus,
     input[type="email"]:focus,
     input[type="password"]:focus {
       border-color: #0071e3;
@@ -90,6 +91,7 @@
   <div class="container">
     <h2>Create your account</h2>
     <form id="signupForm" novalidate>
+      <input type="text" id="fullName" placeholder="Full Name" required />
       <input type="email" id="email" placeholder="Email address" required />
       <input type="password" id="password" placeholder="Password" required minlength="6" />
       <input type="password" id="confirmPassword" placeholder="Confirm password" required minlength="6" />
@@ -97,7 +99,7 @@
     </form>
     <div class="message" id="errorMessage"></div>
     <div class="redirect-login">
-      Already have an account? <a href="Loginindex.html">Log in</a>
+      Already have an account? <a href="loginindex.html">Log in</a>
     </div>
   </div>
 
@@ -107,9 +109,7 @@
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-
-    // Firebase config with placeholder for API key
- const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
       authDomain: "order-monitoring-purchasing.firebaseapp.com",
       projectId: "order-monitoring-purchasing",
@@ -120,7 +120,6 @@
     };
 
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -129,43 +128,45 @@
     const errorMessage = document.getElementById('errorMessage');
 
     form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  errorMessage.textContent = '';
-  errorMessage.classList.remove('success');
+      e.preventDefault();
+      errorMessage.textContent = '';
+      errorMessage.classList.remove('success');
 
-  const email = form.email.value.trim();
-  const password = form.password.value;
-  const confirmPassword = form.confirmPassword.value;
+      const fullName = form.fullName.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      const confirmPassword = form.confirmPassword.value;
 
-  if (password !== confirmPassword) {
-    errorMessage.textContent = "Passwords do not match.";
-    return;
-  }
+      if (!fullName) {
+        errorMessage.textContent = "Please enter your full name.";
+        return;
+      }
 
-  try {
-    console.log("Trying to create user:", email);
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    console.log("User created:", userCredential.user.uid);
+      if (password !== confirmPassword) {
+        errorMessage.textContent = "Passwords do not match.";
+        return;
+      }
 
-    await setDoc(doc(db, "users", userCredential.user.uid), {
-      email: userCredential.user.email,
-      createdAt: new Date().toISOString(),
-      approved: false,
-      role: "user"
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          fullName: fullName,
+          email: user.email,
+          createdAt: new Date().toISOString(),
+          approved: false,
+          role: "user"
+        });
+
+        errorMessage.textContent = "Signup successful! Please wait for admin approval.";
+        errorMessage.classList.add('success');
+
+        form.reset();
+      } catch (error) {
+        errorMessage.textContent = error.message;
+      }
     });
-    console.log("User data saved to Firestore");
-
-    errorMessage.textContent = "Signup successful! Please wait for admin approval.";
-    errorMessage.classList.add('success');
-
-    form.reset();
-
-  } catch (error) {
-    console.error("Signup error:", error);
-    errorMessage.textContent = error.message || "Unknown error occurred.";
-  }
-});
-
   </script>
 
 </body>
