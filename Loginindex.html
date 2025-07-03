@@ -1,128 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login - Order Monitoring</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-      background: #f5f7fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 320px;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 24px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 14px;
-      margin: 10px 0 20px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    input[type="email"]:focus,
-    input[type="password"]:focus {
-      border-color: #0071e3;
-      outline: none;
-      box-shadow: 0 0 6px #0071e3;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      background-color: #0071e3;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #005bb5;
-    }
-
-    .message {
-      margin-top: 16px;
-      color: red;
-      font-size: 14px;
-      height: 18px;
-    }
-
-    .success {
-      color: green;
-    }
-
-    .redirect-signup {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .redirect-signup a {
-      color: #0071e3;
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .redirect-signup a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – Order Monitoring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
-<body>
+<body class="h-full">
+  <div class="flex h-screen overflow-hidden">
 
-  <div class="container">
-    <h2>Login to your account</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email address" required />
-      <input type="password" id="password" placeholder="Password" required minlength="6" />
-      <button type="submit">Log In</button>
-    </form>
-    <div class="message" id="errorMessage"></div>
-    <div class="redirect-signup">
-      Don't have an account? <a href="index.html">Sign up</a>
+    <!-- Left Panel -->
+    <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 text-white items-center justify-center px-12">
+      <div class="max-w-md text-center animate-fadeIn">
+        <h1 class="text-4xl font-bold mb-4 leading-tight">Welcome Back</h1>
+        <p class="text-lg mb-6">Monitor your orders efficiently and stay on top of every transaction.</p>
+        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=700&q=80"
+             alt="Dashboard"
+             class="rounded-xl shadow-lg max-w-full" />
+      </div>
+    </div>
+
+    <!-- Right Panel: Login Form -->
+    <div class="flex flex-col justify-center items-center w-full lg:w-1/2 px-6 lg:px-24">
+      <div class="w-full max-w-md space-y-8">
+        <div>
+          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+          <p class="mt-2 text-center text-sm text-gray-600">Secure access to your dashboard</p>
+        </div>
+
+        <form id="loginForm" class="mt-8 space-y-6">
+          <div class="rounded-md shadow-sm space-y-5">
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+              <input id="email" name="email" type="email" autocomplete="email" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 shadow-sm sm:text-sm">
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 shadow-sm sm:text-sm">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input id="remember" name="remember" type="checkbox"
+                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
+            </div>
+
+            <div class="text-sm">
+              <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+              Forgot password?
+                </button>
+
+            </div>
+          </div>
+
+          <div>
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-150 ease-in-out">
+              Sign in
+            </button>
+          </div>
+        </form>
+
+        <p id="errorMessage" class="text-center text-sm text-red-600 mt-2"></p>
+
+        <div class="text-center text-sm mt-6">
+          Don't have an account?
+          <a href="signup.html" class="text-blue-600 hover:text-blue-500 font-medium">Sign up</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase Login Logic -->
+  <!-- Firebase Login Script -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-    const firebaseConfig = {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+
+       const firebaseConfig = {
       apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
       authDomain: "order-monitoring-purchasing.firebaseapp.com",
       projectId: "order-monitoring-purchasing",
       storageBucket: "order-monitoring-purchasing.appspot.com",
       messagingSenderId: "209378598320",
-      appId: "1:209378598320:web:0c143d69bc329a994d8a75",
-      measurementId: "G-PPNWT4ECV0"
+      appId: "1:209378598320:web:0c143d69bc329a994d8a75"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -131,42 +114,73 @@
 
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+
+forgotPasswordBtn.addEventListener('click', async () => {
+  const email = loginForm.email.value.trim();
+  if (!email) {
+    errorMessage.textContent = "Please enter your email to reset password.";
+    errorMessage.classList.remove('text-green-600');
+    errorMessage.classList.add('text-red-600');
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    errorMessage.textContent = "📧 Password reset email sent!";
+    errorMessage.classList.remove('text-red-600');
+    errorMessage.classList.add('text-green-600');
+
+    setTimeout(() => {
+      errorMessage.textContent = "";
+      errorMessage.classList.remove("text-green-600");
+    }, 5000);
+
+  } catch (error) {
+    errorMessage.textContent = error.message;
+    errorMessage.classList.remove('text-green-600');
+    errorMessage.classList.add('text-red-600');
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      errorMessage.textContent = '';
+      errorMessage.textContent = "";
 
       const email = loginForm.email.value.trim();
       const password = loginForm.password.value;
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
 
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          errorMessage.textContent = "User record not found. Please sign up.";
-          await auth.signOut();
+        if (!userDoc.exists()) {
+          errorMessage.textContent = "Account not found. Please sign up.";
+          return;
+        }
+        if (!userDoc.data().approved) {
+          errorMessage.textContent = "Account is not yet approved.";
           return;
         }
 
-        const userData = userSnap.data();
-        if (!userData.approved) {
-          errorMessage.textContent = "Your account is not approved yet. Please wait.";
-          await auth.signOut();
-          return;
-        }
-
-        // Redirect on success
         window.location.href = "Order Monitoring.html";
-
-      } catch (error) {
-        errorMessage.textContent = error.message;
+      } catch (err) {
+        errorMessage.textContent = err.message;
       }
     });
   </script>
-
 </body>
 </html>
