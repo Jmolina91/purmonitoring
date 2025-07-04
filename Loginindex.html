@@ -74,7 +74,7 @@
   <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-
+import { serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -148,31 +148,46 @@ forgotPasswordBtn.addEventListener('click', async () => {
 
 
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorMessage.textContent = "";
+   loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorMessage.textContent = "";
 
-      const email = loginForm.email.value.trim();
-      const password = loginForm.password.value;
+  const email = loginForm.email.value.trim();
+  const password = loginForm.password.value;
 
-      try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const userRef = doc(db, "users", userCred.user.uid);
+    const userSnap = await getDoc(userRef);
 
-        if (!userDoc.exists()) {
-          errorMessage.textContent = "Account not found. Please sign up.";
-          return;
-        }
-        if (!userDoc.data().approved) {
-          errorMessage.textContent = "Account is not yet approved.";
-          return;
-        }
+    if (!userSnap.exists()) {
+      errorMessage.textContent = "Account not found. Please sign up.";
+      return;
+    }
 
-        window.location.href = "Order Monitoring.html";
-      } catch (err) {
-        errorMessage.textContent = err.message;
-      }
+    const userData = userSnap.data();
+    if (!userData.approved) {
+      errorMessage.textContent = "Account is not yet approved.";
+      return;
+    }
+
+    if (userData.sessionActive) {
+      errorMessage.textContent = "🚫 You are already logged in from another device.";
+      return;
+    }
+
+    // Mark session as active
+    await updateDoc(userRef, {
+      sessionActive: true,
+      lastSession: serverTimestamp()
     });
+
+    window.location.href = "Order Monitoring.html";
+
+  } catch (err) {
+    errorMessage.textContent = err.message;
+  }
+});
   </script>
 </body>
 </html>
