@@ -30,43 +30,35 @@
           <p class="mt-2 text-center text-sm text-gray-600">Secure access to your dashboard</p>
         </div>
 
-        <form id="loginForm" class="mt-8 space-y-6">
-          <div class="rounded-md shadow-sm space-y-5">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-              <input id="email" name="email" type="email" autocomplete="email" required
-                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 shadow-sm sm:text-sm">
-            </div>
+        <form id="loginForm" class="mt-8 space-y-6" autocomplete="off">
+  <div class="rounded-md shadow-sm space-y-5">
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="off" required
+             class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md ...">
+    </div>
 
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-              <input id="password" name="password" type="password" autocomplete="current-password" required
-                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 shadow-sm sm:text-sm">
-            </div>
-          </div>
+    <div>
+      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required
+             class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md ...">
+    </div>
+  </div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input id="remember" name="remember" type="checkbox"
-                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-              <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
-            </div>
+  <div class="text-sm text-right w-full">
+    <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+      Forgot password?
+    </button>
+  </div>
 
-            <div class="text-sm">
-              <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
-              Forgot password?
-                </button>
+  <div>
+    <button type="submit"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 ...">
+      Sign in
+    </button>
+  </div>
+</form>
 
-            </div>
-          </div>
-
-          <div>
-            <button type="submit"
-                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition duration-150 ease-in-out">
-              Sign in
-            </button>
-          </div>
-        </form>
 
         <p id="errorMessage" class="text-center text-sm text-red-600 mt-2"></p>
 
