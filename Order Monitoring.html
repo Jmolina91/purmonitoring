@@ -335,21 +335,33 @@ table {
   }
 }
 
-/* === Status Tags === */
-.status-delivered {
-  color: #34c759;
+/* === Status Tags (One-Line Badge Style) === */
+.status-delivered, .status-cancelled, .status-partial {
   font-weight: 600;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.status-delivered {
+  color: #fff;
+  background-color: #34c759;
 }
 
 .status-cancelled {
-  color: #ff3b30;
-  font-weight: 600;
+  color: #fff;
+  background-color: #ff3b30;
 }
 
 .status-partial {
-  color: #ff9500;
-  font-weight: 600;
+  color: #fff;
+  background-color: #ff9500;
 }
+
+
 
 /* === Fade Animation === */
 .fade-in {
@@ -600,6 +612,8 @@ table {
   <ul class="dropdown-menu">
     <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
     <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
+    <li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
+
   </ul>
 </li>
 
@@ -643,43 +657,52 @@ table {
   <!-- MAIN CONTENT -->
   <div id="mainContent" style="margin-left: 270px; padding: 20px;">
 
-    <!-- DASHBOARD SUMMARY -->
-    <div class="container-fluid p-0 mb-4">
-      <div class="row text-center gx-3">
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Total Orders</h5>
-              <h3 id="totalOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Delivered</h5>
-              <h3 class="text-success" id="deliveredOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>Cancelled</h5>
-              <h3 class="text-danger" id="cancelledOrders">--</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <div class="card card-summary">
-            <div class="card-body">
-              <h5>In Progress</h5>
-              <h3 class="text-warning" id="partialOrders">--</h3>
-            </div>
-          </div>
+   <!-- DASHBOARD SUMMARY -->
+<div class="container-fluid p-0 mb-4">
+  <div class="row text-center gx-3">
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Total Orders</h6>
+          <h4 id="totalOrders">--</h4>
         </div>
       </div>
     </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Delivered</h6>
+          <h4 class="text-success" id="deliveredOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Cancelled</h6>
+          <h4 class="text-danger" id="cancelledOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>In Progress</h6>
+          <h4 class="text-warning" id="partialOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Partially Delivered</h6>
+          <h4 class="text-info" id="partiallyDeliveredOrders">--</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
     <!-- FILTERS + UPLOAD -->
     <div class="container-fluid p-0 mb-4">
@@ -821,6 +844,7 @@ table {
                   <th>Qty Delivered</th>
                   <th>Qty Cancelled</th>
                   <th>Unit Price</th>
+                  <th>Delivery Date</th>
                   <th>Remarks</th>
                 </tr>
               </thead>
@@ -913,7 +937,9 @@ table {
               <tr>
                 <th><div class="resizable-header">Order Number</div></th>
                 <th><div class="resizable-header">Product</div></th>
+         	<th><div class="resizable-header">Unit Price</div></th>
                 <th><div class="resizable-header">Qty Ordered</div></th>
+                <th><div class="resizable-header">Amount</div></th>
                 <th><div class="resizable-header">Qty Delivered</div></th>
                 <th><div class="resizable-header">Qty Cancelled</div></th>
                 <th><div class="resizable-header">Balance</div></th>
@@ -928,6 +954,39 @@ table {
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+<!-- 📅 Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dateRangeModalLabel">Select Date Range</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="startMonth">Start Month:</label>
+        <input type="month" id="startMonth" class="form-control mb-2" />
+
+        <label for="endMonth">End Month:</label>
+        <input type="month" id="endMonth" class="form-control mb-2" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmDateRangeBtn" class="btn btn-primary">Generate Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 
 
 
@@ -974,6 +1033,57 @@ table {
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 📦 Delivery Performance Report Modal -->
+<div class="modal fade" id="deliveryPerformanceModal" tabindex="-1" aria-labelledby="deliveryPerformanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deliveryPerformanceModalLabel">📦 Delivery Performance Report</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="deliveryPerformanceContent" class="table-responsive">
+          <!-- Report table will be injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <footer class="apple-footer">
@@ -1056,7 +1166,7 @@ const updateNavLink = document.getElementById("toggleSidebar");
 
 
 
-
+  let inactivityTimer;
   let fullData = [];
   let currentEditingOrderId = '';
   let currentUserId = null; // Use UID for Firestore path
@@ -1317,8 +1427,24 @@ auth.onAuthStateChanged(user => {
       return;
     }
 
+// ✅ Inject Delivery Date, Lead Time, Tentative Delivery Date
+const extraColumns = ["Delivery Date", "Lead Time", "Tentative Delivery Date"];
+
+extraColumns.forEach(col => {
+  if (!fullColumnOrder.includes(col)) fullColumnOrder.push(col);
+});
+extraColumns.forEach(col => {
+  if (!selectedColumns.includes(col)) selectedColumns.push(col);
+});
+
+// ✅ Save updated columns to localStorage
+localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
+localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
+
+
+
     // ✅ Optional date formatting
-    const dateFields = ["Order Date", "Need By Date", "Approved Date"];
+    const dateFields = ["Order Date", "Need By Date", "Approved Date","Order Date raw"];
     fullData = fullData.map(row => {
       dateFields.forEach(field => {
         if (row[field]) row[field] = formatDate(row[field]);
@@ -1363,29 +1489,6 @@ const updateOrderModal = new bootstrap.Modal(document.getElementById('updateOrde
 const modalOrderNumber = document.getElementById('modalOrderNumber');
 const saveUpdateBtn = document.getElementById('saveUpdateBtn');
 
-
-
-
-
-
-
-
-
-// On confirm, update selected columns and re-render table
-confirmColumnsBtn.addEventListener('click', () => {
-  const checkboxes = columnCheckboxContainer.querySelectorAll('input[type=checkbox]');
-  selectedColumns = Array.from(checkboxes)
-                         .filter(cb => cb.checked)
-                         .map(cb => cb.value);
-
-  if (selectedColumns.length === 0) {
-    alert('Select at least one column to display.');
-    return;
-  }
-
-  customizeTableModal.hide();          // ✅ Close modal
-  populateTable(fullData);             // ✅ Re-render table with new columns
-});
 
 
 // Modify populateTable to respect selectedColumns
@@ -1469,7 +1572,59 @@ function populateTable(data) {
         value = Number(value || 0).toFixed(2);
       }
 
-      td.textContent = value;
+      if (col === "Lead Time") {
+  const select = document.createElement("select");
+  select.className = "form-select form-select-sm";
+  const options = [
+    "Selection", "1-2 Weeks", "2-3 Weeks", "3-4 Weeks", "4-5 Weeks", "5-6 Weeks", "6-7 Weeks",
+    "7-8 Weeks", "8-9 Weeks", "9-10 Weeks", "11-12 Weeks", "90-120 Days"
+  ];
+
+  options.forEach(option => {
+  const opt = document.createElement("option");
+  opt.value = option;
+  opt.textContent = option;
+  if (option === value) opt.selected = true;
+  select.appendChild(opt);
+});
+
+select.addEventListener("change", async () => {
+  row["Lead Time"] = select.value;
+  row["Tentative Delivery Date"] = computeTentativeDate(row["Approved Date"], select.value);
+
+
+  // 🔥 Auto-save to Firestore
+  if (row.docId && currentUserId) {
+    try {
+      await firestore.collection("orders")
+        .doc(currentUserId)
+        .collection("userOrders")
+        .doc(row.docId)
+        .update({
+          "Lead Time": row["Lead Time"],
+          "Tentative Delivery Date": row["Tentative Delivery Date"]
+        });
+      console.log(`✅ Lead Time saved for ${row.docId}`);
+    } catch (err) {
+      console.error("❌ Failed to save Lead Time:", err);
+      alert("Failed to save Lead Time.");
+    }
+  }
+
+  populateTable(fullData); // re-render table to update Tentative column
+});
+
+td.appendChild(select);
+
+
+
+
+} else if (col === "Tentative Delivery Date") {
+  td.textContent = row["Tentative Delivery Date"] || "";
+} else {
+  td.textContent = value;
+}
+
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
@@ -1511,7 +1666,8 @@ function handleDrop(e) {
   selectedColumns.splice(toIndex, 0, moved);
 
   // Update fullColumnOrder accordingly
-  fullColumnOrder = selectedColumns.concat(fullColumnOrder.filter(col => !selectedColumns.includes(col)));
+  fullColumnOrder = Array.from(new Set(selectedColumns.concat(fullColumnOrder)));
+
 
   localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
   localStorage.setItem('fullColumnOrder', JSON.stringify(fullColumnOrder));
@@ -1604,8 +1760,10 @@ matchingItems.forEach((item, index) => {
   <td><input type="number" class="form-control" value="${item["Quantity Delivered"] || 0}" data-field="Quantity Delivered" data-index="${index}" /></td>
   <td><input type="number" class="form-control" value="${item["Quantity Cancelled"] || 0}" data-field="Quantity Cancelled" data-index="${index}" /></td>
   <td><input type="number" class="form-control" value="${item["Unit Price"] || 0}" step="0.01" data-field="Unit Price" data-index="${index}" /></td>
+  <td><input type="date" class="form-control" value="${item["Delivery Date"] ? formatDateForInput(item["Delivery Date"]) : ''}" data-field="Delivery Date" data-index="${index}" /></td>
   <td><input type="text" class="form-control" value="${item["Remarks"] || ''}" data-field="Remarks" data-index="${index}" /></td>
-`;	
+`;
+
 
   tableBody.appendChild(row);
 });
@@ -1613,6 +1771,23 @@ matchingItems.forEach((item, index) => {
 
   updateOrderModal.show();
 });
+
+
+
+
+
+
+function formatDateForInput(dateStr) {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return date.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+
+
+
+
+
 
 // You can now remove the old btnSearchOrder listener since the search happens on btnShowUpdate
 
@@ -1757,23 +1932,34 @@ async function saveOrdersToFirestore(userId, ordersArray) {
   }
 
   function updateSummary(data) {
-    let delivered = 0, cancelled = 0, inProgress = 0;
+  let delivered = 0, cancelled = 0, inProgress = 0, partiallyDelivered = 0;
 
-    data.forEach(row => {
-      const ordered = Number(row["Quantity Ordered"] || 0);
-      const deliveredQty = Number(row["Quantity Delivered"] || 0);
-      const cancelledQty = Number(row["Quantity Cancelled"] || 0);
+  data.forEach(row => {
+    const ordered = Number(row["Quantity Ordered"] || 0);
+    const deliveredQty = Number(row["Quantity Delivered"] || 0);
+    const cancelledQty = Number(row["Quantity Cancelled"] || 0);
 
-      if (cancelledQty > 0) cancelled++;
-      else if (deliveredQty === ordered && ordered > 0) delivered++;
-      else if (deliveredQty !== ordered && cancelledQty === 0) inProgress++;
-    });
+    if (deliveredQty === ordered && ordered > 0) {
+      delivered++;
+    } else if (cancelledQty > 0 && deliveredQty === 0) {
+      cancelled++;
+    } else if (deliveredQty > 0 && deliveredQty !== ordered) {
+      partiallyDelivered++;
+    } else if (deliveredQty === 0 && cancelledQty === 0) {
+      inProgress++;
+    }
+  });
 
-    document.getElementById('totalOrders').textContent = data.length;
-    document.getElementById('deliveredOrders').textContent = delivered;
-    document.getElementById('cancelledOrders').textContent = cancelled;
-    document.getElementById('partialOrders').textContent = inProgress;
-  }
+  document.getElementById('totalOrders').textContent = data.length;
+  document.getElementById('deliveredOrders').textContent = delivered;
+  document.getElementById('cancelledOrders').textContent = cancelled;
+  document.getElementById('partialOrders').textContent = inProgress;
+
+  // 👇 Update Partially Delivered count if element exists
+  const partialElem = document.getElementById('partiallyDeliveredOrders');
+  if (partialElem) partialElem.textContent = partiallyDelivered;
+}
+
 
 function filterTable() {
   console.log('filterTable called');
@@ -2028,7 +2214,17 @@ document.getElementById("btnDownloadExcel").addEventListener("click", () => {
     const rowData = {};
 
     selectedColumns.forEach((col, index) => {
-      rowData[col] = cells[index]?.textContent?.trim() || "";
+      const cell = cells[index];
+      if (!cell) {
+        rowData[col] = "";
+      } else {
+        const select = cell.querySelector("select");
+        if (select) {
+          rowData[col] = select.value;
+        } else {
+          rowData[col] = cell.textContent.trim();
+        }
+      }
     });
 
     return rowData;
@@ -2046,17 +2242,6 @@ document.getElementById("btnDownloadExcel").addEventListener("click", () => {
 
 
 
- document.getElementById("logoutBtn").addEventListener("click", () => {
-    firebase.auth().signOut()
-      .then(() => {
-        // Redirect to login/index after logout
-        window.location.href = "index.html";
-      })
-      .catch(error => {
-        console.error("Logout error:", error.message);
-        alert("Failed to logout. Please try again.");
-      });
-  });
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -2107,7 +2292,9 @@ const row = document.createElement("tr");
 row.innerHTML = `
   <td>${order["Number"] || ''}</td>
   <td>${order["Product"] || order["Description"] || ''}</td>
+  <td>${order["Unit Price"] || 0}</td>
   <td>${order["Quantity Ordered"] || 0}</td>
+  <td>${order["Amount"] || 0}</td>
   <td>${order["Quantity Delivered"] || 0}</td>
   <td>${order["Quantity Cancelled"] || 0}</td>
   <td>${balance}</td>
@@ -2116,6 +2303,26 @@ row.innerHTML = `
 `;
   reportTableBody.appendChild(row);
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function makeTableResizable(tableSelector) {
   const table = document.querySelector(tableSelector);
@@ -2207,6 +2414,305 @@ function downloadTableAsCSV(tableId, filename = 'follow_up_report.csv') {
     reportModal.hide();
   });
 });
+
+
+
+function computeTentativeDate(orderDate, leadTime) {
+  if (!orderDate || !leadTime || leadTime === "Selection") return '';
+
+  const order = new Date(orderDate);
+  let maxWorkingDays = 0;
+
+  if (leadTime.includes('Weeks')) {
+    const parts = leadTime.split('-');
+    const maxWeeks = parseInt(parts[1]) || parseInt(parts[0]) || 0;
+    maxWorkingDays = maxWeeks * 5;
+  } else if (leadTime.includes('Days')) {
+    const parts = leadTime.split('-');
+    const maxDays = parseInt(parts[1]) || parseInt(parts[0]) || 0;
+    maxWorkingDays = maxDays;
+  }
+
+  let daysAdded = 0;
+  let tentative = new Date(order);
+
+  while (daysAdded < maxWorkingDays) {
+    tentative.setDate(tentative.getDate() + 1);
+    const day = tentative.getDay();
+    if (day !== 0 && day !== 6) daysAdded++;
+  }
+
+  return tentative.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function generateDeliveryPerformanceReport(startDate, endDate) {
+  const grouped = {};
+
+  fullData.forEach(order => {
+    const approved = new Date(order["Approved Date"]);
+    if (approved < startDate || approved >= endDate) return;
+
+    const supplier = order["Supplier"] || "Unknown Supplier";
+    if (!grouped[supplier]) grouped[supplier] = [];
+
+    const tentative = new Date(order["Tentative Delivery Date"]);
+    const delivery = order["Delivery Date"] ? new Date(order["Delivery Date"]) : null;
+
+    let status = "";
+
+    if (delivery && delivery <= tentative) {
+      status = "On Time";
+    } else if (delivery && delivery > tentative) {
+      status = "Delayed";
+    } else if (!delivery && tentative < new Date()) {
+      status = "Delayed";
+    } else {
+      status = "Pending";
+    }
+
+    grouped[supplier].push({
+      description: order["Description"] || "",
+      tentativeDate: order["Tentative Delivery Date"] || "",
+      deliveryDate: order["Delivery Date"] || "",
+      status: status
+    });
+  });
+
+  renderDeliveryPerformanceToModal(grouped);
+  new bootstrap.Modal(document.getElementById("deliveryPerformanceModal")).show();
+}
+
+
+
+
+
+
+document.getElementById('confirmDateRangeBtn').addEventListener('click', () => {
+  const startMonth = document.getElementById('startMonth').value;
+  const endMonth = document.getElementById('endMonth').value;
+
+  if (!startMonth || !endMonth) {
+    alert("Please select both start and end month.");
+    return;
+  }
+
+  const startDate = new Date(startMonth + "-01");
+  const endDate = new Date(endMonth + "-01");
+  endDate.setMonth(endDate.getMonth() + 1); // include full end month
+
+  generateDeliveryPerformanceReport(startDate, endDate);
+  bootstrap.Modal.getInstance(document.getElementById("dateRangeModal")).hide();
+});
+
+
+
+document.getElementById('deliveryperformanceBtn').addEventListener('click', () => {
+  new bootstrap.Modal(document.getElementById("dateRangeModal")).show();
+});
+
+
+
+function generateDeliveryPerformanceReport(startDate, endDate) {
+  const grouped = {};
+
+  fullData.forEach(order => {
+    const approved = new Date(order["Approved Date"]);
+    if (approved < startDate || approved >= endDate) return;
+
+    const supplier = order["Supplier"] || "Unknown Supplier";
+    if (!grouped[supplier]) grouped[supplier] = [];
+
+    const tentative = new Date(order["Tentative Delivery Date"]);
+    const delivery = order["Delivery Date"] ? new Date(order["Delivery Date"]) : null;
+
+    let status = "";
+
+    if (delivery && delivery <= tentative) {
+      status = "On Time";
+    } else if (delivery && delivery > tentative) {
+      status = "Delayed";
+    } else if (!delivery && tentative < new Date()) {
+      status = "Delayed";
+    } else {
+      status = "Pending";
+    }
+
+    grouped[supplier].push({
+      description: order["Description"] || "",
+      tentativeDate: order["Tentative Delivery Date"] || "",
+      deliveryDate: order["Delivery Date"] || "",
+      status: status
+    });
+  });
+
+  renderDeliveryPerformanceToModal(grouped);
+  new bootstrap.Modal(document.getElementById("deliveryPerformanceModal")).show();
+}
+
+
+function renderDeliveryPerformanceToModal(grouped) {
+  const container = document.getElementById("deliveryPerformanceContent");
+  container.innerHTML = ''; // Clear previous content
+
+  if (Object.keys(grouped).length === 0) {
+    container.innerHTML = `<p class="text-muted">No matching data found for the selected range.</p>`;
+    return;
+  }
+
+  Object.entries(grouped).forEach(([supplier, records]) => {
+    // Count statuses
+    let onTime = 0, delayed = 0, pending = 0;
+
+    records.forEach(record => {
+      if (record.status === "On Time") onTime++;
+      else if (record.status === "Delayed") delayed++;
+      else if (record.status === "Pending") pending++;
+    });
+
+    // Supplier header with summary
+    const summaryBox = document.createElement("div");
+    summaryBox.className = "mb-2 p-3 rounded bg-light border";
+
+    summaryBox.innerHTML = `
+      <h6 class="mb-2 text-primary">📦 ${supplier}</h6>
+      <div class="d-flex gap-3 flex-wrap small">
+        <span><strong>On Time:</strong> <span class="text-success">${onTime}</span></span>
+        <span><strong>Delayed:</strong> <span class="text-danger">${delayed}</span></span>
+        <span><strong>Pending:</strong> <span class="text-warning">${pending}</span></span>
+        <span><strong>Total:</strong> ${records.length}</span>
+      </div>
+    `;
+
+    // Table for detailed records
+    const table = document.createElement("table");
+    table.className = "table table-bordered table-sm mb-4";
+
+    table.innerHTML = `
+      <thead class="table-light">
+        <tr>
+          <th>Description</th>
+          <th>Tentative Delivery Date</th>
+          <th>Delivery Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${records.map(record => `
+          <tr>
+            <td>${record.description}</td>
+            <td>${record.tentativeDate || '-'}</td>
+            <td>${record.deliveryDate || '-'}</td>
+            <td><span class="badge ${getStatusBadgeClass(record.status)}">${record.status}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+
+    // Append summary and table to the modal
+    container.appendChild(summaryBox);
+    container.appendChild(table);
+  });
+}
+
+function getStatusBadgeClass(status) {
+  switch (status) {
+    case "On Time": return "bg-success";
+    case "Delayed": return "bg-danger";
+    case "Pending": return "bg-warning text-dark";
+    default: return "bg-secondary";
+  }
+}
+
+
+
+
+
+
+ document.getElementById("logoutBtn").addEventListener("click", () => {
+    firebase.auth().signOut()
+      .then(() => {
+        // Redirect to login/index after logout
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        console.error("Logout error:", error.message);
+        alert("Failed to logout. Please try again.");
+      });
+  });
+
+function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+  logoutUser();
+}, 5 * 60 * 1000); // 5 minutes
+
+
+  }
+
+  function logoutUser() {
+    alert("You've been logged out due to inactivity.");
+    // Clear session or Firebase auth, if used
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Example for Firebase logout
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "Loginindex.html"; // Redirect to login page
+      });
+    } else {
+      window.location.href = "index.html";
+    }
+  }
+
+  // Listen to user activity
+  window.addEventListener('mousemove', resetTimer);
+  window.addEventListener('keydown', resetTimer);
+  window.addEventListener('scroll', resetTimer);
+  window.addEventListener('click', resetTimer);
+
+  // Start timer initially
+  resetTimer();
+
+
 
 
 
