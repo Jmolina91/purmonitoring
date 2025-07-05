@@ -1381,7 +1381,7 @@ auth.onAuthStateChanged(user => {
     loadOrdersFromFirestore(currentUserId);
 
   } else {
-    window.location.href = "login.html";
+    window.location.href = "Loginindex.html";
   }
 });
 
@@ -2803,7 +2803,7 @@ function formatDateDisplay(dateValue) {
   }
 
   await firebase.auth().signOut();
-  window.location.href = "loginindex.html";
+  window.location.href = "Loginindex.html";
 });
 
 function resetTimer() {
