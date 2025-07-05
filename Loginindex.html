@@ -178,11 +178,13 @@ forgotPasswordBtn.addEventListener('click', async () => {
 
     // Mark session as active
     await updateDoc(userRef, {
-      sessionActive: true,
-      lastSession: serverTimestamp()
-    });
+  sessionActive: true,
+  lastSession: serverTimestamp()
+});
 
-    window.location.href = "Order Monitoring.html";
+console.log("✅ Login successful. Redirecting...");
+window.location.assign("Order%20Monitoring.html");
+
 
   } catch (err) {
     errorMessage.textContent = err.message;
