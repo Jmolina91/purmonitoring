@@ -72,7 +72,8 @@
 
   <!-- Firebase Login Script -->
   <script type="module">
-
+    
+import { v4 as uuidv4 } from "https://jspm.dev/uuid";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 import {
@@ -177,10 +178,16 @@ forgotPasswordBtn.addEventListener('click', async () => {
     }
 
     // Mark session as active
-    await updateDoc(userRef, {
+    const sessionId = uuidv4();
+
+await updateDoc(userRef, {
   sessionActive: true,
+  sessionId: sessionId,
   lastSession: serverTimestamp()
 });
+
+localStorage.setItem('sessionId', sessionId);
+
 
 console.log("✅ Login successful. Redirecting...");
 window.location.assign("Order%20Monitoring.html");
