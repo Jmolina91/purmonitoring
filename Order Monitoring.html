@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1142,6 +1143,27 @@ table {
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const auth = firebase.auth();
   const firestore = firebase.firestore();
 
@@ -1444,7 +1466,7 @@ localStorage.setItem('selectedColumns', JSON.stringify(selectedColumns));
 
 
     // ✅ Optional date formatting
-    const dateFields = ["Order Date", "Need By Date", "Approved Date","Order Date raw"];
+    const dateFields = ["Order Date", "Need By Date", "Approved Date", "Order Date raw", "Delivery Date", "Tentative Delivery Date"];
     fullData = fullData.map(row => {
       dateFields.forEach(field => {
         if (row[field]) row[field] = formatDate(row[field]);
@@ -1518,7 +1540,6 @@ function populateTable(data) {
     if (storedSelected) {
       try {
         selectedColumns = JSON.parse(storedSelected);
-        // Filter to remove outdated columns
         selectedColumns = selectedColumns.filter(col => Object.keys(data[0]).includes(col));
       } catch (e) {
         selectedColumns = Object.keys(data[0]).filter(key => key);
@@ -1528,7 +1549,6 @@ function populateTable(data) {
     }
   }
 
-  // ✅ Fallback if filtered columns are now empty
   if (!selectedColumns || selectedColumns.length === 0) {
     selectedColumns = Object.keys(data[0]).filter(key => key);
   }
@@ -1560,73 +1580,81 @@ function populateTable(data) {
   // ✅ Build rows
   data.forEach(row => {
     const tr = document.createElement('tr');
+
     columns.forEach(col => {
       const td = document.createElement('td');
       let value = row[col] ?? '';
 
-      if (typeof value === 'object') {
+      // Format object-type values
+      if (typeof value === 'object' && value !== null) {
         value = JSON.stringify(value);
       }
 
+      // Handle pricing and amount formatting
       if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
         value = Number(value || 0).toFixed(2);
       }
 
+      // Custom rendering logic per column
       if (col === "Lead Time") {
-  const select = document.createElement("select");
-  select.className = "form-select form-select-sm";
-  const options = [
-    "Selection", "1-2 Weeks", "2-3 Weeks", "3-4 Weeks", "4-5 Weeks", "5-6 Weeks", "6-7 Weeks",
-    "7-8 Weeks", "8-9 Weeks", "9-10 Weeks", "11-12 Weeks", "90-120 Days"
-  ];
+        const select = document.createElement("select");
+        select.className = "form-select form-select-sm";
+        const options = [
+          "Selection", "1-2 Weeks", "2-3 Weeks", "3-4 Weeks", "4-5 Weeks", "5-6 Weeks", "6-7 Weeks",
+          "7-8 Weeks", "8-9 Weeks", "9-10 Weeks", "11-12 Weeks", "90-120 Days"
+        ];
 
-  options.forEach(option => {
-  const opt = document.createElement("option");
-  opt.value = option;
-  opt.textContent = option;
-  if (option === value) opt.selected = true;
-  select.appendChild(opt);
-});
-
-select.addEventListener("change", async () => {
-  row["Lead Time"] = select.value;
-  row["Tentative Delivery Date"] = computeTentativeDate(row["Approved Date"], select.value);
-
-
-  // 🔥 Auto-save to Firestore
-  if (row.docId && currentUserId) {
-    try {
-      await firestore.collection("orders")
-        .doc(currentUserId)
-        .collection("userOrders")
-        .doc(row.docId)
-        .update({
-          "Lead Time": row["Lead Time"],
-          "Tentative Delivery Date": row["Tentative Delivery Date"]
+        options.forEach(option => {
+          const opt = document.createElement("option");
+          opt.value = option;
+          opt.textContent = option;
+          if (option === value) opt.selected = true;
+          select.appendChild(opt);
         });
-      console.log(`✅ Lead Time saved for ${row.docId}`);
-    } catch (err) {
-      console.error("❌ Failed to save Lead Time:", err);
-      alert("Failed to save Lead Time.");
-    }
-  }
 
-  populateTable(fullData); // re-render table to update Tentative column
-});
+        select.addEventListener("change", async () => {
+          row["Lead Time"] = select.value;
+          row["Tentative Delivery Date"] = computeTentativeDate(row["Approved Date"], select.value);
 
-td.appendChild(select);
+          // 🔥 Save to Firestore
+          if (row.docId && currentUserId) {
+            try {
+              await firestore.collection("orders")
+                .doc(currentUserId)
+                .collection("userOrders")
+                .doc(row.docId)
+                .update({
+                  "Lead Time": row["Lead Time"],
+                  "Tentative Delivery Date": row["Tentative Delivery Date"]
+                });
+              console.log(`✅ Lead Time saved for ${row.docId}`);
+            } catch (err) {
+              console.error("❌ Failed to save Lead Time:", err);
+              alert("Failed to save Lead Time.");
+            }
+          }
 
+          populateTable(fullData); // Refresh table
+        });
 
+        td.appendChild(select);
 
+      } else if (col === "Tentative Delivery Date") {
+        td.textContent = formatDateDisplay(row["Tentative Delivery Date"]);
 
-} else if (col === "Tentative Delivery Date") {
-  td.textContent = row["Tentative Delivery Date"] || "";
-} else {
-  td.textContent = value;
-}
+      } else if (col.toLowerCase() === "delivery date") {
+        td.textContent = formatDateDisplay(row["Delivery Date"]);
+
+      } else if (col.toLowerCase().includes("date")) {
+        td.textContent = formatDateDisplay(value);
+
+      } else {
+        td.textContent = value;
+      }
 
       tr.appendChild(td);
     });
+
     tbody.appendChild(tr);
   });
 
@@ -1774,14 +1802,13 @@ matchingItems.forEach((item, index) => {
 
 
 
-
-
-
 function formatDateForInput(dateStr) {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '';
   return date.toISOString().split('T')[0]; // YYYY-MM-DD
 }
+
+
 
 
 
@@ -2487,7 +2514,12 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
   const grouped = {};
 
   fullData.forEach(order => {
-    const approved = new Date(order["Approved Date"]);
+    // ✅ Format the dates first
+    order["Order Date"] = formatDateDisplay(order["Order Date"]);
+    order["Tentative Delivery Date"] = formatDateDisplay(order["Tentative Delivery Date"]);
+    order["Delivery Date"] = formatDateDisplay(order["Delivery Date"]);
+
+    const approved = new Date(order["Order Date"]);
     if (approved < startDate || approved >= endDate) return;
 
     const supplier = order["Supplier"] || "Unknown Supplier";
@@ -2497,7 +2529,6 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
     const delivery = order["Delivery Date"] ? new Date(order["Delivery Date"]) : null;
 
     let status = "";
-
     if (delivery && delivery <= tentative) {
       status = "On Time";
     } else if (delivery && delivery > tentative) {
@@ -2509,7 +2540,9 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
     }
 
     grouped[supplier].push({
+      orderNumber: order["Number"] || "N/A",
       description: order["Description"] || "",
+      orderDate: order["Order Date"] || "",
       tentativeDate: order["Tentative Delivery Date"] || "",
       deliveryDate: order["Delivery Date"] || "",
       status: status
@@ -2519,6 +2552,7 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
   renderDeliveryPerformanceToModal(grouped);
   new bootstrap.Modal(document.getElementById("deliveryPerformanceModal")).show();
 }
+
 
 
 
@@ -2543,7 +2577,6 @@ document.getElementById('confirmDateRangeBtn').addEventListener('click', () => {
 });
 
 
-
 document.getElementById('deliveryperformanceBtn').addEventListener('click', () => {
   new bootstrap.Modal(document.getElementById("dateRangeModal")).show();
 });
@@ -2554,8 +2587,10 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
   const grouped = {};
 
   fullData.forEach(order => {
-    const approved = new Date(order["Approved Date"]);
-    if (approved < startDate || approved >= endDate) return;
+    const orderDate = new Date(order["Order Date"]);
+    if (orderDate < startDate || orderDate >= endDate) return;
+
+
 
     const supplier = order["Supplier"] || "Unknown Supplier";
     if (!grouped[supplier]) grouped[supplier] = [];
@@ -2576,7 +2611,9 @@ function generateDeliveryPerformanceReport(startDate, endDate) {
     }
 
     grouped[supplier].push({
+      orderNumber: order["Number"] || "N/A",
       description: order["Description"] || "",
+      orderDate: order["Order Date"] || "",
       tentativeDate: order["Tentative Delivery Date"] || "",
       deliveryDate: order["Delivery Date"] || "",
       status: status
@@ -2625,26 +2662,33 @@ function renderDeliveryPerformanceToModal(grouped) {
     const table = document.createElement("table");
     table.className = "table table-bordered table-sm mb-4";
 
-    table.innerHTML = `
-      <thead class="table-light">
-        <tr>
-          <th>Description</th>
-          <th>Tentative Delivery Date</th>
-          <th>Delivery Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${records.map(record => `
-          <tr>
-            <td>${record.description}</td>
-            <td>${record.tentativeDate || '-'}</td>
-            <td>${record.deliveryDate || '-'}</td>
-            <td><span class="badge ${getStatusBadgeClass(record.status)}">${record.status}</span></td>
-          </tr>
-        `).join('')}
-      </tbody>
-    `;
+  table.innerHTML = `
+  <thead class="table-light">
+  <tr>
+    <th>Order #</th>
+    <th>Description</th>
+    <th>Order Date</th>
+    <th>Tentative Delivery Date</th>
+    <th>Delivery Date</th>
+    <th>Status</th>
+  </tr>
+</thead>
+
+  <tbody>
+    ${records.map(record => `
+      <tr>
+        <td>${record.orderNumber}</td>
+        <td>${record.description}</td>
+        <td>${record.orderDate || '-'}</td>
+        <td>${record.tentativeDate || '-'}</td>
+        <td>${formatDateDisplay(record.deliveryDate) || '-'}</td>
+        <td><span class="badge ${getStatusBadgeClass(record.status)}">${record.status}</span></td>
+      </tr>
+    `).join('')}
+  </tbody>
+`;
+
+
 
     // Append summary and table to the modal
     container.appendChild(summaryBox);
@@ -2662,21 +2706,105 @@ function getStatusBadgeClass(status) {
 }
 
 
+function isValidDate(str) {
+  const d = new Date(str);
+  return !isNaN(d.getTime());
+}
 
 
 
 
- document.getElementById("logoutBtn").addEventListener("click", () => {
-    firebase.auth().signOut()
-      .then(() => {
-        // Redirect to login/index after logout
-        window.location.href = "index.html";
-      })
-      .catch(error => {
-        console.error("Logout error:", error.message);
-        alert("Failed to logout. Please try again.");
-      });
-  });
+
+
+
+
+
+
+
+function formatDateDisplay(dateValue) {
+  if (!dateValue) return "";
+
+  // ✅ Excel serial number (e.g., 45646)
+  if (!isNaN(dateValue) && Number(dateValue) > 59 && Number(dateValue) < 60000) {
+    const excelEpoch = new Date(1899, 11, 30);
+    const date = new Date(excelEpoch.getTime() + Number(dateValue) * 86400000);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }); // ➜ February 28, 2025
+  }
+
+  // ✅ Date object
+  if (Object.prototype.toString.call(dateValue) === "[object Date]" && !isNaN(dateValue)) {
+    return dateValue.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // ✅ yyyy-mm-dd format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    const [yyyy, mm, dd] = dateValue.split("-");
+    const date = new Date(`${yyyy}-${mm}-${dd}`);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // ✅ mm/dd/yyyy format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+    const [mm, dd, yyyy] = dateValue.split("/");
+    const date = new Date(`${yyyy}-${mm}-${dd}`);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  return dateValue; // fallback
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ document.getElementById("logoutBtn").addEventListener("click", async () => {
+  const user = firebase.auth().currentUser;
+
+  if (user) {
+    try {
+      await firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .update({
+          sessionActive: false,
+          lastSession: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+      console.error("Failed to update sessionActive on logout:", err);
+    }
+  }
+
+  await firebase.auth().signOut();
+  window.location.href = "loginindex.html";
+});
 
 function resetTimer() {
     clearTimeout(inactivityTimer);
@@ -2711,7 +2839,6 @@ function resetTimer() {
 
   // Start timer initially
   resetTimer();
-
 
 
 
