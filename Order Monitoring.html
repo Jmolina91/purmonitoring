@@ -7,7 +7,7 @@
   <title>Order Monitoring Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
+ <style>
   :root {
   --apple-blue: #007aff;
   --sidebar-bg: #f9fafc;
@@ -20,6 +20,8 @@
   --hover-shadow: rgba(0, 0, 0, 0.1);
   --transition-fast: 0.25s ease;
 }
+
+
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -63,19 +65,32 @@ body {
 
 /* 🚪 Slide-In Sidebar Effect (Apple-like animation) */
 .sidebar {
+  width: 250px;
   position: fixed;
-  top: 56px; /* height of your navbar */
+  top: 70px; /* height of navbar */
   left: 0;
-  width: 260px;
-  height: calc(100vh - 56px); /* full height minus navbar */
-  background-color: #fff;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
-  z-index: 1050;
+  height: calc(100% - 70px);
+  background-color: #f8f9fa;
+  padding: 20px;
   overflow-y: auto;
-  padding: 1rem;
-  border-top-right-radius: 12px;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s ease;
+  z-index: 1030;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  transform: translateX(-100%);
 }
+
+/* When visible */
+.sidebar.active {
+  transform: translateX(0);
+}
+
+/* Main content shift */
+#mainContent.shifted {
+  margin-left: 270px; /* Matches the sidebar width + padding */
+  transition: margin-left 0.3s ease;
+}
+
+
 
 /* Hidden (slide-out) */
 .sidebar.hidden {
@@ -132,10 +147,14 @@ body {
 
 /* === Main Content === */
 .main-content {
-  margin-left: 260px;
-  padding: 2rem;
-  transition: margin-left var(--transition-fast);
+  transition: margin-left 0.3s ease;
+  margin-left: 0; /* default when sidebar is hidden */
 }
+
+.main-content.shifted {
+  margin-left: 260px; /* same width as sidebar */
+}
+
 
 /* === Card Summary === */
 .card-summary {
@@ -588,10 +607,23 @@ table {
   font-size: 0.85rem;
   color: #8e8e93;
 }
+.main-content.shifted {
+  margin-left: 260px;
+}
 
+.apple-footer {
+  transition: margin-left 0.3s ease;
+  margin-left: 0;
+}
+
+.main-content.shifted ~ .apple-footer {
+  margin-left: 260px;
+}
 
 
 </style>
+
+
 
 
 </head>
@@ -656,7 +688,8 @@ table {
 
 
   <!-- MAIN CONTENT -->
-  <div id="mainContent" style="margin-left: 270px; padding: 20px;">
+  <div id="mainContent" class="main-content" style="padding: 20px;">
+
 
    <!-- DASHBOARD SUMMARY -->
 <div class="container-fluid p-0 mb-4">
@@ -704,41 +737,61 @@ table {
   </div>
 </div>
 
+<div class="container-fluid p-0 mb-4">
+  <div class="row gx-2 align-items-center">
 
-    <!-- FILTERS + UPLOAD -->
-    <div class="container-fluid p-0 mb-4">
-      <div class="row gx-3">
-        <div class="col-md-3">
-          <input type="text" class="form-control" placeholder="Search Customer/Product..." id="searchInput">
-        </div>
-        <div class="col-md-3">
-          <select class="form-select" id="statusFilter">
-            <option value="">All Status</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Partial">Partial</option>
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label class="upload-zone" for="excelFile">
-            📁 Click or drag Excel file to upload
-            <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
-          </label>
-
-
-
-  <button id="btnDownloadExcel" class="apple-style-btn">
-    📥 Download Excel
-  </button>
-
-
-        </div>
-
-
-
-      </div>
+    <!-- Search -->
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-2 mb-md-0">
+      <input type="text" class="form-control form-control-sm" placeholder="Search Customer/Product..." id="searchInput">
     </div>
+
+    <!-- Status Filter -->
+    <div class="col-lg-2 col-md-3 col-sm-6 mb-2 mb-md-0">
+      <select class="form-select form-select-sm" id="statusFilter">
+        <option value="">All Status</option>
+        <option value="Delivered">Delivered</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="Partial">Partial</option>
+      </select>
+    </div>
+
+    <!-- Month Filter -->
+    <div class="col-lg-2 col-md-3 col-sm-6 mb-2 mb-md-0">
+      <select class="form-select form-select-sm" id="monthSort">
+        <option value="">Sort by Month</option>
+        <option value="January">January</option>
+        <option value="February">February</option>
+        <option value="March">March</option>
+        <option value="April">April</option>
+        <option value="May">May</option>
+        <option value="June">June</option>
+        <option value="July">July</option>
+        <option value="August">August</option>
+        <option value="September">September</option>
+        <option value="October">October</option>
+        <option value="November">November</option>
+        <option value="December">December</option>
+      </select>
+    </div>
+
+    <!-- Upload + Download -->
+    <div class="col-lg-4 col-md-12 d-flex flex-wrap gap-2 align-items-center justify-content-start mt-2 mt-lg-0">
+      <label class="upload-zone m-0" for="excelFile">
+        📁 Upload Excel
+        <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
+      </label>
+
+      <button id="btnDownloadExcel" class="apple-style-btn btn-sm">
+        📥 Download Excel
+      </button>
+    </div>
+
+  </div>
+</div>
+
+        
+    
 
 
 
@@ -781,8 +834,7 @@ table {
         </div>
       </div>
     </div>
-
-  </div>
+ </div>
 </div>
 
 
@@ -801,8 +853,9 @@ table {
 
 
 
+
 <!-- 🍏 Apple-Style Order Table -->
-<div class="container-fluid p-0 mb-5">
+<div class="container-fluid p-0 mb-4">
   <div class="apple-card">
     <div class="apple-card-header">
       <h5 class="mb-0">📋 Order List</h5>
@@ -822,7 +875,8 @@ table {
   </div>
 </div>
 
-
+</div>
+      </div>
 
 
   <!-- UPDATE ORDER MODAL -->
@@ -881,7 +935,7 @@ table {
       </div>
     </div>
   </div>
-
+  </div>
 
 
 
@@ -1031,10 +1085,9 @@ table {
       <div class="modal-footer">
         <button id="confirmChartChoices" class="btn btn-primary">Apply</button>
       </div>
-    </div>
-  </div>
+   </div>
 </div>
-
+</div>
 
 
 
@@ -1064,28 +1117,10 @@ table {
         <div id="deliveryPerformanceContent" class="table-responsive">
           <!-- Report table will be injected here -->
         </div>
-      </div>
-    </div>
-  </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+</div>
+</div>
+</div> 
 
 <footer class="apple-footer">
   <div class="footer-container">
@@ -1104,11 +1139,6 @@ table {
     </div>
   </div>
 </footer>
-
-
-
-
-
 
 
 
@@ -1361,36 +1391,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-auth.onAuthStateChanged(user => {
-  if (user) {
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = "Loginindex.html";
+    return;
+  }
+
+  try {
+    const userRef = firestore.collection('users').doc(user.uid);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    const localSessionId = localStorage.getItem('sessionId');
+
+    // 🚨 Check for session ID match
+    if (!userData.sessionId || userData.sessionId !== localSessionId) {
+      alert("🚫 You’ve been logged out because another login occurred.");
+      await auth.signOut();
+      localStorage.removeItem('sessionId');
+      window.location.href = "Loginindex.html";
+      return;
+    }
+
+    // ✅ Session valid, proceed
     currentUserId = user.uid;
 
-    // Fetch fullName from Firestore compat
-    firestore.collection('users')
-      .doc(currentUserId)
-      .get()
-      .then(docSnap => {
-        const nameElem = document.getElementById('userEmailDisplay');
-        if (nameElem) {
-          const data = docSnap.exists && docSnap.data();
-          nameElem.textContent = data?.fullName || user.email;
-        }
-      })
-      .catch(err => console.error("Error fetching profile:", err));
+    const nameElem = document.getElementById('userEmailDisplay');
+    if (nameElem) {
+      nameElem.textContent = userData?.fullName || user.email;
+    }
 
-    // Then load your orders
     loadOrdersFromFirestore(currentUserId);
 
-  } else {
+  } catch (err) {
+    console.error("Session validation error:", err);
+    await auth.signOut();
+    localStorage.removeItem('sessionId');
     window.location.href = "Loginindex.html";
   }
 });
 
 
 
+
   document.getElementById('excelFile').addEventListener('change', handleFile, false);
   document.getElementById('searchInput').addEventListener('input', filterTable);
   document.getElementById('statusFilter').addEventListener('change', filterTable);
+  document.getElementById('monthSort').addEventListener('change', sortByMonth);
+
 
  async function loadOrdersFromFirestore(userId) {
   try {
@@ -1925,24 +1973,32 @@ async function saveOrdersToFirestore(userId, ordersArray) {
 
 
   function determineStatus(row) {
-    const delivered = Number(row["Quantity Delivered"] || 0);
-    const ordered = Number(row["Quantity Ordered"] || 0);
-    const cancelled = Number(row["Quantity Cancelled"] || 0);
+  const delivered = Number(row["Quantity Delivered"] || 0);
+  const ordered = Number(row["Quantity Ordered"] || 0);
+  const cancelled = Number(row["Quantity Cancelled"] || 0);
 
-    if (cancelled > 0) return 'Cancelled';
-    if (delivered === ordered && ordered > 0) return 'Delivered';
-    if (delivered > 0 && delivered < ordered) return 'Partial';
-    return 'Pending';
-  }
+  if (cancelled > 0 && delivered === 0) return 'Cancelled';
+  if (delivered === ordered && ordered > 0) return 'Delivered';
+  if (delivered > 0 && delivered < ordered) return 'Partial';
+  if (ordered > 0 && delivered === 0 && cancelled === 0) return 'In Progress';
+  return 'Pending';
+}
+
+
+function getStatusClass(status) {
+  const s = status.toLowerCase();
+  return s === 'delivered' ? 'status-delivered' :
+         s === 'cancelled' ? 'status-cancelled' :
+         s === 'partial' ? 'status-partial' :
+         s === 'in progress' ? 'status-inprogress' :
+         'status-pending';
+}
 
 
 
-  function getStatusClass(status) {
-    const s = status.toLowerCase();
-    return s === 'delivered' ? 'status-delivered' :
-           s === 'cancelled' ? 'status-cancelled' :
-           s === 'partial' ? 'status-partial' : '';
-  }
+
+
+
 
   function formatDate(value) {
     if (!value) return '';
@@ -1988,22 +2044,18 @@ async function saveOrdersToFirestore(userId, ordersArray) {
   if (partialElem) partialElem.textContent = partiallyDelivered;
 }
 
-
 function filterTable() {
-  console.log('filterTable called');
-
   const searchInput = document.getElementById('searchInput');
   const statusSelect = document.getElementById('statusFilter');
+  const monthSelect = document.getElementById('monthFilter');
 
   const search = (searchInput?.value || '').toLowerCase();
   const statusFilter = (statusSelect?.value || '').toLowerCase();
-
-  console.log('Search:', search, 'Status filter:', statusFilter);
+  const selectedMonth = monthSelect?.value || ''; // e.g., "07"
 
   const filtered = fullData.filter(row => {
     const customerRaw = row["Customer"] ?? row["Supplier"] ?? '';
     const productRaw = row["Product"] ?? row["Description"] ?? '';
-
     const customer = String(customerRaw).toLowerCase();
     const product = String(productRaw).toLowerCase();
 
@@ -2014,11 +2066,19 @@ function filterTable() {
       console.warn("Invalid row during status determination:", row, err);
     }
 
-    return (customer.includes(search) || product.includes(search)) &&
-           (!statusFilter || status === statusFilter);
-  });
+    // Month check
+    let matchesMonth = true;
+    if (selectedMonth && row["Order Date"]) {
+      const date = new Date(row["Order Date"]);
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      matchesMonth = (month === selectedMonth);
+    }
 
-  console.log('Filtered data count:', filtered.length);
+    const matchesSearch = customer.includes(search) || product.includes(search);
+    const matchesStatus = !statusFilter || status === statusFilter;
+
+    return matchesSearch && matchesStatus && matchesMonth;
+  });
 
   populateTable(filtered);
   updateSummary(filtered);
@@ -2429,10 +2489,6 @@ function downloadTableAsCSV(tableId, filename = 'follow_up_report.csv') {
 
 
 
-
-
-
-
     // Show Follow-Up Report Output Modal
     const reportOutputModal = new bootstrap.Modal(document.getElementById("reportOutputModal"));
     reportOutputModal.show();
@@ -2479,7 +2535,13 @@ function computeTentativeDate(orderDate, leadTime) {
 
 
 
+ document.getElementById("toggleSidebar").addEventListener("click", () => {
+    const sidebar = document.getElementById("functionSidebar");
+    const mainContent = document.getElementById("mainContent");
 
+    sidebar.classList.toggle("active");
+    mainContent.classList.toggle("shifted");
+  });
 
 
 
@@ -2772,6 +2834,37 @@ function formatDateDisplay(dateValue) {
 
 
 
+function sortByMonth() {
+  const selectedMonth = document.getElementById("monthSort").value;
+
+  if (!selectedMonth) {
+    populateTable(fullData); // Show all if no month selected
+    updateSummary(fullData);
+    return;
+  }
+
+  const filtered = fullData.filter(row => {
+    const orderDateStr = row["Order Date"];
+    if (!orderDateStr) return false;
+
+    const orderDate = new Date(orderDateStr);
+    const monthName = orderDate.toLocaleString('default', { month: 'long' });
+
+    return monthName.toLowerCase() === selectedMonth.toLowerCase();
+  });
+
+  populateTable(filtered);
+  updateSummary(filtered);
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2876,7 +2969,6 @@ window.addEventListener('beforeunload', async () => {
     }
   }
 });
-
 
 
 
