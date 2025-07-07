@@ -70,133 +70,144 @@
     </div>
   </div>
 
-  <!-- Firebase Login Script -->
-  <script type="module">
-    
-import { v4 as uuidv4 } from "https://jspm.dev/uuid";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+<!-- Firebase Login Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+  // 🔧 Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+    authDomain: "order-monitoring-purchasing.firebaseapp.com",
+    projectId: "order-monitoring-purchasing",
+    storageBucket: "order-monitoring-purchasing.appspot.com",
+    messagingSenderId: "209378598320",
+    appId: "1:209378598320:web:0c143d69bc329a994d8a75"
+  };
 
-       const firebaseConfig = {
-      apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
-      authDomain: "order-monitoring-purchasing.firebaseapp.com",
-      projectId: "order-monitoring-purchasing",
-      storageBucket: "order-monitoring-purchasing.appspot.com",
-      messagingSenderId: "209378598320",
-      appId: "1:209378598320:web:0c143d69bc329a994d8a75"
-    };
+  // 🔐 Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  // DOM Elements
+  const loginForm = document.getElementById('loginForm');
+  const errorMessage = document.getElementById('errorMessage');
+  const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
-    const loginForm = document.getElementById('loginForm');
-    const errorMessage = document.getElementById('errorMessage');
-    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
-
-forgotPasswordBtn.addEventListener('click', async () => {
-  const email = loginForm.email.value.trim();
-  if (!email) {
-    errorMessage.textContent = "Please enter your email to reset password.";
-    errorMessage.classList.remove('text-green-600');
-    errorMessage.classList.add('text-red-600');
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    errorMessage.textContent = "📧 Password reset email sent!";
-    errorMessage.classList.remove('text-red-600');
-    errorMessage.classList.add('text-green-600');
-
-    setTimeout(() => {
-      errorMessage.textContent = "";
-      errorMessage.classList.remove("text-green-600");
-    }, 5000);
-
-  } catch (error) {
-    errorMessage.textContent = error.message;
-    errorMessage.classList.remove('text-green-600');
-    errorMessage.classList.add('text-red-600');
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   loginForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  errorMessage.textContent = "";
-
-  const email = loginForm.email.value.trim();
-  const password = loginForm.password.value;
-
-  try {
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    const userRef = doc(db, "users", userCred.user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      errorMessage.textContent = "Account not found. Please sign up.";
+  // 🔁 Forgot Password Logic
+  forgotPasswordBtn.addEventListener('click', async () => {
+    const email = loginForm.email.value.trim();
+    if (!email) {
+      showError("Please enter your email to reset password.");
       return;
     }
 
-    const userData = userSnap.data();
-    if (!userData.approved) {
-      errorMessage.textContent = "Account is not yet approved.";
-      return;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showSuccess("📧 Password reset email sent!");
+    } catch (err) {
+      showError(err.message);
     }
+  });
 
-    if (userData.sessionActive) {
-      errorMessage.textContent = "🚫 You are already logged in from another device.";
-      return;
-    }
-
-    // Mark session as active
-    const sessionId = uuidv4();
-
-await updateDoc(userRef, {
-  sessionActive: true,
-  sessionId: sessionId,
-  lastSession: serverTimestamp()
-});
-
-localStorage.setItem('sessionId', sessionId);
-
-
-console.log("✅ Login successful. Redirecting...");
-window.location.assign("Order%20Monitoring.html");
-
-
-  } catch (err) {
-    errorMessage.textContent = err.message;
+  // 🔧 Feedback Functions
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorMessage.classList.remove("text-green-600");
+    errorMessage.classList.add("text-red-600");
+    console.error("❌", msg); // 🔁 ADD THIS
   }
-});
-  </script>
+
+  function showSuccess(msg) {
+    errorMessage.textContent = msg;
+    errorMessage.classList.remove("text-red-600");
+    errorMessage.classList.add("text-green-600");
+    console.log("✅", msg); // 🔁 ADD THIS
+  }
+
+  // 🔐 LOGIN HANDLER
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMessage.textContent = "";
+
+    const email = loginForm.email.value.trim();
+    const password = loginForm.password.value;
+
+    console.log("🔐 Attempting login for:", email); // 🔁 ADD BEFORE LOGIN ATTEMPT
+
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await signOut(auth);
+        return showError("Account not found.");
+      }
+
+      const userData = userSnap.data();
+
+      if (!userData.approved) {
+        await signOut(auth);
+        return showError("Account is not yet approved.");
+      }
+
+      const newSessionId = crypto.randomUUID(); // 🆕 Session ID
+      const remoteSessionId = userData.sessionId;
+      const sessionActive = userData.sessionActive;
+      const existingLocalSession = localStorage.getItem("sessionId");
+
+      // 🚫 Already active session on another device?
+      console.log("🔍 Checking session:", {
+        sessionActive,
+        remoteSessionId,
+        existingLocalSession,
+        newSessionId
+      }); // 🔁 ADD THIS
+
+// 🚫 Only prevent login if there's a session already in localStorage that doesn't match the remote
+if (sessionActive && remoteSessionId && existingLocalSession && existingLocalSession !== remoteSessionId) {
+  await signOut(auth);
+  return showError("🚫 You are already logged in from another device.");
+}
+
+
+      // ✅ Save session ID to Firestore
+      await updateDoc(userRef, {
+        sessionActive: true,
+        sessionId: newSessionId,
+        lastSession: serverTimestamp()
+      });
+
+      console.log("✅ Firestore session updated:", newSessionId); // 🔁 ADD THIS
+
+      // ✅ Save locally
+      localStorage.setItem("sessionId", newSessionId);
+
+      // ✅ Redirect
+      window.location.href = "Order Monitoring.html";
+
+    } catch (err) {
+      console.error("Login failed:", err); // 🔁 ADD THIS
+      showError(err.message);
+    }
+  });
+</script>
+
+
 </body>
 </html>
