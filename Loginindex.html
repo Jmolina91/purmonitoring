@@ -186,20 +186,27 @@ if (sessionActive && remoteSessionId && existingLocalSession && existingLocalSes
 }
 
 
-      // ✅ Save session ID to Firestore
-      await updateDoc(userRef, {
-        sessionActive: true,
-        sessionId: newSessionId,
-        lastSession: serverTimestamp()
-      });
+    // ✅ Save session ID to Firestore
+await updateDoc(userRef, {
+  sessionActive: true,
+  sessionId: newSessionId,
+  lastSession: serverTimestamp()
+});
 
-      console.log("✅ Firestore session updated:", newSessionId); // 🔁 ADD THIS
+console.log("✅ Firestore session updated:", newSessionId);
 
-      // ✅ Save locally
-      localStorage.setItem("sessionId", newSessionId);
+// ✅ Save locally
+localStorage.setItem("sessionId", newSessionId);
 
-      // ✅ Redirect
-      window.location.href = "Order Monitoring.html";
+// ✅ Redirect based on role
+if (userData.role?.toLowerCase() === "admin") {
+  window.location.href = "ADMN Home.html";
+} else if (userData.role?.toLowerCase() === "team leader") {
+  window.location.href = "teamleader-view.html";
+} else {
+  showError("❌ Unknown role. Contact admin.");
+}
+
 
     } catch (err) {
       console.error("Login failed:", err); // 🔁 ADD THIS
