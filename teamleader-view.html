@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Leader Order View</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f2f2f7;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.4s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .sidebar {
+    width: 260px;
+    background: #1c1c1e;
+    color: white;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: fixed;
+    height: 100%;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+
+  .sidebar h3 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .sidebar a {
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar a:hover {
+    color: #0a84ff;
+  }
+
+ .main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2rem;
+  overflow-x: hidden;
+  background: #f2f2f7;
+}
+
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #0a84ff;
+    margin-bottom: 1rem;
+  }
+
+  #statusMsg {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  header {
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  header button:hover {
+    transform: scale(1.05);
+  }
+
+  .table-container {
+  overflow: auto;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 70vh;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0; /* remove extra padding to prevent header jump */
+  position: relative;
+}
+
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed;
+  }
+
+table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* match header background */
+  color: white;
+  z-index: 5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* subtle shadow */
+}
+
+  th, td {
+    padding: 12px 14px;
+    border: 1px solid #e5e5ea;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* Required! */
+  color: white;
+  font-weight: 600;
+  z-index: 10;
+  padding: 12px 14px;
+  text-align: left;
+  user-select: none;
+  border-bottom: 1px solid #ccc;
+}
+
+
+
+  th {
+    background-color: #007aff;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  th.resizable {
+    position: relative;
+  }
+
+  th.resizable::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2;
+  }
+
+  #customizePanel {
+    display: none;
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+
+.chart-slide-panel {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 0;
+  overflow: hidden;
+  transform: translateX(-100%); /* start fully hidden */
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  transition: transform 0.5s ease-in-out, max-height 0.5s ease-in-out;
+}
+
+.chart-slide-panel.visible {
+  transform: translateX(0%);
+  max-height: 600px; /* adjust if needed based on chart height */
+}
+
+
+</style>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <h3>📊 Dashboard</h3>
+  <a href="#">🏠 Home</a>
+  <a href="#" onclick="showChartSection()">📈 Charts</a>
+
+  <a href="#">📄 Reports</a>
+  <a href="#">👥 Users</a>
+  <a href="#" onclick="logout()" class="text-red-400 hover:text-red-500">🚪 Logout</a>
+</aside>
+
+<!-- Page Content -->
+<div class="main-content fade-in">
+  <!-- Top Header -->
+  <header>
+    <h2>📋 Team Leader Orders</h2>
+    <div class="flex gap-3">
+      <button id="btnCustomize" class="bg-[#007aff] text-white">⚙️ Customize</button>
+      <button onclick="refreshTable()" class="bg-[#34c759] text-white">🔄 Refresh</button>
+      <button onclick="exportTableToCSV()" class="bg-[#ff9500] text-white">📤 Export CSV</button>
+    </div>
+  </header>
+
+  <!-- Customize Panel -->
+  <div id="customizePanel" class="hidden bg-white rounded-xl shadow-md p-6 mb-6 animate-fade-in-down">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-xl font-semibold text-gray-800 flex items-center gap-2">🛠️ Table Settings</h4>
+    </div>
+    <div id="customizeColumns" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- JS will populate columns here -->
+    </div>
+  </div>
+
+<!-- Inside .main-content, after Customize Panel -->
+<!-- Chart Slide Panel -->
+<div id="chartSlidePanel"
+     class="chart-slide-panel transform transition-transform duration-500 ease-in-out">
+  <div class="p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h4 class="text-lg font-semibold text-gray-700">📊 Order Insights</h4>
+    </div>
+    <div class="flex flex-wrap justify-center gap-6">
+      <!-- Pie Chart -->
+      <div class="w-full md:w-1/2" style="max-width: 600px; height: 320px;">
+        <h5 class="text-md font-semibold text-gray-600 mb-2">🧩 Orders by Main Category</h5>
+        <canvas id="categoryPieChart" style="min-height: 280px; min-width: 300px;"></canvas>
+      </div>
+      <!-- Line Chart -->
+      <div class="w-full md:w-1/2" style="max-width: 600px; height: 320px;">
+        <h5 class="text-md font-semibold text-gray-600 mb-2">📈 Orders Over Time</h5>
+        <canvas id="ordersLineChart" style="min-height: 280px; min-width: 300px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <!-- Status Message -->
+  <div id="statusMsg">🔐 Verifying user...</div>
+
+  <!-- Table Container -->
+  <div class="table-container">
+    <table id="ordersTable">
+      <thead id="ordersHead">
+        <tr><th>Loading...</th></tr>
+      </thead>
+      <tbody id="ordersBody">
+        <tr><td>Loading orders...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-8 text-center text-gray-400 text-sm">
+    © 2025 Team Leader Dashboard. All rights reserved.
+  </footer>
+</div>
+
+
+
+
+
+
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+    authDomain: "order-monitoring-purchasing.firebaseapp.com",
+    projectId: "order-monitoring-purchasing",
+    storageBucket: "order-monitoring-purchasing.appspot.com",
+    messagingSenderId: "209378598320",
+    appId: "1:209378598320:web:0c143d69bc329a994d8a75"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let columnSettings = { visible: [], order: [], widths: {} };
+  let chartPanelVisible = false;
+  let ordersChartInstance = null;
+  let categoryChartInstance = null;
+  let chartsRendered = false;
+
+
+  function loadColumnSettings(defaultColumns) {
+    const saved = JSON.parse(localStorage.getItem("tableColumnSettings"));
+    if (saved && Array.isArray(saved.order) && Array.isArray(saved.visible)) {
+      columnSettings = {
+        visible: saved.visible,
+        order: saved.order,
+        widths: saved.widths || {}
+      };
+    } else {
+      columnSettings = {
+        visible: [...defaultColumns],
+        order: [...defaultColumns],
+        widths: {}
+      };
+    }
+  }
+
+
+
+
+
+
+function showChartSection() {
+  const panel = document.getElementById("chartSlidePanel");
+  chartPanelVisible = !chartPanelVisible;
+
+  if (chartPanelVisible) {
+    panel.classList.add("visible");
+    if (!chartsRendered && window.latestOrderData) {
+      renderOrdersChart(window.latestOrderData);
+      renderCategoryPieChart(window.latestOrderData);
+      chartsRendered = true;
+    }
+  } else {
+    panel.classList.remove("visible");
+  }
+}
+
+
+
+
+
+function renderOrdersChart(orderData) {
+  const ctx = document.getElementById('ordersLineChart').getContext('2d');
+  if (ordersChartInstance) ordersChartInstance.destroy();
+
+  const monthlyCounts = {};
+  orderData.forEach(order => {
+    const date = new Date(order.orderDate || order.order?.['Order Date']);
+    if (!isNaN(date)) {
+      const monthKey = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+      monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+    }
+  });
+
+  const labels = Object.keys(monthlyCounts);
+  const values = Object.values(monthlyCounts);
+
+  ordersChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Orders',
+        data: values,
+        borderColor: '#0a84ff',
+        backgroundColor: 'rgba(10,132,255,0.1)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointBackgroundColor: '#0a84ff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `Orders: ${ctx.parsed.y}`
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Month' } },
+        y: { beginAtZero: true, title: { display: true, text: 'Number of Orders' } }
+      }
+    }
+  });
+}
+
+
+
+
+function renderCategoryPieChart(orderData) {
+  const ctx = document.getElementById('categoryPieChart').getContext('2d');
+  if (categoryChartInstance) categoryChartInstance.destroy();
+
+  const categoryCounts = {};
+
+  orderData.forEach(order => {
+    const rawCategory = order.order?.Category || "";
+    const mainCategory = rawCategory.split('.')[0].trim().toUpperCase();
+
+    if (mainCategory) {
+      categoryCounts[mainCategory] = (categoryCounts[mainCategory] || 0) + 1;
+    }
+  });
+
+  const labels = Object.keys(categoryCounts);
+  const data = Object.values(categoryCounts);
+  const backgroundColors = labels.map((_, i) =>
+    `hsl(${(i * 137.5) % 360}, 70%, 60%)`);
+
+  categoryChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: backgroundColors
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.label}: ${ctx.parsed} orders`
+          }
+        }
+      }
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function saveColumnSettings() {
+    localStorage.setItem("tableColumnSettings", JSON.stringify(columnSettings));
+  }
+
+  function fixTableColumnWidths() {
+    const head = document.getElementById("ordersHead");
+    const body = document.getElementById("ordersBody");
+    const headerRow = head.querySelector("tr");
+    const rows = Array.from(body.querySelectorAll("tr"));
+
+    if (!headerRow) return;
+
+    columnSettings.order.forEach((col, i) => {
+      if (!columnSettings.visible.includes(col)) return;
+
+      let maxWidth = 0;
+      const th = headerRow.children[i];
+      if (th) maxWidth = Math.max(maxWidth, th.textContent.trim().length * 10);
+
+      rows.forEach(row => {
+        const cell = row.children[i];
+        if (cell) maxWidth = Math.max(maxWidth, cell.textContent.trim().length * 9);
+      });
+
+      maxWidth = Math.max(80, Math.min(maxWidth, 300));
+
+      if (headerRow.children[i]) headerRow.children[i].style.width = maxWidth + "px";
+      rows.forEach(row => {
+        if (row.children[i]) row.children[i].style.width = maxWidth + "px";
+      });
+
+      columnSettings.widths[col] = maxWidth;
+    });
+
+    saveColumnSettings();
+  }
+
+ function buildTable(rows) {
+  const head = document.getElementById("ordersHead");
+  const body = document.getElementById("ordersBody");
+  head.innerHTML = "";
+  body.innerHTML = "";
+
+  if (!rows.length) {
+    head.innerHTML = "<tr><th>No Data</th></tr>";
+    body.innerHTML = "<tr><td>No orders found</td></tr>";
+    return;
+  }
+
+  const allColumns = new Set(["userId"]);
+  rows.forEach(r => Object.keys(r.order).forEach(k => allColumns.add(k)));
+  const allColArray = Array.from(allColumns);
+
+  loadColumnSettings(allColArray);
+
+  // ⬅️ Get and clear the customize panel
+  const customizePanel = document.getElementById("customizePanel");
+  const customizeColumnsContainer = document.getElementById("customizeColumns");
+  customizeColumnsContainer.innerHTML = "";
+
+  // ✅ Auto Fit Button: Insert at top of customizePanel
+  let existingAutoFit = document.getElementById("autoFitBtn");
+  if (existingAutoFit) existingAutoFit.remove();
+
+  const autoFitBtn = document.createElement("button");
+  autoFitBtn.id = "autoFitBtn";
+  autoFitBtn.className = "mb-5 flex items-center gap-2 bg-[#d1d1d6] hover:bg-[#c7c7cc] text-[#1c1c1e] px-4 py-2 rounded-lg shadow-sm transition-all duration-200";
+  autoFitBtn.innerHTML = `🧩 <span class="font-medium">Auto Fit Column Widths</span> <kbd class="ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600">Alt + H + O + I</kbd>`;
+  autoFitBtn.onclick = fixTableColumnWidths;
+  customizePanel.insertBefore(autoFitBtn, customizeColumnsContainer);
+
+  // ✅ Column Visibility Checkboxes
+  customizeColumnsContainer.style.display = "grid";
+  customizeColumnsContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+  customizeColumnsContainer.style.gap = "12px";
+
+  columnSettings.order.forEach(col => {
+    const wrapper = document.createElement("label");
+    wrapper.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f2f2f7;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+    `;
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = columnSettings.visible.includes(col);
+    input.dataset.col = col;
+    input.addEventListener("change", () => {
+      const colName = input.dataset.col;
+      if (input.checked) {
+        if (!columnSettings.visible.includes(colName)) {
+          columnSettings.visible.push(colName);
+        }
+      } else {
+        columnSettings.visible = columnSettings.visible.filter(c => c !== colName);
+      }
+      saveColumnSettings();
+      buildTable(rows);
+    });
+    const labelText = document.createElement("span");
+    labelText.textContent = col;
+    wrapper.appendChild(input);
+    wrapper.appendChild(labelText);
+    customizeColumnsContainer.appendChild(wrapper);
+  });
+
+  // ✅ Table Header
+  const headerRow = document.createElement("tr");
+  columnSettings.order.forEach(col => {
+    if (!columnSettings.visible.includes(col)) return;
+
+const th = document.createElement("th");
+th.classList.add("resizable");
+
+th.dataset.col = col;
+th.style.userSelect = "none";
+
+    th.style.userSelect = "none";
+    if (columnSettings.widths[col]) {
+      th.style.width = columnSettings.widths[col] + "px";
+    }
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = col;
+    titleSpan.style.pointerEvents = "none";
+    th.appendChild(titleSpan);
+
+    const resizer = document.createElement("div");
+    resizer.style.cssText = `
+      width: 6px;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      right: 0;
+      cursor: col-resize;
+      z-index: 10;
+    `;
+    let isResizing = false;
+
+    resizer.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      isResizing = true;
+      const startX = e.pageX;
+      const startWidth = th.offsetWidth;
+      const index = Array.from(headerRow.children).indexOf(th);
+      const colName = th.dataset.col;
+
+      function onMouseMove(eMove) {
+        const newWidth = startWidth + (eMove.pageX - startX);
+        head.querySelectorAll("th")[index].style.width = newWidth + "px";
+        body.querySelectorAll("tr").forEach(row => {
+          if (row.children[index]) row.children[index].style.width = newWidth + "px";
+        });
+      }
+
+      function onMouseUp() {
+        isResizing = false;
+        const newWidth = head.querySelectorAll("th")[index].offsetWidth;
+        columnSettings.widths[colName] = newWidth;
+        saveColumnSettings();
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    th.appendChild(resizer);
+
+    // Drag & Drop Columns
+    th.draggable = true;
+    th.addEventListener("dragstart", e => {
+      if (isResizing) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData("text/plain", col);
+    });
+    th.addEventListener("dragover", e => e.preventDefault());
+    th.addEventListener("drop", e => {
+      e.preventDefault();
+      if (isResizing) return;
+      const draggedCol = e.dataTransfer.getData("text/plain");
+      const targetCol = th.dataset.col;
+      const fromIndex = columnSettings.order.indexOf(draggedCol);
+      const toIndex = columnSettings.order.indexOf(targetCol);
+      columnSettings.order.splice(fromIndex, 1);
+      columnSettings.order.splice(toIndex, 0, draggedCol);
+      saveColumnSettings();
+      buildTable(rows);
+    });
+
+    headerRow.appendChild(th);
+  });
+  head.appendChild(headerRow);
+
+  // ✅ Table Body
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    columnSettings.order.forEach(col => {
+      if (!columnSettings.visible.includes(col)) return;
+      const td = document.createElement("td");
+      td.textContent = col === "userId" ? r.userId : (r.order[col] ?? "");
+      if (columnSettings.widths[col]) {
+        td.style.width = columnSettings.widths[col] + "px";
+      }
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+
+
+  auth.onAuthStateChanged(async user => {
+    const status = document.getElementById("statusMsg");
+    if (!user) {
+      status.textContent = "⛔ Not logged in.";
+      return;
+    }
+
+    try {
+      const userDoc = await db.collection("users").doc(user.uid).get();
+      const data = userDoc.data();
+
+      if (!data || (data.role?.toLowerCase() !== "team leader")) {
+        status.textContent = "⛔ Access denied. Only Team Leaders allowed.";
+        return;
+      }
+
+      const assignedUsers = data.teamMembers || [];
+      if (assignedUsers.length === 0) {
+        status.textContent = "📝 No users assigned to you yet.";
+        return;
+      }
+
+      const rows = [];
+      for (const uid of assignedUsers) {
+        const snap = await db.collection("orders").doc(uid).collection("userOrders").get();
+        snap.forEach(doc => {
+          rows.push({ userId: uid, order: doc.data() });
+        });
+      }
+
+      document.getElementById("ordersTable").style.display = "table";
+      status.style.display = "none";
+      buildTable(rows);
+
+      if (!Object.keys(columnSettings.widths).length) {
+        fixTableColumnWidths();
+      }
+             document.getElementById("ordersTable").style.display = "table";
+      status.style.display = "none";
+      buildTable(rows);
+
+      if (!Object.keys(columnSettings.widths).length) {
+        fixTableColumnWidths();
+      }
+
+      // ✅ MOVE THIS HERE
+window.latestOrderData = rows; // ✅ Save for later
+// No need to render here — wait for user to open chart panel
+
+
+
+
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      status.textContent = "❌ Error loading orders.";
+      return;
+    }
+
+
+
+  });
+
+
+
+  document.getElementById("btnCustomize").addEventListener("click", () => {
+    const panel = document.getElementById("customizePanel");
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "Loginindex.html";
+    });
+  }
+</script>
+
+
+</body>
+</html>
