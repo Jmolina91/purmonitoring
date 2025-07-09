@@ -14,6 +14,7 @@
       color: #1c1c1e;
       padding: 2rem;
     }
+body { display: none; }
 
     h2 {
       font-size: 1.8rem;
@@ -271,6 +272,17 @@
     window.addEventListener("click", (e) => {
       if (e.target === modal) closeModal();
     });
+
+// 🔐 Redirect to login if not authenticated
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "Loginindex.html";
+  }
+});
+
+
+
+    
   </script>
 </body>
 </html>
