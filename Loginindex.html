@@ -10,7 +10,6 @@
 </head>
 <body class="h-full">
   <div class="flex h-screen overflow-hidden">
-
     <!-- Left Panel -->
     <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 text-white items-center justify-center px-12">
       <div class="max-w-md text-center animate-fadeIn">
@@ -31,34 +30,33 @@
         </div>
 
         <form id="loginForm" class="mt-8 space-y-6" autocomplete="off">
-  <div class="rounded-md shadow-sm space-y-5">
-    <div>
-      <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-      <input id="email" name="email" type="email" autocomplete="off" required
-             class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md ...">
-    </div>
+          <div class="rounded-md shadow-sm space-y-5">
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+              <input id="email" name="email" type="email" autocomplete="off" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
+            </div>
 
-    <div>
-      <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-      <input id="password" name="password" type="password" autocomplete="new-password" required
-             class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md ...">
-    </div>
-  </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+              <input id="password" name="password" type="password" autocomplete="new-password" required
+                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
+            </div>
+          </div>
 
-  <div class="text-sm text-right w-full">
-    <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
-      Forgot password?
-    </button>
-  </div>
+          <div class="text-sm text-right w-full">
+            <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+              Forgot password?
+            </button>
+          </div>
 
-  <div>
-    <button type="submit"
-            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 ...">
-      Sign in
-    </button>
-  </div>
-</form>
-
+          <div>
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+              Sign in
+            </button>
+          </div>
+        </form>
 
         <p id="errorMessage" class="text-center text-sm text-red-600 mt-2"></p>
 
@@ -87,7 +85,6 @@
     serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-  // 🔧 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
     authDomain: "order-monitoring-purchasing.firebaseapp.com",
@@ -97,17 +94,14 @@
     appId: "1:209378598320:web:0c143d69bc329a994d8a75"
   };
 
-  // 🔐 Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // DOM Elements
   const loginForm = document.getElementById('loginForm');
   const errorMessage = document.getElementById('errorMessage');
   const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
-  // 🔁 Forgot Password Logic
   forgotPasswordBtn.addEventListener('click', async () => {
     const email = loginForm.email.value.trim();
     if (!email) {
@@ -123,30 +117,26 @@
     }
   });
 
-  // 🔧 Feedback Functions
   function showError(msg) {
     errorMessage.textContent = msg;
     errorMessage.classList.remove("text-green-600");
     errorMessage.classList.add("text-red-600");
-    console.error("❌", msg); // 🔁 ADD THIS
+    console.error("❌", msg);
   }
 
   function showSuccess(msg) {
     errorMessage.textContent = msg;
     errorMessage.classList.remove("text-red-600");
     errorMessage.classList.add("text-green-600");
-    console.log("✅", msg); // 🔁 ADD THIS
+    console.log("✅", msg);
   }
 
-  // 🔐 LOGIN HANDLER
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMessage.textContent = "";
 
     const email = loginForm.email.value.trim();
     const password = loginForm.password.value;
-
-    console.log("🔐 Attempting login for:", email); // 🔁 ADD BEFORE LOGIN ATTEMPT
 
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
@@ -161,73 +151,47 @@
 
       const userData = userSnap.data();
 
-     if (!userData.approved) {
-  await signOut(auth);
-  return showError("Account is not yet approved.");
-}
+      if (!userData.approved) {
+        await signOut(auth);
+        return showError("Account is not yet approved.");
+      }
 
-
-
-
-      const newSessionId = crypto.randomUUID(); // 🆕 Session ID
+      const newSessionId = crypto.randomUUID();
       const remoteSessionId = userData.sessionId;
       const sessionActive = userData.sessionActive;
       const existingLocalSession = localStorage.getItem("sessionId");
 
-      // 🚫 Already active session on another device?
-      console.log("🔍 Checking session:", {
-        sessionActive,
-        remoteSessionId,
-        existingLocalSession,
-        newSessionId
-      }); // 🔁 ADD THIS
+      if (sessionActive && remoteSessionId && existingLocalSession && existingLocalSession !== remoteSessionId) {
+        await signOut(auth);
+        return showError("🚫 You are already logged in from another device.");
+      }
 
-// 🚫 Only prevent login if there's a session already in localStorage that doesn't match the remote
-if (sessionActive && remoteSessionId && existingLocalSession && existingLocalSession !== remoteSessionId) {
-  await signOut(auth);
-  return showError("🚫 You are already logged in from another device.");
-}
+      await updateDoc(userRef, {
+        sessionActive: true,
+        sessionId: newSessionId,
+        lastSession: serverTimestamp()
+      });
 
+      localStorage.setItem("sessionId", newSessionId);
 
-    // ✅ Save session ID to Firestore
-await updateDoc(userRef, {
-  sessionActive: true,
-  sessionId: newSessionId,
-  lastSession: serverTimestamp()
-});
+      // ✅ Role-based redirect
+      const role = userData.role?.toLowerCase();
 
-console.log("✅ userData:", userData);
-
-// 🔒 Ensure user is approved
-if (!userData.approved) {
-  await signOut(auth);
-  return showError("Account is not yet approved.");
-}
-
-// ✅ Role-based redirect
-const role = userData.role?.toLowerCase();
-
-if (role === "admin") {
-  window.location.href = "ADMN Home.html";
-} else if (role === "team leader") {
-  window.location.href = "teamleader-view.html";
-} else if (role === "user") {
-  window.location.href = "Order Monitoring.html";
-} else {
-  showError("❌ Unknown role. Contact admin.");
-}
-
-
-
-
+      if (role === "admin") {
+        window.location.href = "ADMN Home.html";
+      } else if (role === "team leader") {
+        window.location.href = "teamleader-view.html";
+      } else if (role === "user") {
+        window.location.href = "Order Monitoring.html";
+      } else {
+        showError("❌ Unknown role. Contact admin.");
+      }
 
     } catch (err) {
-      console.error("Login failed:", err); // 🔁 ADD THIS
+      console.error("Login failed:", err);
       showError(err.message);
     }
   });
 </script>
-
-
 </body>
 </html>
