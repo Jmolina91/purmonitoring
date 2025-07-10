@@ -199,16 +199,17 @@ console.log("✅ Firestore session updated:", newSessionId);
 // ✅ Save locally
 localStorage.setItem("sessionId", newSessionId);
 
-// ✅ Redirect based on role 
-if (userData.role?.toLowerCase() === "admin") {
+// ✅ Redirect based on role and approval status
+if (userData.role?.toLowerCase() === "admin" && userData.approved === true) {
   window.location.href = "ADMN Home.html";
-} else if (userData.role?.toLowerCase() === "team leader") {
+} else if (userData.role?.toLowerCase() === "team leader" && userData.approved === true) {
   window.location.href = "teamleader-view.html";
-} else if (userData.role?.toLowerCase() === "user" && userData.status?.toLowerCase() === "approved") {
+} else if (userData.role?.toLowerCase() === "user" && userData.approved === true) {
   window.location.href = "Order Monitoring.html";
 } else {
   showError("❌ Unknown role or not approved. Contact admin.");
 }
+
 
 
     } catch (err) {
