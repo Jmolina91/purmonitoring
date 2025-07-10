@@ -194,21 +194,26 @@ await updateDoc(userRef, {
   lastSession: serverTimestamp()
 });
 
-console.log("✅ Firestore session updated:", newSessionId);
+console.log("✅ userData:", userData);
 
-// ✅ Save locally
-localStorage.setItem("sessionId", newSessionId);
+if (!userData.approved) {
+  console.log("🚫 NOT APPROVED: ", userData.approved);
+  await signOut(auth);
+  return showError("Account is not yet approved.");
+}
 
-// ✅ Redirect based on role and approval status
-if (userData.role?.toLowerCase() === "admin" && userData.approved === true) {
+// ✅ Redirect based on role
+const role = userData.role?.toLowerCase();
+if (role === "admin" && userData.approved === true) {
   window.location.href = "ADMN Home.html";
-} else if (userData.role?.toLowerCase() === "team leader" && userData.approved === true) {
+} else if (role === "team leader" && userData.approved === true) {
   window.location.href = "teamleader-view.html";
-} else if (userData.role?.toLowerCase() === "user" && userData.approved === true) {
+} else if (role === "user" && userData.approved === true) {
   window.location.href = "Order Monitoring.html";
 } else {
   showError("❌ Unknown role or not approved. Contact admin.");
 }
+
 
 
 
