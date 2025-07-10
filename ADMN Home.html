@@ -273,12 +273,43 @@ body { display: none; }
       if (e.target === modal) closeModal();
     });
 
-// 🔐 Redirect to login if not authenticated
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async (user) => {
   if (!user) {
     window.location.href = "Loginindex.html";
+    return;
+  }
+
+  try {
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    const userData = userDoc.data();
+
+    if (userData && userData.role === "Admin") {
+      // Show the page only if Admin
+      document.body.style.display = "block";
+    } else {
+      // Not admin: show error message
+      document.body.innerHTML = `
+        <div style="display: flex; height: 100vh; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;">
+          <div>
+            <h2 style="color: red;">❌ Error: Invalid Access</h2>
+            <p>Please contact the system administrator for access.</p>
+          </div>
+        </div>
+      `;
+    }
+  } catch (e) {
+    console.error("Error checking role:", e);
+    document.body.innerHTML = `
+      <div style="display: flex; height: 100vh; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;">
+        <div>
+          <h2 style="color: red;">❌ Error: Unable to verify access</h2>
+          <p>Try again later or contact system administrator.</p>
+        </div>
+      </div>
+    `;
   }
 });
+
 
 
 
