@@ -198,13 +198,15 @@ console.log("✅ Firestore session updated:", newSessionId);
 // ✅ Save locally
 localStorage.setItem("sessionId", newSessionId);
 
-// ✅ Redirect based on role
+// ✅ Redirect based on role 
 if (userData.role?.toLowerCase() === "admin") {
   window.location.href = "ADMN Home.html";
 } else if (userData.role?.toLowerCase() === "team leader") {
   window.location.href = "teamleader-view.html";
+} else if (userData.role?.toLowerCase() === "user" && userData.status?.toLowerCase() === "approved") {
+  window.location.href = "Order Monitoring.html";
 } else {
-  showError("❌ Unknown role. Contact admin.");
+  showError("❌ Unknown role or not approved. Contact admin.");
 }
 
 
