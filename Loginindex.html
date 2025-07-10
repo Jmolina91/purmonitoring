@@ -15,9 +15,7 @@
       <div class="max-w-md text-center animate-fadeIn">
         <h1 class="text-4xl font-bold mb-4 leading-tight">Welcome Back</h1>
         <p class="text-lg mb-6">Monitor your orders efficiently and stay on top of every transaction.</p>
-        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=700&q=80"
-             alt="Dashboard"
-             class="rounded-xl shadow-lg max-w-full" />
+        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=700&q=80" alt="Dashboard" class="rounded-xl shadow-lg max-w-full" />
       </div>
     </div>
 
@@ -33,26 +31,20 @@
           <div class="rounded-md shadow-sm space-y-5">
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-              <input id="email" name="email" type="email" autocomplete="off" required
-                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
+              <input id="email" name="email" type="email" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
             </div>
-
             <div>
               <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-              <input id="password" name="password" type="password" autocomplete="new-password" required
-                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
+              <input id="password" name="password" type="password" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md">
             </div>
           </div>
 
           <div class="text-sm text-right w-full">
-            <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
-              Forgot password?
-            </button>
+            <button type="button" id="forgotPasswordBtn" class="font-medium text-blue-600 hover:text-blue-500 focus:outline-none">Forgot password?</button>
           </div>
 
           <div>
-            <button type="submit"
-                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
               Sign in
             </button>
           </div>
@@ -104,10 +96,7 @@
 
   forgotPasswordBtn.addEventListener('click', async () => {
     const email = loginForm.email.value.trim();
-    if (!email) {
-      showError("Please enter your email to reset password.");
-      return;
-    }
+    if (!email) return showError("Please enter your email to reset password.");
 
     try {
       await sendPasswordResetEmail(auth, email);
@@ -157,11 +146,16 @@
       }
 
       const newSessionId = crypto.randomUUID();
-      const remoteSessionId = userData.sessionId;
-      const sessionActive = userData.sessionActive;
+      const remoteSessionId = userData.sessionId || "";
+      const sessionActive = userData.sessionActive || false;
       const existingLocalSession = localStorage.getItem("sessionId");
 
-      if (sessionActive && remoteSessionId && existingLocalSession && existingLocalSession !== remoteSessionId) {
+      if (
+        sessionActive &&
+        remoteSessionId &&
+        existingLocalSession &&
+        existingLocalSession !== remoteSessionId
+      ) {
         await signOut(auth);
         return showError("🚫 You are already logged in from another device.");
       }
@@ -174,18 +168,19 @@
 
       localStorage.setItem("sessionId", newSessionId);
 
-      // ✅ Role-based redirect
-      const role = userData.role?.toLowerCase();
+     // ✅ Redirect based on role
+const role = userData.role?.toLowerCase();
 
-      if (role === "admin") {
-        window.location.href = "ADMN Home.html";
-      } else if (role === "team leader") {
-        window.location.href = "teamleader-view.html";
-      } else if (role === "user") {
-        window.location.href = "Order Monitoring.html";
-      } else {
-        showError("❌ Unknown role. Contact admin.");
-      }
+if (role === "admin") {
+  window.location.href = "ADMN Home.html";
+} else if (role === "team leader") {
+  window.location.href = "teamleader-view.html";
+} else if (role === "user") {
+  window.location.href = "Order Monitoring.html";
+} else {
+  await signOut(auth);
+  return showError("❌ Unknown role. Contact admin.");
+}
 
     } catch (err) {
       console.error("Login failed:", err);
