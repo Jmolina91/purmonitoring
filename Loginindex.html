@@ -161,10 +161,12 @@
 
       const userData = userSnap.data();
 
-      if (userData.status?.toLowerCase() !== "approved") {
+     if (!userData.approved) {
   await signOut(auth);
   return showError("Account is not yet approved.");
 }
+
+
 
 
       const newSessionId = crypto.randomUUID(); // 🆕 Session ID
