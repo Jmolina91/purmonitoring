@@ -640,7 +640,7 @@ table {
   <ul class="dropdown-menu">
     <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
     <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
-    <li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
+    ///<li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
     <li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
 
   </ul>
@@ -1331,6 +1331,7 @@ const confirmColumnsBtn = document.getElementById('confirmColumnsBtn');
 const updateNavLink = document.getElementById("toggleSidebar");
 
 
+
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -1379,6 +1380,21 @@ firebase.auth().onAuthStateChanged(async (user) => {
   let chart1Type = localStorage.getItem('chart1Type') || 'line';
   let chart2Type = localStorage.getItem('chart2Type') || 'bar';
   let globalRRData = [];
+  let currentSearch = "";
+  let currentStatus = "all";
+  let currentMonthSort = "";
+  let lastUpdatedOrderNumber = null;
+
+
+
+
+
+
+
+
+
+
+
 
 
  document.getElementById("currentYear").textContent = new Date().getFullYear();
@@ -1842,7 +1858,8 @@ function populateTable(data) {
             }
           }
 
-          populateTable(fullData); // Refresh table
+          setTimeout(() => filterTable(), 50);
+
         });
 
         td.appendChild(select);
@@ -2037,7 +2054,7 @@ saveUpdateBtn.addEventListener('click', () => {
     return;
   }
 
-  // Loop through each row to gather updated values
+  // Gather updated values
   const inputs = document.querySelectorAll('#multiItemTableBody input');
   inputs.forEach(input => {
     const index = parseInt(input.dataset.index);
@@ -2051,46 +2068,54 @@ saveUpdateBtn.addEventListener('click', () => {
     currentItem[index][field] = value;
   });
 
-  // Recalculate balance and update Firestore
   saveUpdateBtn.disabled = true;
   saveUpdateBtn.textContent = "Saving...";
 
   const batch = firestore.batch();
 
+  let lastUpdatedOrderNumber = null; // ✅ Track for scroll highlight
+
   currentItem.forEach(item => {
-  item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
+    item["BALANCE"] = item["Quantity Ordered"] - item["Quantity Delivered"] - item["Quantity Cancelled"];
 
-  if (!item["docId"]) {
-    console.error("❌ Missing docId for item:", item);
-    return;
-  }
+    if (!item["docId"]) {
+      console.error("❌ Missing docId for item:", item);
+      return;
+    }
 
-  const docRef = firestore.collection("orders")
-    .doc(currentUserId)
-    .collection("userOrders")
-    .doc(item["docId"]);
+    if (!lastUpdatedOrderNumber) {
+      lastUpdatedOrderNumber = item["Number"]; // ✅ Store this to highlight
+    }
 
-  console.log("✅ Updating document:", item["docId"]);
-  batch.update(docRef, item);
-});
+    const docRef = firestore.collection("orders")
+      .doc(currentUserId)
+      .collection("userOrders")
+      .doc(item["docId"]);
 
+    console.log("✅ Updating document:", item["docId"]);
+    batch.update(docRef, item);
+  });
 
   batch.commit()
     .then(() => {
       alert("Order items updated successfully.");
 
-      // Update fullData in memory
+      // ✅ Update local data
       currentItem.forEach(updated => {
         const index = fullData.findIndex(item => item["docId"] === updated["docId"]);
-
-
         if (index !== -1) {
           fullData[index] = { ...updated };
         }
       });
 
-      populateTable(fullData);
-      updateSummary(fullData);
+      // ✅ Set global reference so filterTable can scroll to it
+      window.lastUpdatedOrderNumber = lastUpdatedOrderNumber;
+
+      setTimeout(() => {
+  filterTable();
+}, 50);  // Slight delay ensures fullData is updated first
+
+
       updateOrderModal.hide();
     })
     .catch(error => {
@@ -2102,6 +2127,7 @@ saveUpdateBtn.addEventListener('click', () => {
       saveUpdateBtn.textContent = "Save";
     });
 });
+
 
 
 
@@ -2204,13 +2230,9 @@ function getStatusClass(status) {
 }
 
 
- // 👇 Your fullData and other functions like determineStatus, populateTable, updateSummary, etc.
 
-  function filterTable() {
-  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  const statusFilter = (document.getElementById('statusFilter')?.value || '').toLowerCase();
-  const selectedMonth = (document.getElementById('monthSort')?.value || '').toLowerCase();
 
+ function filterTable() {
   const filtered = fullData.filter(row => {
     const customerRaw = row["Customer"] ?? row["Supplier"] ?? '';
     const productRaw = row["Product"] ?? row["Description"] ?? '';
@@ -2224,29 +2246,63 @@ function getStatusClass(status) {
       console.warn("Status error on row:", row);
     }
 
-    // ✅ Month filter
     let matchesMonth = true;
-    if (selectedMonth && row["Order Date"]) {
+    if (currentMonthSort && row["Order Date"]) {
       const orderDate = new Date(row["Order Date"]);
       const monthName = orderDate.toLocaleString("default", { month: "long" }).toLowerCase();
-      matchesMonth = monthName === selectedMonth;
+      matchesMonth = monthName === currentMonthSort;
     }
 
-    const matchesSearch = customer.includes(search) || product.includes(search);
-    const matchesStatus = !statusFilter || status === statusFilter;
+    const matchesSearch = customer.includes(currentSearch) || product.includes(currentSearch);
+    const matchesStatus = !currentStatus || currentStatus === "all" || status === currentStatus;
 
     return matchesSearch && matchesStatus && matchesMonth;
   });
 
   populateTable(filtered);
+
+  // ✅ Scroll to the recently updated row if exists
+  if (lastUpdatedOrderNumber) {
+    const row = document.querySelector(`[data-order-number="${lastUpdatedOrderNumber}"]`);
+    if (row) {
+      row.classList.add("table-success");
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => row.classList.remove("table-success"), 2000);
+    }
+    lastUpdatedOrderNumber = null; // reset
+  }
+
   updateSummary(filtered);
 }
 
 
- document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("searchInput").addEventListener("input", filterTable);
-  document.getElementById("statusFilter").addEventListener("change", filterTable);
-  document.getElementById("monthSort").addEventListener("change", filterTable);
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  const statusFilter = document.getElementById("statusFilter");
+  const monthSort = document.getElementById("monthSort");
+
+  // Initialize values from inputs if they have defaults
+  currentSearch = searchInput.value.trim().toLowerCase();
+  currentStatus = statusFilter.value;
+  currentMonthSort = monthSort.value;
+
+  searchInput.addEventListener("input", (e) => {
+    currentSearch = e.target.value.trim().toLowerCase();
+    filterTable();
+  });
+
+  statusFilter.addEventListener("change", (e) => {
+    currentStatus = e.target.value;
+    filterTable();
+  });
+
+  monthSort.addEventListener("change", (e) => {
+    currentMonthSort = e.target.value;
+    filterTable();
+  });
+
+  // Apply initial filter on page load
+  filterTable();
 });
 
 
@@ -3162,6 +3218,9 @@ document.getElementById("rowDetailForm").addEventListener("submit", async (e) =>
       console.error("Failed to save RR report data:", err);
     }
   }
+
+
+
 
   // ✅ Close modal
   bootstrap.Modal.getInstance(document.getElementById("rowDetailModal")).hide();
