@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset=UTF-8><title>Team Leader Order View</title><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js></script><link href=https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/chart.js></script><link href=https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css rel=stylesheet>
+  <style>
+body,html{height:100%;overflow:auto}
+.sidebar a:hover,h2{color:#0a84ff}#statusMsg,h2{margin-bottom:1rem}.sidebar,body,header{display:flex}h2,thead th{font-weight:600}.sidebar,thead th{color:#fff;z-index:10}td,th,thead th{padding:12px 14px;text-align:left}#customizePanel,header{margin-bottom:1.5rem;background:#fff}.fade-in{animation:.4s ease-in fadeIn}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.sidebar{width:260px;background:#1c1c1e;padding:2rem 1.5rem;flex-direction:column;gap:1rem;position:fixed;height:100%;box-shadow:0 4px 10px rgba(0,0,0,.2)}.sidebar h3{font-size:1.5rem;margin-bottom:2rem}.sidebar a{font-size:1rem;color:#fff;text-decoration:none;padding:8px 0;transition:.2s}.main-content{flex:1;margin-left:260px;padding:2rem;overflow-x:hidden;background:#f2f2f7}h2{font-size:1.75rem}#statusMsg{font-size:1rem;color:#444;text-align:center}header{padding:1rem 1.5rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);justify-content:space-between;align-items:center}header button{padding:8px 14px;border:none;border-radius:8px;font-size:.95rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:transform .2s,background .2s}header button:hover{transform:scale(1.05)}.table-container{overflow-y:auto;overflow-x:auto;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);max-height:70vh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;position:relative}table{width:100%;border-collapse:collapse;font-size:.95rem;table-layout:fixed}td,th{border:1px solid #e5e5ea;word-wrap:break-word;white-space:normal}thead th{position:sticky;top:0;background-color:#007aff;user-select:none;border-bottom:1px solid #ccc;box-shadow:0 2px 5px rgba(0,0,0,.05)}tr:nth-child(2n){background-color:#f9f9f9}th.resizable::after{content:'';position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;z-index:2}#customizePanel{display:none;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-radius:12px;max-width:100%}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.chart-slide-panel{transform:translateX(-100%);max-height:0;overflow:hidden;transition:transform .5s,max-height .5s;will-change:transform,max-height}.chart-slide-panel.visible{transform:translateX(0);max-height:2000px}
+@media (max-width:768px){.sidebar{position:absolute;width:100%;height:auto;flex-direction:row;justify-content:space-around;padding:1rem;top:0;z-index:99}.main-content{margin-left:0;padding-top:6rem}header{flex-direction:column;align-items:flex-start;gap:1rem}.table-container{max-height:60vh}}.table-container::-webkit-scrollbar{width:8px;height:8px}.table-container::-webkit-scrollbar-thumb{background:#ccc;border-radius:10px}thead th{transition:box-shadow .3s}.table-container:has(thead th.sticky) thead th{box-shadow:0 4px 6px rgba(0,0,0,.08)}#buyerFilterPanel{animation:.3s ease-in fadeIn}
+
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: {
+    mode: 'index',
+    intersect: false
+  },
+  animation: {
+    duration: 1000,
+    easing: 'easeOutCubic'
+  },
+  scales: {
+    x: {
+      stacked: true,
+      title: {
+        display: true,
+        text: 'Suppliers',
+        font: { size: 14, weight: 'bold' }
+      },
+      ticks: {
+        font: { size: 12 },
+        color: '#333'
+      }
+    },
+    y: {
+      stacked: true,
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Number of Orders',
+        font: { size: 14, weight: 'bold' }
+      },
+      ticks: {
+        stepSize: 1,
+        font: { size: 12 },
+        color: '#333'
+      }
+    }
+  },
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        font: { size: 13, family: 'Segoe UI, sans-serif' },
+        boxWidth: 16,
+        padding: 15
+      }
+    },
+    tooltip: {
+      backgroundColor: '#1c1c1e',
+      titleFont: { size: 13 },
+      bodyFont: { size: 13 },
+      padding: 10,
+      cornerRadius: 8,
+      callbacks: {
+        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}`
+      }
+    }
+  }
+}
+</style>
+
+<aside class=sidebar><h3>📊 Dashboard</h3><a href=#>🏠 Home</a> <a href=# onclick=showChartSection()>📈 Charts</a> <a href=# onclick=generateStatusReport()>📄 Reports</a> <a href=# onclick=showBuyerFilterPanel()>👥 Purchasers</a> <a href=# onclick=logout() class="hover:text-red-500 text-red-400">🚪 Logout</a></aside><div class="fade-in main-content"><header><h2>📋 Team Leader Control Panel</h2><div class="flex gap-3"><button class="text-white bg-[#007aff]"id=btnCustomize>⚙️ Customize</button> <button class="text-white bg-[#34c759]"onclick=refreshTable()>🔄 Refresh</button> <button class="text-white bg-[#ff9500]"onclick=exportTableToCSV()>📤 Export CSV</button></div></header><div class="bg-white shadow-md animate-fade-in-down hidden mb-6 p-6 rounded-xl"id=customizePanel><div class="flex items-center justify-between mb-4"><h4 class="flex items-center gap-2 font-semibold text-gray-800 text-xl">🛠️ Table Settings</h4></div><div class="gap-4 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2"id=customizeColumns></div></div><div style="display:none;background:#fff;padding:1rem;margin-bottom:1rem;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08)"id=buyerFilterPanel><strong>Filter by Buyer:</strong><div style=display:flex;flex-wrap:wrap;gap:10px;margin-top:.5rem id=buyerCheckboxes></div></div><div class="bg-gray-50 rounded-xl chart-slide-panel duration-500 ease-in-out p-6 shadow-inner transform transition-transform"id=chartSlidePanel><div class="flex items-center justify-between mb-6"><h4 class="font-semibold text-xl text-gray-800 tracking-tight">📊 Order Insights</h4></div><div class="flex justify-center flex-wrap gap-6"><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">🧩 Orders by Main Category</h5><div class="flex items-center h-full justify-center"><canvas id=categoryPieChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">📈 Orders Over Time</h5><div class="flex items-center h-full justify-center"><canvas id=ordersLineChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-full"style=max-width:550px;height:400px><div class="flex justify-between bg-white duration-300 flex-col h-full hover:shadow-lg p-5 rounded-2xl shadow-md transition-all"><div class=mb-3><h5 class="font-semibold mb-3 text-gray-700 text-md">📦 Delivery Status per Supplier</h5><div class="flex gap-2 flex-wrap"><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=supplierSelect>Supplier:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=supplierSelect><option value=all>All Suppliers</select></div><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=sortSelect>Sort:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=sortSelect><option value=alphabetical>Alphabetical (A-Z)<option value=total>Total Orders (desc)</select></div></div></div><div class="border rounded-xl bg-gray-50 border-gray-100 overflow-x-auto p-2"><div style=min-width:400px;min-height:280px><canvas id=supplierStatusChart style=height:280px!important class=w-full></canvas></div></div></div></div></div></div><div style=display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;pointer-events:auto id=loaderModal><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:600px;background:#fff;padding:40px;border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.25);text-align:center"><div style=margin-bottom:20px;font-weight:700;font-size:1.8rem id=loaderLabel>Sorting... 0%</div><div style=width:100%;background:#ddd;height:30px;border-radius:15px;overflow:hidden><div style="height:100%;width:0%;background:linear-gradient(to right,#007bff,#00d4ff);transition:width .1s"id=loaderBar></div></div></div></div><div class=table-container><table id=ordersTable><thead id=ordersHead><tr><th>Loading...<tbody id=ordersBody><tr><td>Loading orders...</table></div><div id=statusMsg>🔐 Verifying user...</div><footer class="text-sm mt-8 text-center text-gray-400">© 2025 Team Leader Dashboard. All rights reserved.</footer></div><div class="flex justify-center bg-black bg-opacity-50 fixed hidden inset-0 items-start overflow-y-auto pb-10 pt-10 z-50"id=reportModal><div class="flex bg-white flex-col max-w-5xl p-6 relative rounded-lg shadow-lg w-full"><button class="hover:text-red-500 absolute right-2 text-2xl text-gray-500 top-2"onclick=closeReportModal()>×</button><h3 class="font-semibold text-xl mb-4"id=reportTitle>📊 Report</h3><div class="flex justify-between mb-4 flex-wrap gap-3"><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-green-100 hover:bg-green-200"data-status="On Time"><h4 class="font-semibold text-lg">🟢 On Time (<span id=onTimeCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered on or before target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-yellow-100 hover:bg-yellow-200"data-status=Delayed><h4 class="font-semibold text-lg">🟡 Delayed (<span id=delayedCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered after target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-red-100 hover:bg-red-200"data-status=Invalid><h4 class="font-semibold text-lg">🔴 Invalid (<span id=invalidCount>0</span>)</h4><p class="text-sm text-gray-600">Orders with invalid or missing data</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-blue-100 hover:bg-blue-200"data-status="In Progress"><h4 class="font-semibold text-lg">🔵 In Progress (<span id=inProgressCount>0</span>)</h4><p class="text-sm text-gray-600">Orders not delivered and overdue</div></div><div class="max-h-[60vh] overflow-auto"><table class="border text-sm text-left w-full"><thead class="bg-gray-100 sticky top-0"><tr><th class="border px-3 py-2">Order No<th class="border px-3 py-2">Supplier<th class="border px-3 py-2">Delivery Date<th class="border px-3 py-2">Tentative Date<th class="border px-3 py-2">Approved Date<th class="border px-3 py-2">Remarks<tbody id=delayedOrdersTableBody></table></div></div></div>
+
+
+
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+    authDomain: "order-monitoring-purchasing.firebaseapp.com",
+    projectId: "order-monitoring-purchasing",
+    storageBucket: "order-monitoring-purchasing.appspot.com",
+    messagingSenderId: "209378598320",
+    appId: "1:209378598320:web:0c143d69bc329a994d8a75"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let columnSettings = { visible: [], order: [], widths: {} };
+  let chartPanelVisible = false;
+  let ordersChartInstance = null;
+  let categoryChartInstance = null;
+  let supplierStatusChartInstance = null;
+  let chartsRendered = false;
+
+window.supplierChartRendered = false;
+
+
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const userRef = firebase.firestore().collection("users").doc(user.uid);
+  const userDoc = await userRef.get();
+  const userData = userDoc.data();
+
+  const localSessionId = localStorage.getItem('sessionId');
+
+  if (!userData.sessionId || userData.sessionId !== localSessionId) {
+    alert("🚫 You’ve been logged out because another login occurred.");
+    await firebase.auth().signOut();
+    localStorage.removeItem('sessionId');
+    window.location.href = "Loginindex.html";
+  } else {
+    currentUserId = user.uid; // continue normal flow
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function loadColumnSettings(defaultColumns) {
+    const saved = JSON.parse(localStorage.getItem("tableColumnSettings"));
+    if (saved && Array.isArray(saved.order) && Array.isArray(saved.visible)) {
+      columnSettings = {
+        visible: saved.visible,
+        order: saved.order,
+        widths: saved.widths || {}
+      };
+    } else {
+      columnSettings = {
+        visible: [...defaultColumns],
+        order: [...defaultColumns],
+        widths: {}
+      };
+    }
+  }
+
+
+function showBuyerFilterPanel() {
+  const panel = document.getElementById('buyerFilterPanel');
+  panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function formatDateDisplay(dateStr) {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+function showChartSection() {
+  const panel = document.getElementById("chartSlidePanel");
+  chartPanelVisible = !chartPanelVisible;
+
+  if (chartPanelVisible) {
+    panel.classList.add("visible");
+    if (!chartsRendered && window.latestOrderData) {
+      renderOrdersChart(window.latestOrderData);
+      renderCategoryPieChart(window.latestOrderData);
+      chartsRendered = true;
+    }
+  } else {
+    panel.classList.remove("visible");
+  }
+}
+
+
+
+
+
+function renderOrdersChart(orderData) {
+  const ctx = document.getElementById('ordersLineChart').getContext('2d');
+  if (ordersChartInstance) ordersChartInstance.destroy();
+
+  const monthlyCounts = {};
+  orderData.forEach(order => {
+    const date = new Date(order.orderDate || order.order?.['Order Date']);
+    if (!isNaN(date)) {
+      const monthKey = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+      monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+    }
+  });
+
+  const labels = Object.keys(monthlyCounts);
+  const values = Object.values(monthlyCounts);
+
+  ordersChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Orders',
+        data: values,
+        borderColor: '#0a84ff',
+        backgroundColor: 'rgba(10,132,255,0.1)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointBackgroundColor: '#0a84ff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => Orders: ${ctx.parsed.y}
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Month' } },
+        y: { beginAtZero: true, title: { display: true, text: 'Number of Orders' } }
+      }
+    }
+  });
+}
+
+
+
+
+function renderCategoryPieChart(orderData) {
+  const ctx = document.getElementById('categoryPieChart').getContext('2d');
+  if (categoryChartInstance) categoryChartInstance.destroy();
+
+  const categoryCounts = {};
+
+  orderData.forEach(order => {
+    const rawCategory = order.order?.Category || "";
+    const mainCategory = rawCategory.split('.')[0].trim().toUpperCase();
+
+    if (mainCategory) {
+      categoryCounts[mainCategory] = (categoryCounts[mainCategory] || 0) + 1;
+    }
+  });
+
+  const labels = Object.keys(categoryCounts);
+  const data = Object.values(categoryCounts);
+  const backgroundColors = labels.map((_, i) =>
+    hsl(${(i * 137.5) % 360}, 70%, 60%));
+
+  categoryChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: backgroundColors
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: ctx => ${ctx.label}: ${ctx.parsed} orders
+          }
+        }
+      }
+    }
+  });
+}
+
+
+function renderSupplierStatusChart() {
+  if (!window.latestOrderData) return;
+
+  const supplierMap = {};
+
+  // Initialize all suppliers
+  window.latestOrderData.forEach(row => {
+    const supplier = row.order?.Supplier || "Unknown";
+    if (!supplierMap[supplier]) {
+      supplierMap[supplier] = {
+        "On Time": 0,
+        "Delayed": 0,
+        "Invalid": 0,
+        "In Progress": 0
+      };
+    }
+  });
+
+  // Count per category
+  window.onTimeOrders.forEach(o => supplierMap[o.supplier]["On Time"]++);
+  window.delayedOrders.forEach(o => supplierMap[o.supplier]["Delayed"]++);
+  window.invalidOrders.forEach(o => supplierMap[o.supplier]["Invalid"]++);
+  window.inProgressOrders.forEach(o => supplierMap[o.supplier]["In Progress"]++);
+
+  const suppliers = Object.keys(supplierMap);
+  const onTimeData = suppliers.map(s => supplierMap[s]["On Time"]);
+  const delayedData = suppliers.map(s => supplierMap[s]["Delayed"]);
+  const invalidData = suppliers.map(s => supplierMap[s]["Invalid"]);
+  const inProgressData = suppliers.map(s => supplierMap[s]["In Progress"]);
+
+  const ctx = document.getElementById('supplierStatusChart').getContext('2d');
+  if (supplierStatusChartInstance) supplierStatusChartInstance.destroy();
+
+  supplierStatusChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: suppliers,
+      datasets: [
+        {
+          label: '🟢 On Time',
+          data: onTimeData,
+          backgroundColor: '#34d399'
+        },
+        {
+          label: '🟡 Delayed',
+          data: delayedData,
+          backgroundColor: '#facc15'
+        },
+        {
+          label: '🔴 Invalid',
+          data: invalidData,
+          backgroundColor: '#f87171'
+        },
+        {
+          label: '🔵 In Progress',
+          data: inProgressData,
+          backgroundColor: '#60a5fa'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: 'Suppliers' }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          title: { display: true, text: 'Number of Orders' }
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: ctx => ${ctx.dataset.label}: ${ctx.parsed.y}
+          }
+        }
+      }
+    }
+  });
+}
+
+function populateSupplierDropdown(suppliers) {
+  const supplierSelect = document.getElementById('supplierSelect');
+  supplierSelect.innerHTML = '<option value="all">All Suppliers</option>'; // reset
+
+  suppliers.forEach(supplier => {
+    const option = document.createElement('option');
+    option.value = supplier;
+    option.textContent = supplier;
+    supplierSelect.appendChild(option);
+  });
+}
+
+function getTotalOrdersForSupplier(supplierData) {
+  return supplierData["On Time"] + supplierData["Delayed"] + supplierData["Invalid"] + supplierData["In Progress"];
+}
+
+function updateSupplierStatusChart(selectedSupplier = "all", sortBy = "alphabetical") {
+  if (!window.latestOrderData) return;
+
+  const supplierMap = {};
+
+  // Initialize counts per supplier
+  window.latestOrderData.forEach(row => {
+    const supplier = row.order?.Supplier || "Unknown";
+    if (!supplierMap[supplier]) {
+      supplierMap[supplier] = {
+        "On Time": 0,
+        "Delayed": 0,
+        "Invalid": 0,
+        "In Progress": 0
+      };
+    }
+  });
+
+  // Fill counts from categorized orders (make sure these globals exist and are correct)
+  (window.onTimeOrders || []).forEach(o => {
+  if (supplierMap[o.supplier]) supplierMap[o.supplier]["On Time"]++;
+});
+
+(window.delayedOrders || []).forEach(o => {
+  if (supplierMap[o.supplier]) supplierMap[o.supplier]["Delayed"]++;
+});
+
+(window.invalidOrders || []).forEach(o => {
+  if (supplierMap[o.supplier]) supplierMap[o.supplier]["Invalid"]++;
+});
+
+(window.inProgressOrders || []).forEach(o => {
+  if (supplierMap[o.supplier]) supplierMap[o.supplier]["In Progress"]++;
+});
+
+
+  // Filter suppliers if needed
+  let suppliers = Object.keys(supplierMap);
+  if (selectedSupplier !== "all") {
+    suppliers = suppliers.filter(s => s === selectedSupplier);
+  }
+
+  // Sort suppliers
+  if (sortBy === "alphabetical") {
+    suppliers.sort((a, b) => a.localeCompare(b));
+  } else if (sortBy === "total") {
+    suppliers.sort((a, b) => getTotalOrdersForSupplier(supplierMap[b]) - getTotalOrdersForSupplier(supplierMap[a]));
+  }
+
+  // Prepare datasets
+  const onTimeData = suppliers.map(s => supplierMap[s]["On Time"]);
+  const delayedData = suppliers.map(s => supplierMap[s]["Delayed"]);
+  const invalidData = suppliers.map(s => supplierMap[s]["Invalid"]);
+  const inProgressData = suppliers.map(s => supplierMap[s]["In Progress"]);
+
+  const ctx = document.getElementById('supplierStatusChart').getContext('2d');
+  if (supplierStatusChartInstance) supplierStatusChartInstance.destroy();
+
+  supplierStatusChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: suppliers,
+      datasets: [
+        {
+          label: '🟢 On Time',
+          data: onTimeData,
+          backgroundColor: 'rgba(52, 211, 153, 0.8)',
+          borderRadius: 5
+        },
+        {
+          label: '🟡 Delayed',
+          data: delayedData,
+          backgroundColor: 'rgba(250, 204, 21, 0.8)',
+          borderRadius: 5
+        },
+        {
+          label: '🔴 Invalid',
+          data: invalidData,
+          backgroundColor: 'rgba(248, 113, 113, 0.8)',
+          borderRadius: 5
+        },
+        {
+          label: '🔵 In Progress',
+          data: inProgressData,
+          backgroundColor: 'rgba(96, 165, 250, 0.8)',
+          borderRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: 'Suppliers', font: { size: 14, weight: 'bold' } },
+          ticks: { font: { size: 12 }, color: '#333' }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          title: { display: true, text: 'Number of Orders', font: { size: 14, weight: 'bold' } },
+          ticks: { stepSize: 1, font: { size: 12 }, color: '#333' }
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 13 }, boxWidth: 16, padding: 15 } },
+        tooltip: {
+          backgroundColor: '#1c1c1e',
+          titleFont: { size: 13 },
+          bodyFont: { size: 13 },
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: { label: ctx => ${ctx.dataset.label}: ${ctx.parsed.y} }
+        }
+      },
+      animation: { duration: 800, easing: 'easeOutCubic' },
+      interaction: { mode: 'index', intersect: false }
+    }
+  });
+}
+
+
+// Initialize dropdowns and chart after data loads
+function initSupplierChartControls() {
+  if (!window.latestOrderData) return;
+
+  const supplierMap = {};
+  window.latestOrderData.forEach(row => {
+    const supplier = row.order?.Supplier || "Unknown";
+    supplierMap[supplier] = true;
+  });
+  const suppliers = Object.keys(supplierMap).sort();
+
+  populateSupplierDropdown(suppliers);
+
+  // ✅ Render the chart once even if panel not opened yet
+  if (!window.supplierChartRendered) {
+    updateSupplierStatusChart();
+    window.supplierChartRendered = true;
+  }
+
+  // Event listeners
+  document.getElementById('supplierSelect').addEventListener('change', (e) => {
+    const selectedSupplier = e.target.value;
+    const sortBy = document.getElementById('sortSelect').value;
+    updateSupplierStatusChart(selectedSupplier, sortBy);
+  });
+
+  document.getElementById('sortSelect').addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    const selectedSupplier = document.getElementById('supplierSelect').value;
+    updateSupplierStatusChart(selectedSupplier, sortBy);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchAndPrepareOrderData(); // Make sure this initializes all global data
+  initSupplierChartControls();      // Only call this AFTER data is ready
+});
+
+
+
+
+
+
+
+
+
+
+  function saveColumnSettings() {
+    localStorage.setItem("tableColumnSettings", JSON.stringify(columnSettings));
+  }
+
+  function fixTableColumnWidths() {
+    const head = document.getElementById("ordersHead");
+    const body = document.getElementById("ordersBody");
+    const headerRow = head.querySelector("tr");
+    const rows = Array.from(body.querySelectorAll("tr"));
+
+    if (!headerRow) return;
+
+    columnSettings.order.forEach((col, i) => {
+      if (!columnSettings.visible.includes(col)) return;
+
+      let maxWidth = 0;
+      const th = headerRow.children[i];
+      if (th) maxWidth = Math.max(maxWidth, th.textContent.trim().length * 10);
+
+      rows.forEach(row => {
+        const cell = row.children[i];
+        if (cell) maxWidth = Math.max(maxWidth, cell.textContent.trim().length * 9);
+      });
+
+      maxWidth = Math.max(80, Math.min(maxWidth, 300));
+
+      if (headerRow.children[i]) headerRow.children[i].style.width = maxWidth + "px";
+      rows.forEach(row => {
+        if (row.children[i]) row.children[i].style.width = maxWidth + "px";
+      });
+
+      columnSettings.widths[col] = maxWidth;
+    });
+
+    saveColumnSettings();
+  }
+
+ function buildTable(rows) {
+  const head = document.getElementById("ordersHead");
+  const body = document.getElementById("ordersBody");
+  head.innerHTML = "";
+  body.innerHTML = "";
+
+  if (!rows.length) {
+    head.innerHTML = "<tr><th>No Data</th></tr>";
+    body.innerHTML = "<tr><td>No orders found</td></tr>";
+    return;
+  }
+
+  const allColumns = new Set(["userId"]);
+  rows.forEach(r => Object.keys(r.order).forEach(k => allColumns.add(k)));
+  const allColArray = Array.from(allColumns);
+
+  loadColumnSettings(allColArray);
+
+  // ⬅️ Get and clear the customize panel
+  const customizePanel = document.getElementById("customizePanel");
+  const customizeColumnsContainer = document.getElementById("customizeColumns");
+  customizeColumnsContainer.innerHTML = "";
+
+  // ✅ Auto Fit Button: Insert at top of customizePanel
+  let existingAutoFit = document.getElementById("autoFitBtn");
+  if (existingAutoFit) existingAutoFit.remove();
+
+  const autoFitBtn = document.createElement("button");
+  autoFitBtn.id = "autoFitBtn";
+  autoFitBtn.className = "mb-5 flex items-center gap-2 bg-[#d1d1d6] hover:bg-[#c7c7cc] text-[#1c1c1e] px-4 py-2 rounded-lg shadow-sm transition-all duration-200";
+  autoFitBtn.innerHTML = 🧩 <span class="font-medium">Auto Fit Column Widths</span> <kbd class="ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600">Shortcut</kbd>;
+  autoFitBtn.onclick = fixTableColumnWidths;
+  customizePanel.insertBefore(autoFitBtn, customizeColumnsContainer);
+
+  // ✅ Column Visibility Checkboxes
+  customizeColumnsContainer.style.display = "grid";
+  customizeColumnsContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+  customizeColumnsContainer.style.gap = "12px";
+
+  columnSettings.order.forEach(col => {
+    const wrapper = document.createElement("label");
+    wrapper.style.cssText = 
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f2f2f7;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+    ;
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = columnSettings.visible.includes(col);
+    input.dataset.col = col;
+    input.addEventListener("change", () => {
+      const colName = input.dataset.col;
+      if (input.checked) {
+        if (!columnSettings.visible.includes(colName)) {
+          columnSettings.visible.push(colName);
+        }
+      } else {
+        columnSettings.visible = columnSettings.visible.filter(c => c !== colName);
+      }
+      saveColumnSettings();
+      buildTable(rows);
+    });
+    const labelText = document.createElement("span");
+    labelText.textContent = col;
+    wrapper.appendChild(input);
+    wrapper.appendChild(labelText);
+    customizeColumnsContainer.appendChild(wrapper);
+  });
+
+  // ✅ Table Header
+  const headerRow = document.createElement("tr");
+  columnSettings.order.forEach(col => {
+    if (!columnSettings.visible.includes(col)) return;
+
+const th = document.createElement("th");
+th.classList.add("resizable");
+
+th.dataset.col = col;
+th.style.userSelect = "none";
+
+    th.style.userSelect = "none";
+    if (columnSettings.widths[col]) {
+      th.style.width = columnSettings.widths[col] + "px";
+    }
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = col;
+    titleSpan.style.pointerEvents = "none";
+    th.appendChild(titleSpan);
+
+    const resizer = document.createElement("div");
+    resizer.style.cssText = 
+      width: 6px;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      right: 0;
+      cursor: col-resize;
+      z-index: 10;
+    ;
+    let isResizing = false;
+
+    resizer.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      isResizing = true;
+      const startX = e.pageX;
+      const startWidth = th.offsetWidth;
+      const index = Array.from(headerRow.children).indexOf(th);
+      const colName = th.dataset.col;
+
+      function onMouseMove(eMove) {
+        const newWidth = startWidth + (eMove.pageX - startX);
+        head.querySelectorAll("th")[index].style.width = newWidth + "px";
+        body.querySelectorAll("tr").forEach(row => {
+          if (row.children[index]) row.children[index].style.width = newWidth + "px";
+        });
+      }
+
+      function onMouseUp() {
+        isResizing = false;
+        const newWidth = head.querySelectorAll("th")[index].offsetWidth;
+        columnSettings.widths[colName] = newWidth;
+        saveColumnSettings();
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    th.appendChild(resizer);
+
+    // Drag & Drop Columns
+    th.draggable = true;
+    th.addEventListener("dragstart", e => {
+      if (isResizing) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData("text/plain", col);
+    });
+    th.addEventListener("dragover", e => e.preventDefault());
+    th.addEventListener("drop", e => {
+      e.preventDefault();
+      if (isResizing) return;
+      const draggedCol = e.dataTransfer.getData("text/plain");
+      const targetCol = th.dataset.col;
+      const fromIndex = columnSettings.order.indexOf(draggedCol);
+      const toIndex = columnSettings.order.indexOf(targetCol);
+      columnSettings.order.splice(fromIndex, 1);
+      columnSettings.order.splice(toIndex, 0, draggedCol);
+      saveColumnSettings();
+      buildTable(rows);
+    });
+
+    headerRow.appendChild(th);
+  });
+  head.appendChild(headerRow);
+
+  // ✅ Table Body
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    columnSettings.order.forEach(col => {
+      if (!columnSettings.visible.includes(col)) return;
+      const td = document.createElement("td");
+
+      if (col === "userId") {
+  td.textContent = r.userId;
+} else if (["Delivery Date", "Order Date", "Approved Date", "Need By Date"].includes(col)) {
+  td.textContent = formatDateDisplay(r.order[col]);
+} else {
+  td.textContent = r.order[col] ?? "";
+if (col.toLowerCase() === "buyer") {
+  td.classList.add("buyer-cell");
+}
+
+
+
+
+}
+
+      if (columnSettings.widths[col]) {
+        td.style.width = columnSettings.widths[col] + "px";
+      }
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+
+
+ auth.onAuthStateChanged(async user => {
+  const status = document.getElementById("statusMsg");
+  if (!user) {
+    status.textContent = "⛔ Not logged in.";
+    return;
+  }
+
+  try {
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    const data = userDoc.data();
+
+    if (!data || (data.role?.toLowerCase() !== "team leader")) {
+      status.textContent = "⛔ Access denied. Only Team Leaders allowed.";
+      return;
+    }
+
+    const assignedUsers = data.teamMembers || [];
+    if (assignedUsers.length === 0) {
+      status.textContent = "📝 No users assigned to you yet.";
+      return;
+    }
+
+    const rows = [];
+    for (const uid of assignedUsers) {
+      const snap = await db.collection("orders").doc(uid).collection("userOrders").get();
+      snap.forEach(doc => {
+        rows.push({ userId: uid, order: doc.data() });
+      });
+    }
+
+    document.getElementById("ordersTable").style.display = "table";
+    status.style.display = "none";
+
+    buildTable(rows);          // ✅ Build the table
+    buildBuyerFilter();        // ✅ Then build the buyer filter
+    window.latestOrderData = rows; // Save for chart use
+    initSupplierChartControls(); // Initialize supplier chart controls and render chart
+
+
+    if (!Object.keys(columnSettings.widths).length) {
+      fixTableColumnWidths();
+    }
+
+  } catch (err) {
+    console.error("Error loading orders:", err);
+    status.textContent = "❌ Error loading orders.";
+    return;
+  }
+});
+
+
+
+  document.getElementById("btnCustomize").addEventListener("click", () => {
+    const panel = document.getElementById("customizePanel");
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const table = document.querySelector('table');
+  const rows = Array.from(table.querySelectorAll('tbody tr'));
+  const buyerSet = new Set();
+
+  // Step 1: Collect all unique buyers
+  rows.forEach(row => {
+    const buyerCell = row.querySelector('.buyer-cell');
+    if (buyerCell) buyerSet.add(buyerCell.innerText.trim());
+  });
+
+  const buyerList = Array.from(buyerSet).sort();
+  const checkboxContainer = document.getElementById('buyerCheckboxes');
+
+  // Step 2: Generate checkboxes
+  buyerList.forEach(buyer => {
+    const label = document.createElement('label');
+    label.style.marginRight = '15px';
+    label.innerHTML = 
+      <input type="checkbox" class="buyer-filter" value="${buyer}" checked />
+      ${buyer}
+    ;
+    checkboxContainer.appendChild(label);
+  });
+
+  // Step 3: Filter table based on checkbox selection
+  document.querySelectorAll('.buyer-filter').forEach(checkbox => {
+    checkbox.addEventListener('change', filterRows);
+  });
+
+  function filterRows() {
+    const checkedBuyers = Array.from(document.querySelectorAll('.buyer-filter:checked')).map(cb => cb.value);
+
+    rows.forEach(row => {
+      const buyerCell = row.querySelector('.buyer-cell');
+      if (buyerCell) {
+        const buyerName = buyerCell.innerText.trim();
+        row.style.display = checkedBuyers.includes(buyerName) ? '' : 'none';
+      }
+    });
+  }
+});
+
+
+function buildBuyerFilter() {
+  const checkboxContainer = document.getElementById('buyerCheckboxes');
+  checkboxContainer.innerHTML = ""; // clear previous
+
+  const allRows = document.querySelectorAll('#ordersBody tr');
+  const buyerSet = new Set();
+
+  allRows.forEach(row => {
+    const buyerCell = row.querySelector('.buyer-cell');
+    if (buyerCell) buyerSet.add(buyerCell.innerText.trim());
+  });
+
+  const buyerList = Array.from(buyerSet).sort();
+  buyerList.forEach(buyer => {
+    const label = document.createElement('label');
+    label.style.marginRight = '15px';
+    label.innerHTML = 
+      <input type="checkbox" class="buyer-filter" value="${buyer}" checked />
+      ${buyer}
+    ;
+    checkboxContainer.appendChild(label);
+  });
+
+  const debouncedFilter = debounce(filterRowsSmoothly);
+  document.querySelectorAll('.buyer-filter').forEach(checkbox => {
+    checkbox.addEventListener('change', debouncedFilter);
+  });
+
+  function debounce(func, delay = 150) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  function filterRowsSmoothly() {
+  const selected = Array.from(document.querySelectorAll('.buyer-filter:checked')).map(cb => cb.value);
+  const rows = document.querySelectorAll('#ordersBody tr');
+
+  // Modal loader elements
+  const loaderModal = document.getElementById('loaderModal');
+  const loaderBar = document.getElementById('loaderBar');
+  const loaderLabel = document.getElementById('loaderLabel');
+
+  loaderModal.style.display = 'block';
+  loaderBar.style.width = '0%';
+  loaderLabel.textContent = 'Sorting... 0%';
+
+  let i = 0;
+  const chunkSize = 20;
+  const total = rows.length;
+
+  function processNextChunk() {
+    const start = i;
+    const end = Math.min(i + chunkSize, total);
+
+    for (let j = start; j < end; j++) {
+      const row = rows[j];
+      const buyerCell = row.querySelector('.buyer-cell');
+      if (!buyerCell) continue;
+
+      const buyerName = buyerCell.innerText.trim();
+      row.style.display = selected.includes(buyerName) ? "" : "none";
+    }
+
+    i = end;
+
+    // Update loader progress
+    const progress = Math.round((i / total) * 100);
+    loaderBar.style.width = ${progress}%;
+    loaderLabel.textContent = Sorting... ${progress}%;
+
+    if (i < total) {
+      requestAnimationFrame(processNextChunk);
+    } else {
+      // Hide modal after a short delay
+      setTimeout(() => {
+        loaderModal.style.display = 'none';
+        loaderBar.style.width = '0%';
+      }, 300);
+    }
+  }
+
+  requestAnimationFrame(processNextChunk);
+}
+
+}
+
+document.addEventListener('click', function (e) {
+  const buyerPanel = document.getElementById('buyerFilterPanel');
+  const customizePanel = document.getElementById('customizePanel');
+  const usersBtn = document.querySelector('a[onclick*="showBuyerFilterPanel"]');
+  const customizeBtn = document.getElementById('btnCustomize');
+
+  const clickedInsideBuyer = buyerPanel.contains(e.target) || usersBtn.contains(e.target);
+  const clickedInsideCustomize = customizePanel.contains(e.target) || customizeBtn.contains(e.target);
+
+  // If click is outside both panels and their toggle buttons
+  if (!clickedInsideBuyer) {
+    buyerPanel.style.display = 'none';
+  }
+
+  if (!clickedInsideCustomize) {
+    customizePanel.style.display = 'none';
+  }
+});
+
+
+function showReportModal() {
+  document.getElementById("reportModal").classList.remove("hidden");
+}
+
+
+function closeReportModal() {
+  document.getElementById("reportModal").classList.add("hidden");
+}
+
+
+
+
+function generateStatusReport() {
+  console.log("🚀 generateStatusReport called");
+  const data = window.latestOrderData;
+  if (!data || !data.length) {
+    alert("No order data available.");
+    return;
+  }
+
+  const today = new Date();
+  let onTime = 0, delayed = 0, invalid = 0, inProgress = 0;
+  let onTimeRows = [], delayedRows = [], invalidRows = [], inProgressRows = [];
+
+  const formatDate = (raw) => {
+    const date = new Date(raw);
+    return raw && !isNaN(date)
+      ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : "—";
+  };
+
+  data.forEach(row => {
+    const order = row.order;
+    const deliveryDateRaw = order["Delivery Date"];
+    const approvedDateRaw = order["Approved Date"];
+    const tentativeDateRaw = order["Tentative Delivery Date"];
+
+    const deliveryDate = deliveryDateRaw ? new Date(deliveryDateRaw) : null;
+    const approvedDate = approvedDateRaw ? new Date(approvedDateRaw) : null;
+    const tentativeDate = tentativeDateRaw ? new Date(tentativeDateRaw) : null;
+
+    if (!tentativeDate) return;
+
+    const baseDetails = {
+      orderNo: order["Number"] || "N/A",
+      supplier: order["Supplier"] || "—",
+      deliveryDate: formatDate(deliveryDateRaw),
+      approvedDate: formatDate(approvedDateRaw),
+      tentativeDate: formatDate(tentativeDateRaw)
+    };
+
+    if (deliveryDate && approvedDate && deliveryDate < approvedDate) {
+      invalid++;
+      invalidRows.push({ ...baseDetails, remarks: "Invalid (Delivery before Approval)" });
+      return;
+    }
+
+    if (deliveryDate && deliveryDate <= tentativeDate) {
+      onTime++;
+      onTimeRows.push({ ...baseDetails, remarks: "On Time" });
+      return;
+    }
+
+    if (deliveryDate && deliveryDate > tentativeDate) {
+      delayed++;
+      delayedRows.push({ ...baseDetails, remarks: "Delayed" });
+    } else if (!deliveryDate && today > tentativeDate) {
+      inProgress++;
+      inProgressRows.push({ ...baseDetails, remarks: "Not Delivered (Overdue)" });
+    }
+  });
+
+  // 🌐 Store in global variables
+  window.onTimeOrders = onTimeRows;
+  window.delayedOrders = delayedRows;
+  window.invalidOrders = invalidRows;
+  window.inProgressOrders = inProgressRows;
+
+ // 🆕 ✅ Render the new chart here
+  renderSupplierStatusChart();
+
+
+  // 🧮 Update UI counters
+  document.getElementById("onTimeCount").textContent = onTime;
+  document.getElementById("delayedCount").textContent = delayed;
+  document.getElementById("invalidCount").textContent = invalid;
+  document.getElementById("inProgressCount").textContent = inProgress;
+
+  // 📊 Show Delayed by default
+  renderStatusTable("Delayed", delayedRows);
+
+ auth.onAuthStateChanged(user => {
+  if (!user) return;
+
+  const reportData = {
+    timestamp: Date.now(),
+    onTimeOrders: window.onTimeOrders,
+    delayedOrders: window.delayedOrders,
+    invalidOrders: window.invalidOrders,
+    inProgressOrders: window.inProgressOrders
+  };
+
+  saveReportsToFirestore(user.uid, reportData);
+});
+
+}
+
+
+
+async function saveReportsToFirestore(userId, reportData) {
+  const reportRef = db.collection("reports").doc(userId).collection("statusReports").doc("latest");
+
+  try {
+    const existing = await reportRef.get();
+    const existingData = existing.exists ? existing.data() : null;
+
+    // Check if the report data is different
+    const hasChanged = !existingData || JSON.stringify(existingData) !== JSON.stringify(reportData);
+
+    if (hasChanged) {
+      await reportRef.set(reportData, { merge: true });
+      console.log("✅ Reports saved to Firestore.");
+    } else {
+      console.log("ℹ️ No changes in report data. Skipped saving.");
+    }
+  } catch (err) {
+    console.error("❌ Error saving report:", err);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function renderStatusTable(title, rows) {
+  const tbody = document.getElementById("delayedOrdersTableBody");
+  tbody.innerHTML = "";
+
+  if (rows.length === 0) {
+    tbody.innerHTML = <tr><td colspan="6" class="text-center text-gray-500 py-2">No ${title} orders found.</td></tr>;
+  } else {
+    rows.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = 
+        <td class="px-3 py-1 border">${item.orderNo}</td>
+        <td class="px-3 py-1 border">${item.supplier || '-'}</td>
+        <td class="px-3 py-1 border">${item.deliveryDate}</td>
+        <td class="px-3 py-1 border">${item.tentativeDate}</td>
+        <td class="px-3 py-1 border">${item.approvedDate}</td>
+        <td class="px-3 py-1 border text-red-600">${item.remarks}</td>
+      ;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById("reportTitle").textContent = 📊 ${title} Orders;
+  showReportModal();
+}
+
+
+
+
+// 🖱️ Click events on count sections to filter table
+document.getElementById("onTimeCount").addEventListener("click", () => {
+  renderStatusTable("On Time", window.onTimeOrders);
+});
+document.getElementById("delayedCount").addEventListener("click", () => {
+  renderStatusTable("Delayed", window.delayedOrders);
+});
+document.getElementById("invalidCount").addEventListener("click", () => {
+  renderStatusTable("Invalid", window.invalidOrders);
+});
+document.getElementById("inProgressCount").addEventListener("click", () => {
+  renderStatusTable("In Progress", window.inProgressOrders);
+});
+
+
+
+
+
+// 🖱️ Handle click events for status buttons
+document.querySelectorAll('.status-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const selectedStatus = btn.getAttribute('data-status');
+
+    // 🔄 Highlight active
+    document.querySelectorAll('.status-btn').forEach(b => {
+      b.classList.remove('bg-blue-500', 'text-white', 'ring', 'ring-offset-2');
+    });
+    btn.classList.add('bg-blue-500', 'text-white', 'ring', 'ring-offset-2');
+
+    // 🎯 Select dataset based on clicked status
+    switch (selectedStatus) {
+      case 'On Time':
+        renderStatusTable('On Time', window.onTimeOrders);
+        break;
+      case 'Delayed':
+        renderStatusTable('Delayed', window.delayedOrders);
+        break;
+      case 'Invalid':
+        renderStatusTable('Invalid', window.invalidOrders);
+        break;
+      case 'In Progress':
+        renderStatusTable('In Progress', window.inProgressOrders);
+        break;
+      default:
+        break;
+    }
+  });
+});
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const reportLink = document.getElementById("reportLink");
+  if (reportLink) {
+    reportLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      generateStatusReport(); // this will call showReportModal()
+    });
+  } else {
+    console.error("❌ reportLink not found in DOM");
+  }
+});
+
+
+
+
+
+
+
+
+
+  // LOGOUT BUTTON TRIGGER
+document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+
+async function logoutUser(showAlert = true) {
+  if (showAlert) alert("You've been logged out!");
+
+  const user = firebase.auth().currentUser;
+
+  if (user) {
+    try {
+      await firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .update({
+          sessionActive: false,
+          sessionId: null,
+          lastSession: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+      console.error("Failed to update session info on logout:", err);
+    }
+  }
+
+  localStorage.removeItem('sessionId');
+  sessionStorage.clear();
+
+  try {
+    await firebase.auth().signOut();
+  } catch (err) {
+    console.error("Logout error:", err.message);
+  }
+
+  window.location.href = "Loginindex.html";
+}
+
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => {
+    logoutUser(); // Logs out after 10 minutes of inactivity
+  }, 10 * 60 * 1000); // 10 minutes
+}
+
+["click", "mousemove", "keydown", "scroll", "touchstart"].forEach(event => {
+  window.addEventListener(event, resetInactivityTimer);
+});
+
+window.addEventListener("load", resetInactivityTimer);
+
+// 🔒 Page/tab close session cleanup (best-effort)
+window.addEventListener("unload", () => {
+  const user = firebase.auth().currentUser;
+  if (user) {
+    navigator.sendBeacon("/log-session-close", JSON.stringify({
+      uid: user.uid
+    }));
+  }
+
+  localStorage.removeItem('sessionId');
+  sessionStorage.clear();
+});
+
+
+</script>
