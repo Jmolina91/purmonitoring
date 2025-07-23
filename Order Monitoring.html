@@ -1849,16 +1849,16 @@ async function populateTable(data) {
     const tr = document.createElement('tr');
     if (row.docId) tr.setAttribute('data-order-id', row.docId);
 
-    // ✅ Compute status
+    // ✅ Compute status using Tentative Delivery Date
     let status = "Pending";
     const qtyCancelled = Number(row["Quantity Cancelled"]) || 0;
     const deliveryDate = row["Delivery Date"] ? new Date(row["Delivery Date"]) : null;
-    const needByDate = row["Need By Date"] ? new Date(row["Need By Date"]) : null;
+    const tentativeDate = row["Tentative Delivery Date"] ? new Date(row["Tentative Delivery Date"]) : null;
 
     if (qtyCancelled > 0) {
       status = "Cancelled";
-    } else if (deliveryDate && needByDate) {
-      status = deliveryDate > needByDate ? "Delayed" : "On Time";
+    } else if (deliveryDate && tentativeDate) {
+      status = deliveryDate > tentativeDate ? "Delayed" : "On Time";
     }
 
     const isDelayedOrCancelled = ["Delayed", "Cancelled"].includes(status);
@@ -1904,7 +1904,7 @@ async function populateTable(data) {
           select.dataset.field = "Reason";
 
           const options = [
-            "", "Supplier Delay", "Out of Stock", "Logistics Issue", "Customer Request", "Other"
+            "", "Supplier Delay", "Price Update", "Out of Stock", "Logistics Issue", "Customer Request", "Other"
           ];
 
           options.forEach(option => {
@@ -1994,10 +1994,9 @@ async function populateTable(data) {
         td.appendChild(select);
       } else if (col === "Tentative Delivery Date") {
         td.textContent = formatDateDisplay(row["Tentative Delivery Date"]);
-     } else if (col.toLowerCase() === "delivery date") {
-  td.textContent = row["Delivery Date"] ? formatDateDisplay(row["Delivery Date"]) : "—";
-}
- else if (col.toLowerCase().includes("date")) {
+      } else if (col.toLowerCase() === "delivery date") {
+        td.textContent = row["Delivery Date"] ? formatDateDisplay(row["Delivery Date"]) : "—";
+      } else if (col.toLowerCase().includes("date")) {
         td.textContent = formatDateDisplay(value);
       } else {
         td.textContent = value;
@@ -2011,9 +2010,6 @@ async function populateTable(data) {
 
   console.log("✅ Table populated with", data.length, "rows.");
 }
-
-
-
 
 
 function handleDragStart(e) {
