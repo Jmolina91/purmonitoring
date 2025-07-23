@@ -641,12 +641,9 @@ table {
   </a>
   <ul class="dropdown-menu">
     <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
-  <!--
-<li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
-<li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
-<li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
--->
-
+    <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
+    <li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
+    <li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
 
   </ul>
 </li>
@@ -1997,9 +1994,10 @@ async function populateTable(data) {
         td.appendChild(select);
       } else if (col === "Tentative Delivery Date") {
         td.textContent = formatDateDisplay(row["Tentative Delivery Date"]);
-      } else if (col.toLowerCase() === "delivery date") {
-        td.textContent = formatDateDisplay(row["Delivery Date"]);
-      } else if (col.toLowerCase().includes("date")) {
+     } else if (col.toLowerCase() === "delivery date") {
+  td.textContent = row["Delivery Date"] ? formatDateDisplay(row["Delivery Date"]) : "—";
+}
+ else if (col.toLowerCase().includes("date")) {
         td.textContent = formatDateDisplay(value);
       } else {
         td.textContent = value;
