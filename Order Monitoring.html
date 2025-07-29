@@ -1374,7 +1374,7 @@ const updateNavLink = document.getElementById("toggleSidebar");
 
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "Loginindex.html";
     return;
   }
 
@@ -1393,6 +1393,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
     currentUserId = user.uid; // continue normal flow
   }
 });
+
+
 
 
 
