@@ -7,18 +7,1335 @@
   <title>Order Monitoring Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
- <style>.sidebar-btn,.upload-zone{text-align:center;cursor:pointer}.apple-card,.hide-element {display: none;}.sidebar{backdrop-filter:blur(20px)}.apple-table thead th,.sidebar-btn{white-space:nowrap;font-weight:600}:root{--apple-blue:#007aff;--sidebar-bg:#f9fafc;--sidebar-border:#dce1e6;--text-main:#1c1c1e;--text-muted:#8e8e93;--highlight:#0a84ff;--card-bg:#ffffff;--card-shadow:rgba(0, 0, 0, 0.06);--hover-shadow:rgba(0, 0, 0, 0.1);--transition-fast:0.25s ease}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background-color:#f2f4f8;color:var(--text-main);margin:0;padding:0;overflow-x:hidden}.sidebar{position:fixed;top:56px;left:0;width:260px;height:calc(100vh - 56px);background:rgba(255,255,255,.65);border-right:1px solid rgba(200,200,200,.3);padding:2rem 1.5rem;display:flex;flex-direction:column;gap:1.25rem;box-shadow:2px 0 12px rgba(0,0,0,.06);z-index:999;overflow-y:auto;transition:transform .3s;transform:translateX(-100%)}.apple-table,table{width:100%;font-family:-apple-system,BlinkMacSystemFont,"San Francisco","Segoe UI",Roboto,Helvetica,Arial,sans-serif;border-collapse:separate;border-spacing:0}.sidebar-title{font-size:1.25rem;font-weight:700;color:#1c1c1e;margin-bottom:1.5rem;letter-spacing:.5px;padding-left:2px}.sidebar.active{transform:translateX(0)}.sidebar.slide-out-left{transform:translateX(-100%)}#mainContent.shifted{margin-left:270px;transition:margin-left .3s}.sidebar-btn{background:linear-gradient(135deg,#007aff,#0a84ff);border:none;padding:.7rem 1.4rem;border-radius:18px;color:#fff;font-size:1rem;box-shadow:0 4px 10px rgba(0,122,255,.15);transition:.2s ease-in-out;display:flex;align-items:center;justify-content:center;gap:.5rem}.sidebar-btn:hover{background:linear-gradient(135deg,#005ecb,#007aff);transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,122,255,.25)}.sidebar-btn:active{transform:scale(.98);box-shadow:0 3px 8px rgba(0,122,255,.2)}.sidebar-btn.active{background:#004ba0;box-shadow:inset 0 0 0 2px #ffffff33}.sidebar-btn::before{content:'🛠️';font-size:1.1rem}.apple-footer,.main-content{transition:margin-left .3s;margin-left:0}.card-summary{background:var(--card-bg);padding:1.5rem 2rem;border-radius:16px;box-shadow:0 4px 14px var(--card-shadow);border-left:5px solid var(--highlight);transition:transform .3s,box-shadow .3s}.card-summary:hover{transform:translateY(-4px);box-shadow:0 10px 24px var(--hover-shadow)}.upload-zone{border:2px dashed #c7c7cc;background-color:#f4f4f7;padding:2rem;border-radius:12px;color:var(--text-muted);transition:all var(--transition-fast)}.upload-zone:hover{border-color:var(--highlight);color:var(--highlight);background-color:#e6f0ff}.table-wrapper{max-height:500px;overflow-y:auto;overflow-x:auto;background:#fff;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);margin-top:2rem;padding:0;border:1px solid #e0e0e0}table{font-size:.93rem;color:#1c1c1e;background:#fff}.apple-card{background:#ffffffcc;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);overflow:hidden;border:1px solid #e0e0e5;transition:.3s}.apple-card-header{background:linear-gradient(to right,#007aff,#0a84ff);color:#fff;padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.2);font-size:1.1rem;font-weight:600}.apple-card-body{padding:0}.apple-table-wrapper{max-height:600px;overflow-y:auto;border-radius:0 0 16px 16px;position:relative;z-index:1}.apple-table{min-width:600px;font-size:.95rem}.apple-table thead th{position:sticky;top:0;background:#f8f9fb;color:#1c1c1e;padding:.85rem 1.2rem;border-bottom:1px solid #d1d1d6;backdrop-filter:blur(12px);z-index:10;text-align:left}.apple-table tbody tr:hover{background-color:#f2f4f8;transition:background-color .2s}.apple-table td{padding:.75rem 1.2rem;border-bottom:1px solid #ebedf0;color:#2c2c2e;background:#fff;vertical-align:middle;transition:background .3s}.apple-table-wrapper::-webkit-scrollbar{height:10px;width:10px}.apple-table-wrapper::-webkit-scrollbar-thumb{background:#cfd3d6;border-radius:10px}.apple-table td:first-child,.apple-table th:first-child{position:sticky;left:0;background:#f8f9fb;z-index:3}.apple-table thead th:first-child{z-index:11}.chart-wrapper{height:240px}#chartCanvas,#ordersIssuedChart{width:100%!important;height:240px!important}.chart-duo{display:flex;flex-wrap:wrap;gap:20px}.chart-box{flex:1;min-width:300px}.chart-divider{width:1px;background-color:#e0e0e0;margin:0 10px}@media (max-width:992px){.chart-duo{flex-direction:column}.chart-divider{display:none}}.status-cancelled,.status-delivered,.status-partial{font-weight:600;display:inline-block;padding:2px 10px;border-radius:20px;font-size:.85rem;line-height:1;white-space:nowrap}.status-delivered{color:#fff;background-color:#34c759}.status-cancelled{color:#fff;background-color:#ff3b30}.status-partial{color:#fff;background-color:#ff9500}.apple-logout-btn,.apple-style-btn{background:linear-gradient(to bottom,#f2f2f7,#d1d1d6);font-weight:500;font-size:.95rem;color:#1c1c1e}.fade-in{animation:.5s ease-in-out both fadeIn}@keyframes fadeIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}.apple-style-btn{border:1px solid #c7c7cc;border-radius:12px;padding:10px 18px;box-shadow:inset 0 1px 0 #fff,0 2px 4px rgba(0,0,0,.1);transition:.2s ease-in-out;backdrop-filter:blur(10px)}.apple-style-btn:hover{background:linear-gradient(to bottom,#e0e0e5,#c7c7cc);box-shadow:0 4px 8px rgba(0,0,0,.12);transform:translateY(-1px)}.apple-style-btn:active{background:#d1d1d6;transform:scale(.98);box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}.apple-logout-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;border:1px solid #c7c7cc;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,.05);cursor:pointer;transition:.2s;font-family:-apple-system,BlinkMacSystemFont,"San Francisco","Segoe UI",Roboto,Helvetica,Arial,sans-serif}.apple-logout-btn:hover{background:linear-gradient(to bottom,#e5e5ea,#c7c7cc);transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,0,0,.1)}.apple-logout-btn:active{background:linear-gradient(to bottom,#d1d1d6,#a1a1aa);transform:translateY(0);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}.apple-logout-btn .icon{width:18px;height:18px;stroke:#1c1c1e}.apple-style-report-table{width:100%;border-collapse:separate;border-spacing:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:.95rem;background:rgba(255,255,255,.75);backdrop-filter:blur(6px);border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);transition:.3s}.apple-style-report-table thead th{background:linear-gradient(to bottom,#f9f9fb,#e8e8f0);color:#1c1c1e;font-weight:600;padding:16px;text-align:center;border-bottom:1px solid #d1d1d6;letter-spacing:.3px;font-size:.96rem}.apple-style-report-table tbody td{padding:14px 16px;text-align:center;border-bottom:1px solid #eaeaf0;color:#2c2c2e;vertical-align:middle;background-color:#fff;transition:background-color .2s}.apple-style-report-table tbody tr:nth-child(2n) td{background-color:#fafafa}.apple-style-report-table tbody tr:hover td{background-color:#f2f2f7;cursor:pointer}.apple-style-report-table .text-success{color:#30d158;font-weight:600}.apple-style-report-table .text-danger{color:#ff3b30;font-weight:600}.apple-style-report-table .text-warning{color:#ff9f0a;font-weight:600}.apple-style-report-table td.remarks-cell{text-align:left;white-space:pre-wrap;word-break:break-word;max-width:100%}.resizable-header{position:relative;display:flex;justify-content:center;align-items:center;padding-right:10px}.resizable-header::after{content:'';position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;user-select:none}#rrReportTableBody tr.selected-row td{background-color:#cce4ff!important}#rrReportTableBody tr:hover td{background-color:#e2f0ff!important;cursor:pointer}#supplierCheckboxes label{margin-right:10px;white-space:nowrap}.apple-footer{background:linear-gradient(to top,#f2f2f7,#fff);padding:40px 20px 20px;font-family:-apple-system,BlinkMacSystemFont,"San Francisco","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1c1c1e;border-top:1px solid #e5e5ea;box-shadow:0 -1px 3px rgba(0,0,0,.05)}.footer-container{max-width:1200px;margin:0 auto;text-align:center}.footer-section{margin-bottom:20px}.footer-title{font-size:1.2rem;font-weight:600;margin:0}.footer-subtext{font-size:.95rem;color:#6e6e73;margin:4px 0 0}.footer-links{margin:20px 0}.footer-links a{margin:0 12px;font-size:.95rem;color:#0071e3;text-decoration:none;transition:color .2s}.footer-links a:hover{color:#004ba0}.footer-copy{font-size:.85rem;color:#8e8e93}.main-content.shifted,.main-content.shifted~.apple-footer{margin-left:260px}</style>
+
+ <style>
+  :root {
+  --apple-blue: #007aff;
+  --sidebar-bg: #f9fafc;
+  --sidebar-border: #dce1e6;
+  --text-main: #1c1c1e;
+  --text-muted: #8e8e93;
+  --highlight: #0a84ff;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.06);
+  --hover-shadow: rgba(0, 0, 0, 0.1);
+  --transition-fast: 0.25s ease;
+}
+
+
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f2f4f8;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+
+/* === Apple-Style Sidebar (Fixed to avoid collision with navbar) === */
+.sidebar {
+  position: fixed;
+  top: 56px; /* Leaves space for the navbar */
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 56px);
+  background: rgba(255, 255, 255, 0.65); /* Glassmorphism */
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  z-index: 999;
+  overflow-y: auto;
+
+  /* Animation defaults */
+  transition: transform 0.3s ease;
+  transform: translateX(-100%); /* start off-screen */
+}
+
+/* ✨ Sidebar Title — Improved Readability and Padding */
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+}
+
+/* 🚪 Slide-In Sidebar Effect (Apple-like animation) */
+.sidebar.active {
+  transform: translateX(0); /* Slide in */
+}
+
+/* ⬅️ Slide Out (when hiding again) */
+.sidebar.slide-out-left {
+  transform: translateX(-100%); /* Slide out to left */
+}
+
+/* Main content shift */
+#mainContent.shifted {
+  margin-left: 270px; /* Matches the sidebar width + padding */
+  transition: margin-left 0.3s ease;
+}
+
+/* 🍎 Sidebar Button — Apple-style Friendly UI */
+.sidebar-btn {
+  background: linear-gradient(135deg, #007aff, #0a84ff);
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 18px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.15);
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sidebar-btn:hover {
+  background: linear-gradient(135deg, #005ecb, #007aff);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
+}
+
+.sidebar-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.2);
+}
+
+.sidebar-btn.active {
+  background: #004ba0;
+  box-shadow: inset 0 0 0 2px #ffffff33;
+}
+
+/* 🧑‍💻 Optional: Add icons to buttons if needed */
+.sidebar-btn::before {
+  content: '🛠️';
+  font-size: 1.1rem;
+}
+
+
+
+/* === Main Content === */
+.main-content {
+  transition: margin-left 0.3s ease;
+  margin-left: 0; /* default when sidebar is hidden */
+}
+
+.main-content.shifted {
+  margin-left: 260px; /* same width as sidebar */
+}
+
+
+/* === Card Summary === */
+.card-summary {
+  background: var(--card-bg);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px var(--card-shadow);
+  border-left: 5px solid var(--highlight);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-summary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px var(--hover-shadow);
+}
+
+/* === Upload Zone === */
+.upload-zone {
+  border: 2px dashed #c7c7cc;
+  background-color: #f4f4f7;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: var(--highlight);
+  color: var(--highlight);
+  background-color: #e6f0ff;
+}
+
+/* === Table Wrapper === */
+.table-wrapper {
+  max-height: 500px; /* Set scrollable height */
+  overflow-y: auto;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  margin-top: 2rem;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+}
+
+/* === Table === */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.93rem;
+  color: #1c1c1e;
+  background: #fff;
+}
+
+/* === Table Header === */
+/* 🍏 Apple Card Styling */
+.apple-card {
+  background: #ffffffcc;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  border: 1px solid #e0e0e5;
+  transition: all 0.3s ease;
+}
+
+/* Header */
+.apple-card-header {
+  background: linear-gradient(to right, #007aff, #0a84ff);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Body Padding */
+.apple-card-body {
+  padding: 0;
+}
+
+/* Scrollable Table Container */
+.apple-table-wrapper {
+  max-height: 600px;
+  overflow-y: auto;
+  border-radius: 0 0 16px 16px;
+  position: relative; /* ✅ add this */
+  z-index: 1;          /* ✅ to establish stacking context */
+}
+
+
+/* Table */
+.apple-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px;
+  font-size: 0.95rem;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Table Head */
+.apple-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fb;
+  font-weight: 600;
+  color: #1c1c1e;
+  padding: 0.85rem 1.2rem;
+  border-bottom: 1px solid #d1d1d6;
+  backdrop-filter: blur(12px);
+  z-index: 10; /* ✅ make sure this is high */
+  white-space: nowrap;
+  text-align: left;
+}
+
+
+/* Table Rows */
+.apple-table tbody tr:hover {
+  background-color: #f2f4f8;
+  transition: background-color 0.2s ease;
+}
+
+.apple-table td {
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #ebedf0;
+  color: #2c2c2e;
+  background: #fff;
+  vertical-align: middle;
+  transition: background 0.3s ease;
+}
+
+/* Scrollbar (optional styling) */
+.apple-table-wrapper::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.apple-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cfd3d6;
+  border-radius: 10px;
+}
+
+.apple-table th:first-child,
+.apple-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: #f8f9fb;
+  z-index: 3;
+}
+
+
+.apple-table thead th:first-child {
+  z-index: 11; /* higher than normal header row and left column */
+}
+
+
+
+/* === Chart Styling === */
+.chart-wrapper {
+  height: 240px;
+}
+
+#chartCanvas,
+#ordersIssuedChart {
+  width: 100% !important;
+  height: 240px !important;
+}
+
+/* === Side-by-side Charts === */
+.chart-duo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-box {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Divider */
+.chart-divider {
+  width: 1px;
+  background-color: #e0e0e0;
+  margin: 0 10px;
+}
+
+@media (max-width: 992px) {
+  .chart-duo {
+    flex-direction: column;
+  }
+  .chart-divider {
+    display: none;
+  }
+}
+
+/* === Status Tags (One-Line Badge Style) === */
+.status-delivered, .status-cancelled, .status-partial {
+  font-weight: 600;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.status-delivered {
+  color: #fff;
+  background-color: #34c759;
+}
+
+.status-cancelled {
+  color: #fff;
+  background-color: #ff3b30;
+}
+
+.status-partial {
+  color: #fff;
+  background-color: #ff9500;
+}
+
+
+
+/* === Fade Animation === */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out both;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apple-style-btn {
+  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* Apple-style gray gradient */
+  color: #1c1c1e;
+  border: 1px solid #c7c7cc;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  backdrop-filter: blur(10px);
+}
+
+.apple-style-btn:hover {
+  background: linear-gradient(to bottom, #e0e0e5, #c7c7cc);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+
+.apple-style-btn:active {
+  background: #d1d1d6;
+  transform: scale(0.98);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.apple-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(to bottom, #f2f2f7, #d1d1d6); /* macOS-style gray gradient */
+  color: #1c1c1e;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 1px solid #c7c7cc;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.apple-logout-btn:hover {
+  background: linear-gradient(to bottom, #e5e5ea, #c7c7cc);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.apple-logout-btn:active {
+  background: linear-gradient(to bottom, #d1d1d6, #a1a1aa);
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.apple-logout-btn .icon {
+  width: 18px;
+  height: 18px;
+  stroke: #1c1c1e;
+}
+
+
+/* World-Class Apple-Inspired Table Design */
+.apple-style-report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.apple-style-report-table thead th {
+  background: linear-gradient(to bottom, #f9f9fb, #e8e8f0);
+  color: #1c1c1e;
+  font-weight: 600;
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid #d1d1d6;
+  letter-spacing: 0.3px;
+  font-size: 0.96rem;
+}
+
+.apple-style-report-table tbody td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #eaeaf0;
+  color: #2c2c2e;
+  vertical-align: middle;
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
+}
+
+.apple-style-report-table tbody tr:nth-child(even) td {
+  background-color: #fafafa;
+}
+
+.apple-style-report-table tbody tr:hover td {
+  background-color: #f2f2f7;
+  cursor: pointer;
+}
+
+.apple-style-report-table .text-success {
+  color: #30d158;
+  font-weight: 600;
+}
+
+.apple-style-report-table .text-danger {
+  color: #ff3b30;
+  font-weight: 600;
+}
+
+.apple-style-report-table .text-warning {
+  color: #ff9f0a;
+  font-weight: 600;
+}
+
+/* Updated Remarks Column Styling for Full Visibility */
+.apple-style-report-table td.remarks-cell {
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* For resizable column headers */
+.resizable-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 10px;
+}
+
+.resizable-header::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+
+
+#rrReportTableBody tr.selected-row td {
+  background-color: #cce4ff !important;
+}
+
+#rrReportTableBody tr:hover td {
+  background-color: #e2f0ff !important;
+  cursor: pointer;
+}
+
+
+#supplierCheckboxes label {
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+
+
+
+
+
+.apple-footer {
+  background: linear-gradient(to top, #f2f2f7, #ffffff);
+  padding: 40px 20px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1c1c1e;
+  border-top: 1px solid #e5e5ea;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-section {
+  margin-bottom: 20px;
+}
+
+.footer-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.footer-subtext {
+  font-size: 0.95rem;
+  color: #6e6e73;
+  margin: 4px 0 0;
+}
+
+.footer-links {
+  margin: 20px 0;
+}
+
+.footer-links a {
+  margin: 0 12px;
+  font-size: 0.95rem;
+  color: #0071e3;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #004ba0;
+}
+
+.footer-copy {
+  font-size: 0.85rem;
+  color: #8e8e93;
+}
+.main-content.shifted {
+  margin-left: 260px;
+}
+
+.apple-footer {
+  transition: margin-left 0.3s ease;
+  margin-left: 0;
+}
+
+.main-content.shifted ~ .apple-footer {
+  margin-left: 260px;
+}
+
+
+</style>
+
+
+
 
 </head>
-  <body>
+<body>
  
- <nav class="mb-4 bg-dark navbar navbar-dark navbar-expand-lg"><div class=container-fluid><a href=# class=navbar-brand>TrackWise</a><ul class="me-auto navbar-nav"><li class=nav-item><a href=# class="nav-link active">Dashboard</a><li class=nav-item><a href="Chart project.html"class=nav-link>Charts</a><li class=nav-item><a href=# class=nav-link id=toggleSidebar>Update</a><li class="nav-item dropdown"><a href=# class="nav-link dropdown-toggle"aria-expanded=false data-bs-toggle=dropdown role=button>Generate Report</a><ul class=dropdown-menu><li><a href=# class=dropdown-item id=toFollowUpBtn>📄 To Follow-Up Report</a><li><a href=# class=dropdown-item id=statusReportBtn>📊 Status Report</a><li><a href=# class=dropdown-item id=generateRRReportBtn>📦 Generate RR Report</a><li><a href=# class=dropdown-item id=deliveryperformanceBtn>📈 Delivery Performance Report</a></ul></ul><div class="dropdown ms-auto"><button class="btn btn-outline-light dropdown-toggle"type=button id=myAccountDropdown aria-expanded=false data-bs-toggle=dropdown>My Account</button><ul class="dropdown-menu dropdown-menu-end"aria-labelledby=myAccountDropdown><li><span class=dropdown-item-text><strong>Name:</strong><br><span id=userEmailDisplay>Loading...</span></span><li><hr class=dropdown-divider><li><a href=# class="dropdown-item text-danger"id=logoutBtn>Logout</a></ul></div></div></nav><div class="hidden sidebar"id=functionSidebar><h5 class=sidebar-title>Functions</h5><button class="btn btn-primary w-100 mb-3 sidebar-btn"id=btnShowUpdate>UPDATE ORDER DETAILS</button> <button class="btn btn-primary w-100 mb-3 sidebar-btn"id=btnCustomizeTable>Customize Table</button> <button class="btn btn-secondary mb-3 sidebar-btn w-100"id=btnCustomizeCharts>Customize Charts</button></div><div class=main-content id=mainContent style=padding:20px><div class="mb-4 container-fluid p-0"><div class="text-center gx-3 row"><div class="mb-3 col-md-2"><div class="card card-summary"><div class=card-body><h6>Total Orders</h6><h4 id=totalOrders>--</h4></div></div></div><div class="mb-3 col-md-2"><div class="card card-summary"><div class=card-body><h6>Delivered</h6><h4 id=deliveredOrders class=text-success>--</h4></div></div></div><div class="mb-3 col-md-2"><div class="card card-summary"><div class=card-body><h6>Cancelled</h6><h4 id=cancelledOrders class=text-danger>--</h4></div></div></div><div class="mb-3 col-md-2"><div class="card card-summary"><div class=card-body><h6>In Progress</h6><h4 id=partialOrders class=text-warning>--</h4></div></div></div><div class="mb-3 col-md-2"><div class="card card-summary"><div class=card-body><h6>Partially Delivered</h6><h4 id=partiallyDeliveredOrders class=text-info>--</h4></div></div></div></div></div><div class="mb-4 container-fluid p-0"><div class="row align-items-center gx-2"><div class="mb-2 mb-md-0 col-lg-4 col-md-6 col-sm-12"><input id=searchInput class="form-control form-control-sm"placeholder="Search Customer/Product..."></div><div class="mb-2 mb-md-0 col-lg-2 col-md-3 col-sm-6"><select id=statusFilter><option value=All>All<option value=Delivered>Delivered<option value="Partially Delivered">Partially Delivered<option value=Cancelled>Cancelled<option value="In Progress">In Progress</select></div><div class="mb-2 mb-md-0 col-lg-2 col-md-3 col-sm-6"><select id=monthSort class="form-select form-select-sm"><option value="">Sort by Month<option value=january>January<option value=february>February<option value=march>March<option value=april>April<option value=may>May<option value=june>June<option value=july>July<option value=august>August<option value=september>September<option value=october>October<option value=november>November<option value=december>December</select></div><div class="d-flex gap-2 align-items-center col-lg-4 col-md-12 flex-wrap justify-content-start mt-2 mt-lg-0"><label class="m-0 upload-zone"for=excelFile>📁 Upload Excel <input id=excelFile type=file accept=".xlsx, .xls"hidden></label> <button class="btn-sm apple-style-btn"id=btnDownloadExcel>📥 Download Excel</button></div></div></div><div class="mb-4 container-fluid p-0"><div class="d-flex justify-content-between chart-trio flex-wrap"><div class="mb-3 chart-box flex-grow-1 mb-md-0 me-md-3"><div class="card border-0 h-100 rounded-4 shadow-sm"><div class="card-body pb-2 pt-4 px-4"><div class="mb-3 d-flex align-items-center justify-content-between"><h5 class=mb-0 style=font-weight:600;color:#1d1d1f>📊 Monthly Sales Overview</h5><select id=currencySelector class="form-select form-select-sm"style=max-width:150px;border-radius:12px><option value=ALL>All Currencies<option value=PHP>PHP<option value=USD>USD<option value=JPY>JPY</select></div><div class=chart-wrapper><canvas id=chartCanvas></canvas></div></div></div></div><div class="chart-divider d-md-block d-none"></div><div class="mb-3 chart-box flex-grow-1 mb-md-0 mx-md-3"><div class="card border-0 h-100 rounded-4 shadow-sm"><div class="card-body pb-2 pt-4 px-4"><h5 class=mb-3 style=font-weight:600;color:#1d1d1f>🧾 Total Orders Issued Per Month</h5><div class=chart-wrapper><canvas id=ordersIssuedChart></canvas></div></div></div></div><div class="chart-divider d-md-block d-none"></div><div class="chart-box flex-grow-1 ms-md-3"><div class="card border-0 h-100 rounded-4 shadow-sm"><div class="card-body pb-2 pt-4 px-4"><h5 class=mb-3 style=font-weight:600;color:#1d1d1f>⏱️ On Time vs Delayed Orders</h5><div class=chart-wrapper><canvas id=onTimeDelayedChart></canvas></div></div></div></div></div></div><div class="mb-4 container-fluid p-0"><div class=apple-card><div class=apple-card-header><h5 class=mb-0>📋 Order List</h5></div><div class=apple-card-body><div class=apple-table-wrapper><table class=apple-table><thead class=sticky-top id=orderTableHead><tbody id=orderTableBody></table></div></div></div></div></div><div class="fade modal"id=updateOrderModal tabindex=-1 aria-hidden=true aria-labelledby=updateOrderModalLabel><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header border-0 pb-0"><h5 class=modal-title id=updateOrderModalLabel>Update Order <span id=modalOrderNumber class=text-primary></span></h5><button class=btn-close type=button data-bs-dismiss=modal aria-label=Close></button></div><div class="modal-body pt-0"><div id=multiItemContainer><table class="table table-bordered table-hover"><thead class=table-light><tr><th>Product<th>Qty Ordered<th>Qty Delivered<th>Qty Cancelled<th>Unit Price<th>Delivery Date<th>Remarks<th>Status<th class=reasonHeader style=display:none>Reason<tbody id=multiItemTableBody></table></div></div><div class="border-0 modal-footer pt-0"><button class="btn btn-secondary px-4 rounded-pill"type=button data-bs-dismiss=modal>Cancel</button> <button class="btn btn-primary px-4 rounded-pill"type=button id=saveUpdateBtn>Save</button></div></div></div></div><div class="fade modal"id=customizeTableModal tabindex=-1 aria-hidden=true aria-labelledby=customizeTableModalLabel><div class="modal-dialog modal-dialog-scrollable"><div class=modal-content><div class=modal-header><h5 class=modal-title id=customizeTableModalLabel>Select Columns to Display</h5><button class=btn-close type=button data-bs-dismiss=modal aria-label=Close></button></div><div class=modal-body id=columnCheckboxContainer></div><div class=modal-footer><button class="btn btn-success"type=button id=confirmColumnsBtn>Apply</button> <button class="btn btn-secondary"type=button onclick=resetColumns()>Reset</button></div></div></div></div><div class="fade modal"id=reportModal tabindex=-1 aria-hidden=true aria-labelledby=reportModalLabel><div class=modal-dialog><div class="modal-content rounded-4 shadow"><div class=modal-header><h5 class=modal-title id=reportModalLabel>Select Supplier</h5><button class=btn-close type=button data-bs-dismiss=modal aria-label=Close></button></div><div class=modal-body><select id=supplierDropdown class="mb-3 form-select"><option value=""disabled selected>Select a supplier</select> <button class="btn btn-primary w-100"id=generateFollowUpReport>Generate Report</button></div></div></div></div><div class="fade modal"id=reportOutputModal tabindex=-1 aria-hidden=true aria-labelledby=reportOutputModalLabel><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content rounded-4 border-0 shadow-lg"><div class=modal-header><h5 class=modal-title>📄 Follow-Up Report for <span id=selectedSupplierName></span></h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><div class="mb-3 d-flex justify-content-end"><button class="btn px-4 rounded-pill btn-outline-success"id=downloadFollowUpReport>⬇️ Download Report</button></div><div class=table-responsive><table class="table apple-style-report-table"id=followUpReportTable><thead><tr><th><div class=resizable-header>Order Number</div><th><div class=resizable-header>Product</div><th><div class=resizable-header>Unit Price</div><th><div class=resizable-header>Qty Ordered</div><th><div class=resizable-header>Amount</div><th><div class=resizable-header>Qty Delivered</div><th><div class=resizable-header>Qty Cancelled</div><th><div class=resizable-header>Balance</div><th><div class=resizable-header>Need By Date</div><th><div class=resizable-header>Remarks</div><tbody id=reportTableBody></table></div></div></div></div></div><div class="fade modal"id=dateRangeModal tabindex=-1 aria-hidden=true aria-labelledby=dateRangeModalLabel><div class=modal-dialog><div class=modal-content><div class=modal-header><h5 class=modal-title id=dateRangeModalLabel>Select Date Range</h5><button class=btn-close type=button data-bs-dismiss=modal aria-label=Close></button></div><div class=modal-body><label for=startMonth>Start Month:</label> <input id=startMonth class="mb-2 form-control"type=month> <label for=endMonth>End Month:</label> <input id=endMonth class="mb-2 form-control"type=month></div><div class=modal-footer><button class="btn btn-secondary"type=button data-bs-dismiss=modal>Cancel</button> <button class="btn btn-primary"id=confirmDateRangeBtn>Generate Report</button></div></div></div></div><div class="fade modal"id=rrUploadModal tabindex=-1><div class=modal-dialog><div class="modal-content p-3"><div class=modal-header><h5 class=modal-title>📄 Upload RR Excel File</h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><input id=rrUploadInput class=form-control type=file accept=".xlsx, .xls"></div></div></div></div><div class="fade modal"id=rrReportModal tabindex=-1><div class="modal-dialog modal-xl"><div class="modal-content p-3"><div class=modal-header><h5 class=modal-title>📦 Receipt Report</h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><div class="mb-2 d-flex gap-2 justify-content-between"><input id=searchPackingSlipInput class="form-control form-control-sm w-50"placeholder="🔍 Search Packing Slip..."><div class=mb-3><button class="btn btn-secondary btn-sm"data-bs-target=#assignCurrencyModal data-bs-toggle=modal>💱 Assign Supplier Currency</button></div><div class=mt-4 id=rrFilteredSupplierTablesContainer></div><div class="d-flex gap-2"><button class="btn btn-sm btn-success"id=downloadRRReport>⬇ Download as Excel</button> <button class="btn btn-sm btn-danger"id=clearRRReport>🗑 Clear Data</button></div></div><table class="table table-bordered table-striped"><thead class=table-light id=rrReportTableHeadRow><tr><th class="text-center bg-secondary fs-6 text-white"colspan=5>TRANSMITTAL OF INVOICE WITH RECEIVING REPORT CPS<tr><th>Receipt<th>Date<th>Supplier<th>Packing Slip<th>Receiver<tbody id=rrReportTableBody></table></div></div></div></div><div class="fade modal"id=rowDetailModal tabindex=-1><div class=modal-dialog><div class="modal-content p-3"><div class=modal-header><h5 class=modal-title>📋 Edit Row Details</h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><form id=rowDetailForm><div class=mb-2><label class=form-label>Department</label> <input id=detailDepartment class=form-control required></div><div class=mb-2><label class=form-label>P.O #</label> <input id=detailPO class=form-control required></div><div class=mb-2><label class=form-label>P.R #</label> <input id=detailPR class=form-control required></div><div class=mb-2><label class=form-label>Amount</label> <input id=detailAmount class=form-control required min=0 step=0.01 type=number></div><div class=text-end><button class="btn btn-primary"type=submit>💾 Save</button></div></form></div></div></div></div><div class="fade modal"id=customizeChartModal tabindex=-1><div class=modal-dialog><div class=modal-content><div class=modal-header><h5 class=modal-title>Customize Chart Types</h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><label class=form-label for=chart1Type>Chart 1 (Sales)</label> <select id=chart1Type class="mb-3 form-select"><option value=line>📈 Line<option value=bar>📊 Bar<option value=area>🌊 Area</select> <label class=form-label for=chart2Type>Chart 2 (Orders)</label> <select id=chart2Type class="mb-3 form-select"><option value=bar>📦 Bar<option value=line>📈 Line<option value=area>🌊 Area</select></div><div class=modal-footer><button class="btn btn-primary"id=confirmChartChoices>Apply</button></div></div></div></div><div class="fade modal"id=assignCurrencyModal tabindex=-1><div class=modal-dialog><div class="modal-content p-3"><div class=modal-header><h5 class=modal-title>💱 Assign Supplier Currency</h5><button class=btn-close type=button data-bs-dismiss=modal></button></div><div class=modal-body><div id=assignCurrencyContainer></div></div><div class=modal-footer><button class="btn btn-primary"type=button id=applyCurrencyAssignments>Apply</button></div></div></div></div><div class="fade modal"id=deliveryPerformanceModal tabindex=-1 aria-hidden=true aria-labelledby=deliveryPerformanceModalLabel><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class=modal-content><div class=modal-header><h5 class=modal-title id=deliveryPerformanceModalLabel>📦 Delivery Performance Report</h5><button class=btn-close type=button data-bs-dismiss=modal aria-label=Close></button></div><div class=modal-body><div class=table-responsive id=deliveryPerformanceContent></div></div></div></div></div><div class="fade modal"id=excelUploadLoaderModal tabindex=-1 aria-hidden=true><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content p-5 text-center"><h5 class=mb-4>Uploading Excel File</h5><div class=progress style=height:30px><div class="fs-6 progress-bar progress-bar-animated progress-bar-striped"id=excelUploadProgressBar style=width:0% role=progressbar>0%</div></div></div></div></div><footer class=apple-footer><div class=footer-container><div class=footer-section><p class=footer-title>Order Monitoring<p class=footer-subtext>Built for performance and simplicity.</div><div class=footer-links><a href=info-sections.html>Privacy</a> <a href=info-sections.html>Terms</a> <a href=info-sections.html>Support</a> <a href=info-sections.html>About</a></div><div class=footer-copy>© <span id=currentYear></span> TrackWise. All rights reserved. | by Jefferson Molina</div></div></footer>
+  <!-- NAVIGATION -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+   <a class="navbar-brand" href="#">TrackWise</a>
+
+
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link" href="Chart project.html">Charts</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" id="toggleSidebar">Update</a></li>
+
+
+      <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Generate Report
+  </a>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
+    <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
+    <li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
+    <li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
+
+  </ul>
+</li>
+
+</li>
+
+    </ul>
+
+<!-- MY ACCOUNT DROPDOWN MENU -->
+<div class="dropdown ms-auto">
+  <button class="btn btn-outline-light dropdown-toggle" type="button" id="myAccountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+    My Account
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="myAccountDropdown">
+    <li>
+      <span class="dropdown-item-text">
+        <strong>Name:</strong><br>
+        <span id="userEmailDisplay">Loading...</span>
+      </span>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+
+
+
+  <!-- SIDEBAR -->
+<div id="functionSidebar" class="sidebar hidden">
+  <h5 class="sidebar-title">Functions</h5>
+  <button id="btnShowUpdate" class="btn btn-primary sidebar-btn w-100 mb-3">UPDATE ORDER DETAILS</button>
+  <button id="btnCustomizeTable" class="btn btn-primary sidebar-btn w-100 mb-3">Customize Table</button>
+  <button id="btnCustomizeCharts" class="btn btn-secondary sidebar-btn w-100 mb-3">Customize Charts</button>
+    </div>
+  
+
+
+  <!-- MAIN CONTENT -->
+  <div id="mainContent" class="main-content" style="padding: 20px;">
+
+
+   <!-- DASHBOARD SUMMARY -->
+<div class="container-fluid p-0 mb-4">
+  <div class="row text-center gx-3">
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Total Orders</h6>
+          <h4 id="totalOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Delivered</h6>
+          <h4 class="text-success" id="deliveredOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Cancelled</h6>
+          <h4 class="text-danger" id="cancelledOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>In Progress</h6>
+          <h4 class="text-warning" id="partialOrders">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 mb-3">
+      <div class="card card-summary">
+        <div class="card-body">
+          <h6>Partially Delivered</h6>
+          <h4 class="text-info" id="partiallyDeliveredOrders">--</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid p-0 mb-4">
+  <div class="row gx-2 align-items-center">
+
+    <!-- Search -->
+    <div class="col-lg-4 col-md-6 col-sm-12 mb-2 mb-md-0">
+      <input type="text" class="form-control form-control-sm" placeholder="Search Customer/Product..." id="searchInput">
+    </div>
+<!-- 0 Filter -->
+<div class="col-lg-2 col-md-3 col-sm-6 mb-2 mb-md-0">
+<select id="statusFilter">
+  <option value="All">All</option>
+  <option value="Delivered">Delivered</option>
+  <option value="Partially Delivered">Partially Delivered</option> <!-- ✅ Fix here -->
+  <option value="Cancelled">Cancelled</option>
+  <option value="In Progress">In Progress</option>
+</select>
+
+</div>
+
+<!-- Month Filter -->
+<div class="col-lg-2 col-md-3 col-sm-6 mb-2 mb-md-0">
+  <select class="form-select form-select-sm" id="monthSort">
+    <option value="">Sort by Month</option>
+    <option value="january">January</option>
+    <option value="february">February</option>
+    <option value="march">March</option>
+    <option value="april">April</option>
+    <option value="may">May</option>
+    <option value="june">June</option>
+    <option value="july">July</option>
+    <option value="august">August</option>
+    <option value="september">September</option>
+    <option value="october">October</option>
+    <option value="november">November</option>
+    <option value="december">December</option>
+  </select>
+</div>
+
+    <!-- Upload + Download -->
+    <div class="col-lg-4 col-md-12 d-flex flex-wrap gap-2 align-items-center justify-content-start mt-2 mt-lg-0">
+      <label class="upload-zone m-0" for="excelFile">
+        📁 Upload Excel
+        <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
+      </label>
+
+      <button id="btnDownloadExcel" class="apple-style-btn btn-sm">
+        📥 Download Excel
+      </button>
+    </div>
+
+  </div>
+</div>
+
+        
+    
+
+
+
+<!-- 📊 Three Side-by-Side Charts -->
+<div class="container-fluid p-0 mb-4">
+  <div class="d-flex flex-wrap justify-content-between chart-trio">
+
+    <!-- Chart 1: Monthly Sales -->
+    <div class="chart-box me-md-3 mb-3 mb-md-0 flex-grow-1">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0" style="font-weight: 600; color: #1d1d1f;">📊 Monthly Sales Overview</h5>
+            <select id="currencySelector" class="form-select form-select-sm" style="max-width: 150px; border-radius: 12px;">
+              <option value="ALL">All Currencies</option>
+              <option value="PHP">PHP</option>
+              <option value="USD">USD</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Divider Line -->
+    <div class="chart-divider d-none d-md-block"></div>
+
+    <!-- Chart 2: Orders Issued -->
+    <div class="chart-box mx-md-3 mb-3 mb-md-0 flex-grow-1">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <h5 class="mb-3" style="font-weight: 600; color: #1d1d1f;">🧾 Total Orders Issued Per Month</h5>
+          <div class="chart-wrapper">
+            <canvas id="ordersIssuedChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Divider Line -->
+    <div class="chart-divider d-none d-md-block"></div>
+
+    <!-- Chart 3: On Time vs Delayed -->
+    <div class="chart-box ms-md-3 flex-grow-1">
+      <div class="card shadow-sm rounded-4 border-0 h-100">
+        <div class="card-body px-4 pt-4 pb-2">
+          <h5 class="mb-3" style="font-weight: 600; color: #1d1d1f;">⏱️ On Time vs Delayed Orders</h5>
+          <div class="chart-wrapper">
+            <canvas id="onTimeDelayedChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 🍏 Apple-Style Order Table -->
+<div class="container-fluid p-0 mb-4">
+  <div class="apple-card">
+    <div class="apple-card-header">
+      <h5 class="mb-0">📋 Order List</h5>
+    </div>
+    <div class="apple-card-body">
+      <div class="apple-table-wrapper">
+        <table class="apple-table">
+          <thead id="orderTableHead" class="sticky-top">
+            <!-- JavaScript will insert dynamic headers -->
+          </thead>
+          <tbody id="orderTableBody">
+            <!-- JavaScript will populate rows here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+      </div>
+
+
+<!-- UPDATE ORDER MODAL -->
+<div class="modal fade" id="updateOrderModal" tabindex="-1" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-lg border-0">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="updateOrderModalLabel">
+          Update Order <span id="modalOrderNumber" class="text-primary"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div id="multiItemContainer">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Qty Ordered</th>
+                <th>Qty Delivered</th>
+                <th>Qty Cancelled</th>
+                <th>Unit Price</th>
+                <th>Delivery Date</th>
+                <th>Remarks</th>
+                <th>Status</th>
+                <th class="reasonHeader" style="display:none;">Reason</th>
+              </tr>
+            </thead>
+            <tbody id="multiItemTableBody">
+              <!-- JavaScript will inject rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="saveUpdateBtn" class="btn btn-primary rounded-pill px-4">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- CUSTOMIZE TABLE MODAL -->
+  <div class="modal fade" id="customizeTableModal" tabindex="-1" aria-labelledby="customizeTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="customizeTableModalLabel">Select Columns to Display</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="columnCheckboxContainer">
+          <!-- Checkbox list rendered by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirmColumnsBtn" class="btn btn-success">Apply</button>
+          <button type="button" class="btn btn-secondary" onclick="resetColumns()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+
+
+
+
+<!-- Supplier Selection Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reportModalLabel">Select Supplier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <select id="supplierDropdown" class="form-select mb-3">
+          <option value="" disabled selected>Select a supplier</option>
+          <!-- Populated by JS -->
+        </select>
+        <button class="btn btn-primary w-100" id="generateFollowUpReport">Generate Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- Report Output Modal -->
+<div class="modal fade" id="reportOutputModal" tabindex="-1" aria-labelledby="reportOutputModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content rounded-4 shadow-lg border-0">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          📄 Follow-Up Report for <span id="selectedSupplierName"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- ✅ Download Button -->
+        <div class="d-flex justify-content-end mb-3">
+          <button id="downloadFollowUpReport" class="btn btn-outline-success rounded-pill px-4">
+            ⬇️ Download Report
+          </button>
+        </div>
+
+        <!-- ✅ Report Table -->
+        <div class="table-responsive">
+          <table class="table apple-style-report-table" id="followUpReportTable">
+            <thead>
+              <tr>
+                <th><div class="resizable-header">Order Number</div></th>
+                <th><div class="resizable-header">Product</div></th>
+         	<th><div class="resizable-header">Unit Price</div></th>
+                <th><div class="resizable-header">Qty Ordered</div></th>
+                <th><div class="resizable-header">Amount</div></th>
+                <th><div class="resizable-header">Qty Delivered</div></th>
+                <th><div class="resizable-header">Qty Cancelled</div></th>
+                <th><div class="resizable-header">Balance</div></th>
+                <th><div class="resizable-header">Need By Date</div></th>
+                <th><div class="resizable-header">Remarks</div></th>
+              </tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+<!-- 📅 Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dateRangeModalLabel">Select Date Range</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="startMonth">Start Month:</label>
+        <input type="month" id="startMonth" class="form-control mb-2" />
+
+        <label for="endMonth">End Month:</label>
+        <input type="month" id="endMonth" class="form-control mb-2" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmDateRangeBtn" class="btn btn-primary">Generate Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- RR Upload Modal -->
+<div class="modal fade" id="rrUploadModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">📄 Upload RR Excel File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="file" id="rrUploadInput" class="form-control" accept=".xlsx, .xls" />
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- RR Report Modal -->
+<div class="modal fade" id="rrReportModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">📦 Receipt Report</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between gap-2 mb-2">
+          <!-- 🔍 Search Packing Slip -->
+          <input
+            type="text"
+            id="searchPackingSlipInput"
+            class="form-control form-control-sm w-50"
+            placeholder="🔍 Search Packing Slip..."
+          />
+
+
+
+
+
+<!-- 💱 Assign Supplier Currency Button -->
+<div class="mb-3">
+  <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#assignCurrencyModal">
+    💱 Assign Supplier Currency
+  </button>
+</div>
+
+<!-- 📄 Grouped Report Output (by Currency) -->
+<div id="rrFilteredSupplierTablesContainer" class="mt-4">
+  <!-- Dynamically generated tables per currency will appear here -->
+</div>
+
+
+
+
+
+          <!-- 📥 Action Buttons -->
+          <div class="d-flex gap-2">
+            <button id="downloadRRReport" class="btn btn-success btn-sm">
+              ⬇ Download as Excel
+            </button>
+            <button id="clearRRReport" class="btn btn-danger btn-sm">
+              🗑 Clear Data
+            </button>
+          </div>
+        </div>
+
+        <!-- 📊 Report Table -->
+        <table class="table table-striped table-bordered">
+          <thead class="table-light" id="rrReportTableHeadRow">
+            <tr>
+              <th colspan="5" class="text-center bg-secondary text-white fs-6">
+                TRANSMITTAL OF INVOICE WITH RECEIVING REPORT CPS
+              </th>
+            </tr>
+            <tr>
+              <th>Receipt</th>
+              <th>Date</th>
+              <th>Supplier</th>
+              <th>Packing Slip</th>
+              <th>Receiver</th>
+            </tr>
+          </thead>
+          <tbody id="rrReportTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Row Detail Modal for Follow-Up Report -->
+<div class="modal fade" id="rowDetailModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">📋 Edit Row Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+      <form id="rowDetailForm">
+  <div class="mb-2">
+    <label class="form-label">Department</label>
+    <input type="text" class="form-control" id="detailDepartment" required />
+  </div>
+  <div class="mb-2">
+    <label class="form-label">P.O #</label>
+    <input type="text" class="form-control" id="detailPO" required />
+  </div>
+  <div class="mb-2">
+    <label class="form-label">P.R #</label>
+    <input type="text" class="form-control" id="detailPR" required />
+  </div>
+  <div class="mb-2">
+    <label class="form-label">Amount</label>
+    <input type="number" step="0.01" min="0" class="form-control" id="detailAmount" required />
+
+
+  </div>
+  <div class="text-end">
+    <button type="submit" class="btn btn-primary">💾 Save</button>
+  </div>
+</form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- CUSTOMIZE CHART MODAL -->
+<div class="modal fade" id="customizeChartModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Customize Chart Types</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="chart1Type" class="form-label">Chart 1 (Sales)</label>
+        <select id="chart1Type" class="form-select mb-3">
+          <option value="line">📈 Line</option>
+          <option value="bar">📊 Bar</option>
+          <option value="area">🌊 Area</option>
+        </select>
+
+        <label for="chart2Type" class="form-label">Chart 2 (Orders)</label>
+        <select id="chart2Type" class="form-select mb-3">
+          <option value="bar">📦 Bar</option>
+          <option value="line">📈 Line</option>
+          <option value="area">🌊 Area</option>
+        </select>
+
+        
+      </div>
+      <div class="modal-footer">
+        <button id="confirmChartChoices" class="btn btn-primary">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- 💱 Assign Currency Modal -->
+<div class="modal fade" id="assignCurrencyModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">💱 Assign Supplier Currency</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="assignCurrencyContainer"></div>
+      </div>
+      <div class="modal-footer">
+        <!-- ✅ Make sure this button is inside .modal-footer -->
+        <button id="applyCurrencyAssignments" class="btn btn-primary" type="button">
+
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- 📦 Delivery Performance Report Modal -->
+<div class="modal fade" id="deliveryPerformanceModal" tabindex="-1" aria-labelledby="deliveryPerformanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deliveryPerformanceModalLabel">📦 Delivery Performance Report</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="deliveryPerformanceContent" class="table-responsive">
+          <!-- Report table will be injected here -->
+        </div>
+
+</div>
+</div>
+</div>
+</div> 
+
+
+
+<!-- Excel Upload Loader Modal -->
+<div class="modal fade" id="excelUploadLoaderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content text-center p-5">
+      <h5 class="mb-4">Uploading Excel File</h5>
+      <div class="progress" style="height: 30px;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated fs-6"
+             id="excelUploadProgressBar"
+             role="progressbar"
+             style="width: 0%">0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<footer class="apple-footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <p class="footer-title">Order Monitoring</p>
+      <p class="footer-subtext">Built for performance and simplicity.</p>
+    </div>
+    <div class="footer-links">
+      <a href="info-sections.html">Privacy</a>
+      <a href="info-sections.html">Terms</a>
+      <a href="info-sections.html">Support</a>
+      <a href="info-sections.html">About</a>
+    </div>
+    <div class="footer-copy">
+      &copy; <span id="currentYear"></span> TrackWise. All rights reserved. | by Jefferson Molina
+    </div>
+  </div>
+</footer>
+
 
 
 </body>
 
-  
-  
+
+
+ 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
