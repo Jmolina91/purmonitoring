@@ -550,6 +550,8 @@ table {
 
 
 
+
+
 .apple-footer {
   background: linear-gradient(to top, #f2f2f7, #ffffff);
   padding: 40px 20px 20px;
@@ -641,11 +643,11 @@ table {
   </a>
   <ul class="dropdown-menu">
     <li><a class="dropdown-item" href="#" id="toFollowUpBtn">📄 To Follow-Up Report</a></li>
-     <li><!-- <a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a> --></li>
-    <li><!-- <a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a> --></li>
-    <li><!-- <a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a> --></li>
-</ul>
+    <li><a class="dropdown-item" href="#" id="statusReportBtn">📊 Status Report</a></li>
+    <li><a class="dropdown-item" href="#" id="generateRRReportBtn">📦 Generate RR Report</a></li>
+    <li><a class="dropdown-item" href="#" id="deliveryperformanceBtn">📈 Delivery Performance Report</a></li>
 
+  </ul>
 </li>
 
 </li>
@@ -1408,8 +1410,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
 
 
-
-
   let inactivityTimer;
   let fullData = [];
   let currentEditingOrderId = '';
@@ -1834,6 +1834,7 @@ function computeStatus(row) {
 
  
 
+ 
 async function populateTable(data) {
   console.log("🚀 Populating table with data:", data);
 
@@ -1849,6 +1850,7 @@ async function populateTable(data) {
   thead.innerHTML = '';
 
   if (!Array.isArray(data) || data.length === 0) {
+    thead.innerHTML = '';
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = selectedColumns.length || 1;
@@ -1859,26 +1861,30 @@ async function populateTable(data) {
     return;
   }
 
+  // ✅ Load or initialize selectedColumns
   if (!Array.isArray(selectedColumns) || selectedColumns.length === 0) {
     const storedSelected = localStorage.getItem('selectedColumns');
     if (storedSelected) {
       try {
-        selectedColumns = JSON.parse(storedSelected).filter(col => Object.keys(data[0]).includes(col));
-      } catch {
-        selectedColumns = Object.keys(data[0]);
+        selectedColumns = JSON.parse(storedSelected);
+        selectedColumns = selectedColumns.filter(col => Object.keys(data[0]).includes(col));
+      } catch (e) {
+        selectedColumns = Object.keys(data[0]).filter(key => key);
       }
     } else {
-      selectedColumns = Object.keys(data[0]);
+      selectedColumns = Object.keys(data[0]).filter(key => key);
     }
   }
 
-  if (!selectedColumns.includes("Status")) selectedColumns.push("Status");
-  if (!selectedColumns.includes("Reason")) selectedColumns.push("Reason");
+  if (!selectedColumns || selectedColumns.length === 0) {
+    selectedColumns = Object.keys(data[0]).filter(key => key);
+  }
 
   const columns = selectedColumns;
 
+  // ✅ Build header
   const headerRow = document.createElement('tr');
-  columns.forEach(col => {
+  columns.forEach((col) => {
     const th = document.createElement('th');
     th.textContent = col;
     th.setAttribute('draggable', true);
@@ -1898,11 +1904,12 @@ async function populateTable(data) {
   });
   thead.appendChild(headerRow);
 
-  for (const row of data) {
+  // ✅ Build rows
+  data.forEach(async row => {
     const tr = document.createElement('tr');
     if (row.docId) tr.setAttribute('data-order-id', row.docId);
 
-    // ✅ Compute status using Tentative Delivery Date
+    // ✅ Determine the status (Pending, Delivered, Delayed, Cancelled)
     let status = "Pending";
     const qtyCancelled = Number(row["Quantity Cancelled"]) || 0;
     const deliveryDate = row["Delivery Date"] ? new Date(row["Delivery Date"]) : null;
@@ -1916,39 +1923,79 @@ async function populateTable(data) {
 
     const isDelayedOrCancelled = ["Delayed", "Cancelled"].includes(status);
 
-    // ✅ Save Status and Reason to Firestore if changed
-    if ((status !== row["Status"] || (isDelayedOrCancelled && row["Reason"] !== row["Reason"])) && row.docId && currentUserId) {
-      const updatePayload = { Status: status };
-      if (isDelayedOrCancelled && row["Reason"]) {
-        updatePayload.Reason = row["Reason"];
-      }
-
-      try {
-        await firestore.collection("orders")
-          .doc(currentUserId)
-          .collection("userOrders")
-          .doc(row.docId)
-          .update(updatePayload);
-        console.log(`✅ Firestore updated for ${row.docId}:`, updatePayload);
-      } catch (err) {
-        console.error(`❌ Firestore update failed for ${row.docId}:`, err);
-      }
-    }
-
-    for (const col of columns) {
+    // ✅ Handle Lead Time update and save to Firestore
+    columns.forEach(col => {
       const td = document.createElement('td');
-      let value = row[col] ?? row[col.toLowerCase()] ?? '';
+      let value = row[col] ?? '';
 
-      // ✅ Status column
-      if (col === "Status") {
+      // Format object-type values
+      if (typeof value === 'object' && value !== null) {
+        value = JSON.stringify(value);
+      }
+
+      // Handle pricing and amount formatting
+      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
+        value = Number(value || 0).toFixed(2);
+      }
+
+      // Custom rendering logic per column
+      if (col === "Lead Time") {
+        const select = document.createElement("select");
+        select.className = "form-select form-select-sm";
+        const options = [
+          "Selection", "1-2 Weeks", "2-3 Weeks", "3-4 Weeks", "4-5 Weeks", "5-6 Weeks", "6-7 Weeks",
+          "7-8 Weeks", "8-9 Weeks", "9-10 Weeks", "11-12 Weeks", "90-120 Days"
+        ];
+
+        options.forEach(option => {
+          const opt = document.createElement("option");
+          opt.value = option;
+          opt.textContent = option;
+          if (option === value) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        select.addEventListener("change", async () => {
+          row["Lead Time"] = select.value;
+          row["Tentative Delivery Date"] = computeTentativeDate(row["Approved Date"], select.value);
+
+          // 🔥 Save to Firestore (Lead Time and Tentative Date only)
+          if (row.docId && currentUserId) {
+            try {
+              await firestore.collection("orders")
+                .doc(currentUserId)
+                .collection("userOrders")
+                .doc(row.docId)
+                .update({
+                  "Lead Time": row["Lead Time"],
+                  "Tentative Delivery Date": row["Tentative Delivery Date"]
+                });
+              console.log(`✅ Lead Time saved for ${row.docId}`);
+            } catch (err) {
+              console.error("❌ Failed to save Lead Time:", err);
+              alert("Failed to save Lead Time.");
+            }
+          }
+
+          setTimeout(() => filterTable(), 50);  // Refresh table
+        });
+
+        td.appendChild(select);
+
+      } else if (col === "Tentative Delivery Date") {
+        td.textContent = formatDateDisplay(row["Tentative Delivery Date"]);
+
+      } else if (col.toLowerCase() === "delivery date") {
+        td.textContent = formatDateDisplay(row["Delivery Date"]);
+
+      } else if (col.toLowerCase().includes("date")) {
+        td.textContent = formatDateDisplay(value);
+
+      } else if (col === "Status") {
         td.textContent = status;
         td.classList.add("orderStatus");
-        tr.appendChild(td);
-        continue;
-      }
 
-      // ✅ Reason column
-      if (col === "Reason") {
+      } else if (col === "Reason") {
         td.classList.add("reason-cell");
 
         if (isDelayedOrCancelled) {
@@ -1969,102 +2016,37 @@ async function populateTable(data) {
           });
 
           select.addEventListener("change", async () => {
-            const newReason = select.value;
-            row["Reason"] = newReason;
+            row["Reason"] = select.value;
 
             try {
               await firestore.collection("orders")
                 .doc(currentUserId)
                 .collection("userOrders")
                 .doc(row.docId)
-                .update({ Reason: newReason });
-              console.log(`✅ Reason updated for ${row.docId}:`, newReason);
+                .update({ Reason: row["Reason"] });
+              console.log(`✅ Reason updated for ${row.docId}`);
             } catch (err) {
-              console.error(`❌ Failed to update Reason for ${row.docId}:`, err);
+              console.error("❌ Failed to update Reason:", err);
             }
           });
 
           td.appendChild(select);
+
         } else {
-          td.textContent = "—";
+          td.textContent = "—"; // Show dash for non-delayed or non-cancelled rows
         }
-
-        tr.appendChild(td);
-        continue;
-      }
-
-      // ✅ Data formatting
-      if (col.toLowerCase().includes("ordered")) td.classList.add("qtyOrdered");
-      if (col.toLowerCase().includes("delivered")) td.classList.add("qtyDelivered");
-      if (col.toLowerCase().includes("cancelled")) td.classList.add("qtyCancelled");
-
-      if (typeof value === 'object' && value !== null) {
-        value = JSON.stringify(value);
-      }
-
-      if (col.toLowerCase().includes('price') || col.toLowerCase().includes('amount')) {
-        value = Number(value || 0).toFixed(2);
-      }
-
-      if (col === "Lead Time") {
-        const select = document.createElement("select");
-        select.className = "form-select form-select-sm";
-        const options = [
-          "Selection", "1-2 Weeks", "2-3 Weeks", "3-4 Weeks", "4-5 Weeks", "5-6 Weeks", "6-7 Weeks",
-          "7-8 Weeks", "8-9 Weeks", "9-10 Weeks", "11-12 Weeks", "90-120 Days"
-        ];
-
-        options.forEach(optValue => {
-          const opt = document.createElement("option");
-          opt.value = optValue;
-          opt.textContent = optValue;
-          if (optValue === value) opt.selected = true;
-          select.appendChild(opt);
-        });
-
-        select.addEventListener("change", async () => {
-          row["Lead Time"] = select.value;
-          row["Tentative Delivery Date"] = computeTentativeDate(row["Approved Date"], select.value);
-
-          try {
-            await firestore.collection("orders")
-              .doc(currentUserId)
-              .collection("userOrders")
-              .doc(row.docId)
-              .update({
-                "Lead Time": row["Lead Time"],
-                "Tentative Delivery Date": row["Tentative Delivery Date"]
-              });
-            console.log(`✅ Lead Time updated for ${row.docId}`);
-          } catch (err) {
-            console.error("❌ Failed to update Lead Time:", err);
-            alert("Failed to update Lead Time.");
-          }
-
-          setTimeout(() => filterTable(), 50);
-        });
-
-        td.appendChild(select);
-      } else if (col === "Tentative Delivery Date") {
-        td.textContent = formatDateDisplay(row["Tentative Delivery Date"]);
-      } else if (col.toLowerCase() === "delivery date") {
-        td.textContent = row["Delivery Date"] ? formatDateDisplay(row["Delivery Date"]) : "—";
-      } else if (col.toLowerCase().includes("date")) {
-        td.textContent = formatDateDisplay(value);
       } else {
         td.textContent = value;
       }
 
       tr.appendChild(td);
-    }
+    });
 
     tbody.appendChild(tr);
-  }
+  });
 
   console.log("✅ Table populated with", data.length, "rows.");
 }
-
-
 
 
 
@@ -2126,6 +2108,8 @@ function enableResize(th, resizer) {
     document.removeEventListener('mouseup', onMouseUp);
   }
 }
+
+
 
 
 
@@ -2204,6 +2188,8 @@ function formatDateForInput(dateStr) {
 }
 
 
+
+// You can now remove the old btnSearchOrder listener since the search happens on btnShowUpdate
 
 saveUpdateBtn.addEventListener('click', () => {
   if (!currentUserId) {
@@ -2293,31 +2279,26 @@ saveUpdateBtn.addEventListener('click', () => {
     batch.update(docRef, item);
   });
 
- batch.commit()
-  .then(() => {
-    alert(`✅ Order updated successfully. Status: ${newStatus}`);
-    currentItem.forEach(updated => {
-      const index = fullData.findIndex(item => item["docId"] === updated["docId"]);
-      if (index !== -1) fullData[index] = { ...updated };
+  batch.commit()
+    .then(() => {
+      alert(`✅ Order updated successfully. Status: ${newStatus}`);
+      currentItem.forEach(updated => {
+        const index = fullData.findIndex(item => item["docId"] === updated["docId"]);
+        if (index !== -1) fullData[index] = { ...updated };
+      });
+
+      filterTable();
+      updateOrderModal.hide();
+    })
+    .catch(error => {
+      console.error("❌ Update failed:", error);
+      alert("❌ Failed to update. See console for details.");
+    })
+    .finally(() => {
+      saveUpdateBtn.disabled = false;
+      saveUpdateBtn.textContent = "Save";
     });
-
-    // ✅ Refresh table with updated fullData
-    filterTable(); // 🔄 Changed from populateTable(fullData)
-    updateOrderModal.hide();
-  })
-
-  .catch(error => {
-    console.error("❌ Update failed:", error);
-    alert("❌ Failed to update. See console for details.");
-  })
-  .finally(() => {
-    saveUpdateBtn.disabled = false;
-    saveUpdateBtn.textContent = "Save";
-  });
-
 });
-
-
 
 async function saveOrdersToFirestore(userId, ordersArray) {
   console.log("Saving to Firestore:", ordersArray); // ✅ log this
@@ -2338,6 +2319,7 @@ async function saveOrdersToFirestore(userId, ordersArray) {
 
   await batch.commit();
 }
+
 
 
 
