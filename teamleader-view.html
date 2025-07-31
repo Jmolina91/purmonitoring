@@ -1,819 +1,1099 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset=UTF-8><title>Team Leader Order View</title><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js></script><link href=https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/chart.js></script><link href=https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css rel=stylesheet>
+  <meta charset="UTF-8" />
+  <title>Team Leader Order View</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
-<style>
-body,html{height:100%;overflow:auto}
-.sidebar a:hover,h2{color:#0a84ff}#statusMsg,h2{margin-bottom:1rem}.sidebar,body,header{display:flex}h2,thead th{font-weight:600}.sidebar,thead th{color:#fff;z-index:10}td,th,thead th{padding:12px 14px;text-align:left}#customizePanel,header{margin-bottom:1.5rem;background:#fff}.fade-in{animation:.4s ease-in fadeIn}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.sidebar{width:260px;background:#1c1c1e;padding:2rem 1.5rem;flex-direction:column;gap:1rem;position:fixed;height:100%;box-shadow:0 4px 10px rgba(0,0,0,.2)}.sidebar h3{font-size:1.5rem;margin-bottom:2rem}.sidebar a{font-size:1rem;color:#fff;text-decoration:none;padding:8px 0;transition:.2s}.main-content{flex:1;margin-left:260px;padding:2rem;overflow-x:hidden;background:#f2f2f7}h2{font-size:1.75rem}#statusMsg{font-size:1rem;color:#444;text-align:center}header{padding:1rem 1.5rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);justify-content:space-between;align-items:center}header button{padding:8px 14px;border:none;border-radius:8px;font-size:.95rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:transform .2s,background .2s}header button:hover{transform:scale(1.05)}.table-container{overflow-y:auto;overflow-x:auto;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);max-height:70vh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;position:relative}table{width:100%;border-collapse:collapse;font-size:.95rem;table-layout:fixed}td,th{border:1px solid #e5e5ea;word-wrap:break-word;white-space:normal}thead th{position:sticky;top:0;background-color:#007aff;user-select:none;border-bottom:1px solid #ccc;box-shadow:0 2px 5px rgba(0,0,0,.05)}tr:nth-child(2n){background-color:#f9f9f9}th.resizable::after{content:'';position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;z-index:2}#customizePanel{display:none;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-radius:12px;max-width:100%}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.chart-slide-panel{transform:translateX(-100%);max-height:0;overflow:hidden;transition:transform .5s,max-height .5s;will-change:transform,max-height}.chart-slide-panel.visible{transform:translateX(0);max-height:2000px}
-@media (max-width:768px){.sidebar{position:absolute;width:100%;height:auto;flex-direction:row;justify-content:space-around;padding:1rem;top:0;z-index:99}.main-content{margin-left:0;padding-top:6rem}header{flex-direction:column;align-items:flex-start;gap:1rem}.table-container{max-height:60vh}}.table-container::-webkit-scrollbar{width:8px;height:8px}.table-container::-webkit-scrollbar-thumb{background:#ccc;border-radius:10px}thead th{transition:box-shadow .3s}.table-container:has(thead th.sticky) thead th{box-shadow:0 4px 6px rgba(0,0,0,.08)}#buyerFilterPanel{animation:.3s ease-in fadeIn}
 
-options: {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: {
-    mode: 'index',
-    intersect: false
-  },
-  animation: {
-    duration: 1000,
-    easing: 'easeOutCubic'
-  },
-  scales: {
-    x: {
-      stacked: true,
-      title: {
-        display: true,
-        text: 'Suppliers',
-        font: { size: 14, weight: 'bold' }
-      },
-      ticks: {
-        font: { size: 12 },
-        color: '#333'
-      }
-    },
-    y: {
-      stacked: true,
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: 'Number of Orders',
-        font: { size: 14, weight: 'bold' }
-      },
-      ticks: {
-        stepSize: 1,
-        font: { size: 12 },
-        color: '#333'
-      }
-    }
-  },
-  plugins: {
-    legend: {
-      position: 'bottom',
-      labels: {
-        font: { size: 13, family: 'Segoe UI, sans-serif' },
-        boxWidth: 16,
-        padding: 15
-      }
-    },
-    tooltip: {
-      backgroundColor: '#1c1c1e',
-      titleFont: { size: 13 },
-      bodyFont: { size: 13 },
-      padding: 10,
-      cornerRadius: 8,
-      callbacks: {
-        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}`
-      }
-    }
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f2f2f7;
+    overflow: hidden;
   }
+
+  body {
+    display: flex;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.4s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .sidebar {
+    width: 260px;
+    background: #1c1c1e;
+    color: white;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: fixed;
+    height: 100%;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+
+  .sidebar h3 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .sidebar a {
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar a:hover {
+    color: #0a84ff;
+  }
+
+ .main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2rem;
+  overflow-x: hidden;
+  background: #f2f2f7;
 }
+
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #0a84ff;
+    margin-bottom: 1rem;
+  }
+
+  #statusMsg {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  header {
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  header button:hover {
+    transform: scale(1.05);
+  }
+
+ .table-container {
+  overflow: auto;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 70vh;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
+  position: relative;
+}
+
+/* Sticky header */
+#ordersTable thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff;
+  color: white;
+  z-index: 10;
+  font-weight: 600;
+  border-bottom: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed;
+  }
+
+table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* match header background */
+  color: white;
+  z-index: 5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* subtle shadow */
+}
+
+  th, td {
+    padding: 12px 14px;
+    border: 1px solid #e5e5ea;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* Required! */
+  color: white;
+  font-weight: 600;
+  z-index: 10;
+  padding: 12px 14px;
+  text-align: left;
+  user-select: none;
+  border-bottom: 1px solid #ccc;
+}
+
+
+
+  th {
+    background-color: #007aff;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  th.resizable {
+    position: relative;
+  }
+
+  th.resizable::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2;
+  }
+
+  #customizePanel {
+    display: none;
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+
+.chart-slide-panel {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 0;
+  overflow: hidden;
+  transform: translateX(-100%); /* start fully hidden */
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  transition: transform 0.5s ease-in-out, max-height 0.5s ease-in-out;
+}
+
+.chart-slide-panel.visible {
+  transform: translateX(0%);
+  max-height: 600px; /* adjust if needed based on chart height */
+}
+
+
+#buyerFilterButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+
+
 </style>
 
-<aside class=sidebar><h3>📊 Dashboard</h3><a href=#>🏠 Home</a> <a href=# onclick=showChartSection()>📈 Charts</a> <a href=# onclick=generateStatusReport()>📄 Reports</a> <a href=# onclick=showBuyerFilterPanel()>👥 Purchasers</a> <button id="logoutBtn" style="background: #ffe5e5; color: #8b1c1c; border: 1px solid #e05252; border-radius: 10px; padding: 8px 16px; margin-left: 12px; cursor: pointer;">
-  🚪 Logout
-</button></aside><div class="fade-in main-content"><header><h2>📋 Team Leader Control Panel</h2><div class="flex gap-3"><button class="text-black bg-[#007aff]"id=btnCustomize>⚙️ Customize</button> <button class="text-black bg-[#34c759]"onclick=refreshTable()>🔄 Refresh</button> <button class="text-black bg-[#ff9500]" onclick="exportTableToExcel('ordersTable', 'Order_Report')">📤 Export Excel</button>
-</div></header><div class="bg-white shadow-md animate-fade-in-down hidden mb-6 p-6 rounded-xl"id=customizePanel><div class="flex items-center justify-between mb-4"><h4 class="flex items-center gap-2 font-semibold text-gray-800 text-xl">🛠️ Table Settings</h4></div><div class="gap-4 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2"id=customizeColumns></div></div><div style="display:none;background:#fff;padding:1rem;margin-bottom:1rem;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08)"id=buyerFilterPanel><strong>Filter by Buyer:</strong><div style=display:flex;flex-wrap:wrap;gap:10px;margin-top:.5rem id=buyerCheckboxes></div></div><div class="bg-gray-50 rounded-xl chart-slide-panel duration-500 ease-in-out p-6 shadow-inner transform transition-transform"id=chartSlidePanel><div class="flex items-center justify-between mb-6"><h4 class="font-semibold text-xl text-gray-800 tracking-tight">📊 Order Insights</h4></div><div class="flex justify-center flex-wrap gap-6"><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">🧩 Orders by Main Category</h5><div class="flex items-center h-full justify-center"><canvas id=categoryPieChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">📈 Orders Over Time</h5><div class="flex items-center h-full justify-center"><canvas id=ordersLineChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-full"style=max-width:550px;height:400px><div class="flex justify-between bg-white duration-300 flex-col h-full hover:shadow-lg p-5 rounded-2xl shadow-md transition-all"><div class=mb-3><h5 class="font-semibold mb-3 text-gray-700 text-md">📦 Delivery Status per Supplier</h5><div class="flex gap-2 flex-wrap"><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=supplierSelect>Supplier:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=supplierSelect><option value=all>All Suppliers</select></div><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=sortSelect>Sort:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=sortSelect><option value=alphabetical>Alphabetical (A-Z)<option value=total>Total Orders (desc)</select></div></div></div><div class="border rounded-xl bg-gray-50 border-gray-100 overflow-x-auto p-2"><div style=min-width:400px;min-height:280px><canvas id=supplierStatusChart style=height:280px!important class=w-full></canvas></div></div></div></div></div></div><div style=display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;pointer-events:auto id=loaderModal><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:600px;background:#fff;padding:40px;border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.25);text-align:center"><div style=margin-bottom:20px;font-weight:700;font-size:1.8rem id=loaderLabel>Sorting... 0%</div><div style=width:100%;background:#ddd;height:30px;border-radius:15px;overflow:hidden><div style="height:100%;width:0%;background:linear-gradient(to right,#007bff,#00d4ff);transition:width .1s"id=loaderBar></div></div></div></div><div class=table-container><table id=ordersTable><thead id=ordersHead><tr><th>Loading...<tbody id=ordersBody><tr><td>Loading orders...</table></div><div id=statusMsg>🔐 Verifying user...</div><footer class="text-sm mt-8 text-center text-gray-400">© 2025 Team Leader Dashboard. All rights reserved.</footer></div><div class="flex justify-center bg-black bg-opacity-50 fixed hidden inset-0 items-start overflow-y-auto pb-10 pt-10 z-50"id=reportModal><div class="flex bg-white flex-col max-w-5xl p-6 relative rounded-lg shadow-lg w-full"><button class="hover:text-red-500 absolute right-2 text-2xl text-gray-500 top-2"onclick=closeReportModal()>×</button><h3 class="font-semibold text-xl mb-4"id=reportTitle>📊 Report</h3><div class="flex justify-between mb-4 flex-wrap gap-3"><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-green-100 hover:bg-green-200"data-status="On Time"><h4 class="font-semibold text-lg">🟢 On Time (<span id=onTimeCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered on or before target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-yellow-100 hover:bg-yellow-200"data-status=Delayed><h4 class="font-semibold text-lg">🟡 Delayed (<span id=delayedCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered after target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-red-100 hover:bg-red-200"data-status=Invalid><h4 class="font-semibold text-lg">🔴 Invalid (<span id=invalidCount>0</span>)</h4><p class="text-sm text-gray-600">Orders with invalid or missing data</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-blue-100 hover:bg-blue-200"data-status="In Progress"><h4 class="font-semibold text-lg">🔵 In Progress (<span id=inProgressCount>0</span>)</h4><p class="text-sm text-gray-600">Orders not delivered and overdue</div></div><div class="max-h-[60vh] overflow-auto"><table class="border text-sm text-left w-full"><thead class="bg-gray-100 sticky top-0"><tr><th class="border px-3 py-2">Order No<th class="border px-3 py-2">Supplier<th class="border px-3 py-2">Delivery Date<th class="border px-3 py-2">Tentative Date<th class="border px-3 py-2">Approved Date<th class="border px-3 py-2">Remarks<tbody id=delayedOrdersTableBody></table></div></div></div>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <h3>📊 Dashboard</h3>
+  <a href="#">🏠 Home</a>
+  <a href="#" onclick="showChartSection()">📈 Charts</a>
+
+  <a href="#">📄 Reports</a>
+  <a href="#">👥 Users</a>
+  <a href="#" onclick="logout()" class="text-red-400 hover:text-red-500">🚪 Logout</a>
+</aside>
+
+<!-- Page Content -->
+<div class="main-content fade-in">
+  <!-- Top Header -->
+  <header>
+  <h2>📋 Team Leader Orders</h2>
+  <div class="flex gap-3 flex-wrap">
+    <button id="btnCustomize" type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg transition-all">
+      ⚙️ Customize
+    </button>
+
+    <button onclick="refreshTable()" type="button" class="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-all">
+      🔄 Refresh
+    </button>
+    <button class="text-black bg-[#ff9500]" onclick="exportTableToExcel('ordersTable', 'Order_Report')">📤 Export Excel</button>
+    </button>
+  </div>
+</header>
+
+
+  <!-- Customize Panel -->
+  <div id="customizePanel" class="hidden bg-white rounded-xl shadow-md p-6 mb-6 animate-fade-in-down">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-xl font-semibold text-gray-800 flex items-center gap-2">🛠️ Table Settings</h4>
+    </div>
+    <div id="customizeColumns" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- JS will populate columns here -->
+    </div>
+  </div>
+
+
+<!-- Use a simple toggle for visibility of the filter dropdown -->
+<div class="relative inline-block">
+  <button id="buyerFilterBtn" class="bg-white text-sm border rounded px-3 py-1">
+    Filter Buyer ⏷
+  </button>
+
+  <!-- This dropdown should always be visible or appear when the button is clicked -->
+  <select id="buyerFilterSelect" class="absolute mt-1 w-full border rounded bg-white shadow-md hidden z-10">
+    <option value="">All Buyers</option>
+    <!-- Options will be added via JS -->
+  </select>
+</div>
 
 
 
 
-<script>
-const _0x1a94c3 = _0x164d;
-(function (_0x3b0a15, _0x4fd3bd) {
-    const _0x1201fc = _0x164d,
-        _0x47c325 = _0x3b0a15();
-    while (!![]) {
-        try {
-            const _0x10596d = parseInt(_0x1201fc(0x206)) / 0x1 * (-parseInt(_0x1201fc(0x2d3)) / 0x2) + -parseInt(_0x1201fc(0x25d)) / 0x3 * (parseInt(_0x1201fc(0x213)) / 0x4) + parseInt(_0x1201fc(0x296)) / 0x5 + -parseInt(_0x1201fc(0x26a)) / 0x6 * (-parseInt(_0x1201fc(0x1ee)) / 0x7) + -parseInt(_0x1201fc(0x202)) / 0x8 * (-parseInt(_0x1201fc(0x28d)) / 0x9) + -parseInt(_0x1201fc(0x24d)) / 0xa * (parseInt(_0x1201fc(0x271)) / 0xb) + parseInt(_0x1201fc(0x256)) / 0xc * (parseInt(_0x1201fc(0x1e5)) / 0xd);
-            if (_0x10596d === _0x4fd3bd) break;
-            else _0x47c325['push'](_0x47c325['shift']());
-        } catch (_0x3d1e98) {
-            _0x47c325['push'](_0x47c325['shift']());
-        }
+
+<!-- Chart Slide Panel -->
+<div id="chartSlidePanel"
+     class="chart-slide-panel transform transition-transform duration-500 ease-in-out">
+  <div class="p-6">
+
+    <!-- Section Title -->
+    <div class="flex justify-between items-center mb-4">
+      <h4 class="text-lg font-semibold text-gray-700">📊 Order Insights</h4>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="w-full mt-6 max-w-[800px] mx-auto">
+      <h5 class="text-md font-semibold text-gray-600 mb-2">⏱️ Monthly On Time vs Delayed Orders (%)</h5>
+      
+<div class="w-full" style="height: 300px;">
+  <canvas id="onTimeDelayedChart" width="800" height="300" class="w-full h-full"></canvas>
+</div>
+
+
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- Status Message -->
+<div id="statusMsg">🔐 Verifying user...</div>
+
+
+<!-- Search Navigation -->
+<div class="flex justify-end items-center px-6 py-4">
+  <input 
+    type="text" 
+    id="searchInput" 
+    placeholder="🔍 Search orders..." 
+    class="px-4 py-2 border rounded-md shadow-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+  />
+</div>
+
+
+<!-- Table Container -->
+<div class="table-container">
+  <table id="ordersTable">
+    <thead id="ordersHead">
+      <tr><th>Loading...</th></tr>
+    </thead>
+    <tbody id="ordersBody">
+      <tr><td>Loading orders...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Bigger Modal Loader -->
+<div id="loaderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5); z-index: 9999; pointer-events: auto;">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80%; max-width: 600px; background: white; padding: 40px; border-radius: 16px;
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25); text-align: center;">
+    
+    <div id="loaderLabel" style="margin-bottom: 20px; font-weight: bold; font-size: 1.8rem;">Sorting... 0%</div>
+    
+    <div style="width: 100%; background: #ddd; height: 30px; border-radius: 15px; overflow: hidden;">
+      <div id="loaderBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #007bff, #00d4ff); transition: width 0.1s;"></div>
+    </div>
+    
+  </div>
+</div>
+
+
+
+
+
+  <!-- Footer -->
+  <footer class="mt-8 text-center text-gray-400 text-sm">
+    © 2025 Team Leader Dashboard. All rights reserved.
+  </footer>
+</div>
+
+
+
+
+
+
+<script> 
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
+    authDomain: "order-monitoring-purchasing.firebaseapp.com",
+    projectId: "order-monitoring-purchasing",
+    storageBucket: "order-monitoring-purchasing.appspot.com",
+    messagingSenderId: "209378598320",
+    appId: "1:209378598320:web:0c143d69bc329a994d8a75"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+
+
+
+  let columnSettings = { visible: [], order: [], widths: {} };
+  let chartPanelVisible = false;
+  let ordersChartInstance = null;
+  let categoryChartInstance = null;
+  let supplierStatusChartInstance = null;
+  let chartsRendered = false;
+  
+
+const buyerFilterDropdown = document.getElementById("buyerFilterDropdown");
+const buyerFilterBtn = document.getElementById("buyerFilterBtn");
+
+
+
+
+window.supplierChartRendered = false;
+
+
+  function loadColumnSettings(defaultColumns) {
+    const saved = JSON.parse(localStorage.getItem("tableColumnSettings"));
+    if (saved && Array.isArray(saved.order) && Array.isArray(saved.visible)) {
+      columnSettings = {
+        visible: saved.visible,
+        order: saved.order,
+        widths: saved.widths || {}
+      };
+    } else {
+      columnSettings = {
+        visible: [...defaultColumns],
+        order: [...defaultColumns],
+        widths: {}
+      };
     }
-}(_0x5866, 0x26b6d));
-const firebaseConfig = {
-    'apiKey': _0x1a94c3(0x2bb),
-    'authDomain': _0x1a94c3(0x29f),
-    'projectId': 'order-monitoring-purchasing',
-    'storageBucket': _0x1a94c3(0x1fe),
-    'messagingSenderId': _0x1a94c3(0x229),
-    'appId': _0x1a94c3(0x23a)
-};
-firebase[_0x1a94c3(0x21d)](firebaseConfig);
-let inactivityTimer;
+  }
 
-function _0x5866() {
-    const _0x513f69 = ['#1c1c1e', 'sort', 'span', 'stringify', 'Error loading orders:', 'localeCompare', '#ordersBody tr', 'data', 'collection', '20HWEKHQ', 'innerHTML', '📊 ', 'rgba(52, 211, 153, 0.8)', '⛔ Not logged in.', 'children', 'setData', 'grid', ' orders', '78120xYXEAq', 'rgba(250, 204, 21, 0.8)', 'split', 'No order data available.', 'orderDate', 'parsed', 'firestore', '3SYegWD', 'Not Delivered (Overdue)', 'Sorting... ', 'auth', 'order', '🟡 Delayed', 'tableColumnSettings', 'dataTransfer', 'bar', 'label', 'remarks', 'getTime', 'Orders: ', '126600MgpPrG', 'autoFitBtn', 'reportTitle', '#333', 'Invalid (Delivery before Approval)', 'forEach', 'long', '1280488vCTbOQ', 'checked', 'signOut', 'users', 'min', 'get', 'includes', 'rgba(248, 113, 113, 0.8)', '15px', 'userSelect', 'loaderModal', 'team leader', 'trim', 'ring-offset-2', 'Need By Date', 'location', 'numeric', 'customizePanel', 'addEventListener', 'btnCustomize', 'dragstart', 'invalidCount', 'On Time', 'onAuthStateChanged', 'role', 'Unknown', 'filter', 'buyerCheckboxes', '18lOMLLl', 'display', 'keys', 'col', 'mousedown', 'marginRight', 'toLowerCase', '\x0a      display: flex;\x0a      align-items: center;\x0a      gap: 10px;\x0a      background: #f2f2f7;\x0a      border: 1px solid #ccc;\x0a      border-radius: 10px;\x0a      padding: 10px 12px;\x0a      cursor: pointer;\x0a    ', 'onTimeOrders', '333735HbDOqq', 'input', '<option value=\"all\">All Suppliers</option>', 'offsetWidth', 'Delayed', 'setItem', 'value', 'now', 'tentativeDate', 'order-monitoring-purchasing.firebaseapp.com', 'pageX', '🔴 Invalid', 'Supplier', 'ordersLineChart', 'loaderBar', 'supplierStatusChart', '🟢 On Time', '\x0a    ', '❌ Error saving report:', 'destroy', 'insertBefore', 'div', 'dataset', 'delayedOrders', 'className', 'chartSlidePanel', ' Orders', 'doc', 'bg-blue-500', 'userOrders', 'removeEventListener', 'Orders', 'reportModal', 'stopPropagation', 'getContext', '<tr><td>No orders found</td></tr>', 'log', 'AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk', 'innerText', 'inProgressCount', '❌ Error loading orders.', 'remove', 'gap', 'round', 'categoryPieChart', 'toLocaleDateString', 'inProgressOrders', 'text/plain', 'short', 'push', 'total', 'hidden', 'max', 'block', 'change', 'all', 'bottom', 'mb-5 flex items-center gap-2 bg-[#d1d1d6] hover:bg-[#c7c7cc] text-[#1c1c1e] px-4 py-2 rounded-lg shadow-sm transition-all duration-200', 'Delivery Date', 'Number of Orders', 'none', '10vTSIJR', 'widths', 'createElement', 'en-US', '✅ Reports saved to Firestore.', 'a[onclick*=\"showBuyerFilterPanel\"]', 'buyer', 'table', '#34d399', '🚀 generateStatusReport called', 'supplierSelect', 'bold', '#0a84ff', 'isArray', 'Sorting... 0%', '403lkrAUJ', 'orders', '<tr><th>No Data</th></tr>', 'customizeColumns', 'teamMembers', 'click', '</td>\x0a        <td class=\"px-3 py-1 border\">', ', 70%, 60%)', 'pie', '98TRDoTY', 'Suppliers', 'default', '.buyer-cell', 'href', 'error', 'Order Date', 'buyerFilterPanel', 'indexOf', 'gridTemplateColumns', 'latest', 'index', 'In Progress', 'getElementById', 'option', '.status-btn', 'order-monitoring-purchasing.appspot.com', 'Approved Date', '\x0a      <input type=\"checkbox\" class=\"buyer-filter\" value=\"', '\x0a      width: 6px;\x0a      height: 100%;\x0a      position: absolute;\x0a      top: 0;\x0a      right: 0;\x0a      cursor: col-resize;\x0a      z-index: 10;\x0a    ', '887192naIzES', 'exists', 'classList', 'width', '23137vVXXPH', 'ordersBody', 'userId', 'N/A', 'pointerEvents', 'Number', 'text-white', 'from', '.buyer-filter', 'contains', 'supplier', 'then', 'tbody tr', '1114724PxuwIt', 'Month', 'ring', 'delayedCount', 'delayedOrdersTableBody', 'textContent', 'cssText', 'appendChild', 'querySelector', 'orderNo', 'initializeApp', '🔵 In Progress', 'reports', 'supplierChartRendered', 'rgba(10,132,255,0.1)', 'Invalid', 'approvedDate', 'ordersTable', 'latestOrderData', 'set', 'parse', 'style', '209378598320', 'dragover', '</td>\x0a        <td class=\"px-3 py-1 border text-red-600\">', 'mouseup', 'map', 'add', '🧩 <span class=\"font-medium\">Auto Fit Column Widths</span> <kbd class=\"ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600\">Shortcut</kbd>', '\x0a        <td class=\"px-3 py-1 border\">', 'length', 'onTimeCount', 'invalidOrders', 'mousemove', 'easeOutCubic', 'repeat(auto-fill, minmax(180px, 1fr))', 'preventDefault', '❌ reportLink not found in DOM', 'querySelectorAll', '1:209378598320:web:0c143d69bc329a994d8a75', 'values', 'onclick', 'sortSelect', 'target', 'splice', '#f87171', 'toLocaleString', 'visible', '\" checked />\x0a      '];
-    _0x5866 = function () {
-        return _0x513f69;
-    };
-    return _0x5866();
-}
-function _0x164d(_0x1fa9d1, _0x26fc33) {
-    const _0x58669b = _0x5866();
-    return _0x164d = function (_0x164d4b, _0x3d3b57) {
-        _0x164d4b = _0x164d4b - 0x1e0;
-        let _0x245214 = _0x58669b[_0x164d4b];
-        return _0x245214;
-    }, _0x164d(_0x1fa9d1, _0x26fc33);
-}
-const auth = firebase[_0x1a94c3(0x260)](),
-    db = firebase[_0x1a94c3(0x25c)]();
-let columnSettings = {
-        'visible': [],
-        'order': [],
-        'widths': {}
-    },
-    chartPanelVisible = ![],
-    ordersChartInstance = null,
-    categoryChartInstance = null,
-    supplierStatusChartInstance = null,
-    chartsRendered = ![];
-window[_0x1a94c3(0x220)] = ![];
-function loadColumnSettings(_0x5af7d9) {
-    const _0x22340b = _0x1a94c3,
-        _0xc63d35 = JSON[_0x22340b(0x227)](localStorage['getItem']('tableColumnSettings'));
-    _0xc63d35 && Array[_0x22340b(0x1e3)](_0xc63d35[_0x22340b(0x261)]) && Array[_0x22340b(0x1e3)](_0xc63d35[_0x22340b(0x242)]) ? columnSettings = {
-        'visible': _0xc63d35[_0x22340b(0x242)],
-        'order': _0xc63d35[_0x22340b(0x261)],
-        'widths': _0xc63d35[_0x22340b(0x2d4)] || {}
-    } : columnSettings = {
-        'visible': [..._0x5af7d9],
-        'order': [..._0x5af7d9],
-        'widths': {}
-    };
-}
-function showBuyerFilterPanel() {
-    const _0x5a9a4e = _0x1a94c3,
-        _0x4eedc0 = document[_0x5a9a4e(0x1fb)]('buyerFilterPanel');
-    _0x4eedc0['style'][_0x5a9a4e(0x28e)] = _0x4eedc0[_0x5a9a4e(0x228)][_0x5a9a4e(0x28e)] === _0x5a9a4e(0x2d2) || _0x4eedc0[_0x5a9a4e(0x228)][_0x5a9a4e(0x28e)] === '' ? _0x5a9a4e(0x2cb) : _0x5a9a4e(0x2d2);
-}
-function formatDateDisplay(_0x3b5b4) {
-    const _0x336741 = _0x1a94c3,
-        _0x59eccd = new Date(_0x3b5b4);
-    if (isNaN(_0x59eccd[_0x336741(0x268)]())) return '';
-    return _0x59eccd[_0x336741(0x2c3)](_0x336741(0x2d6), {
-        'year': _0x336741(0x281),
-        'month': _0x336741(0x270),
-        'day': _0x336741(0x281)
-    });
-}
-function showChartSection() {
-    const _0x5126a8 = _0x1a94c3,
-        _0x4319dc = document[_0x5126a8(0x1fb)](_0x5126a8(0x2af));
-    chartPanelVisible = !chartPanelVisible, chartPanelVisible ? (_0x4319dc['classList'][_0x5126a8(0x22e)]('visible'), !chartsRendered && window['latestOrderData'] && (renderOrdersChart(window[_0x5126a8(0x225)]), renderCategoryPieChart(window[_0x5126a8(0x225)]), chartsRendered = !![])) : _0x4319dc[_0x5126a8(0x204)]['remove'](_0x5126a8(0x242));
+let selectedBuyers = []; // Placeholder if needed in future
+
+async function loadOrders() {
+  try {
+    const data = await fetchDataFromDatabase();
+
+    populateTable(data);
+
+    // Wait a short delay to ensure table renders
+    setTimeout(() => {
+      renderOnTimeVsDelayedChart();
+    }, 100); // Delay just enough for DOM update
+
+    buildBuyerFilter(); // Build after table is populated
+  } catch (error) {
+    console.error('Error loading orders:', error);
+  }
 }
 
-function renderOrdersChart(orderData) {
-  const ctx = document.getElementById('ordersLineChart').getContext('2d');
-  if (ordersChartInstance) ordersChartInstance.destroy();
+// Build the Buyer filter dropdown options
+function buildBuyerFilter() {
+  const buyerIndex = getBuyerColumnIndex();
+  const rows = document.querySelectorAll("#ordersBody tr");
+  const buyersSet = new Set();
 
-  const monthlyStatusCounts = {};
-
-  orderData.forEach(order => {
-    const rawDate = order.orderDate || order.order?.['Order Date'];
-    const approvedDateStr = order.approvedDate || order.order?.['Approved Date'];
-    const deliveryDateStr = order.deliveryDate || order.order?.['Delivery Date'];
-    const tentativeDateStr = order.tentativeDeliveryDate || order.order?.['Tentative Delivery Date'];
-
-    const orderDate = new Date(rawDate);
-    const approvedDate = approvedDateStr ? new Date(approvedDateStr) : null;
-    const deliveryDate = deliveryDateStr ? new Date(deliveryDateStr) : null;
-    const tentativeDate = tentativeDateStr ? new Date(tentativeDateStr) : null;
-
-    if (isNaN(orderDate)) return;
-
-    const monthKey = orderDate.toLocaleString('default', { month: 'short', year: 'numeric' });
-
-    if (!monthlyStatusCounts[monthKey]) {
-      monthlyStatusCounts[monthKey] = { 'On Time': 0, 'Delayed': 0, 'In Progress': 0 };
-    }
-
-    // ✅ Use your corrected logic
-    if (approvedDate && deliveryDate) {
-      if (tentativeDate && deliveryDate > tentativeDate) {
-        monthlyStatusCounts[monthKey]['Delayed']++;
-      } else if (approvedDate <= deliveryDate) {
-        monthlyStatusCounts[monthKey]['On Time']++;
-      } else {
-        monthlyStatusCounts[monthKey]['On Time']++; // default case
-      }
-    } else if (approvedDate && !deliveryDate) {
-      monthlyStatusCounts[monthKey]['In Progress']++;
-    }
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const buyer = cells[buyerIndex]?.textContent.trim();
+    if (buyer) buyersSet.add(buyer);
   });
 
-  const labels = Object.keys(monthlyStatusCounts);
-  const delayedData = labels.map(month => monthlyStatusCounts[month]['Delayed']);
-  const onTimeData = labels.map(month => monthlyStatusCounts[month]['On Time']);
-  const inProgressData = labels.map(month => monthlyStatusCounts[month]['In Progress']);
+  const select = document.getElementById("buyerFilterSelect");
+  select.innerHTML = `<option value="">All Buyers</option>`; // Value = "" is important
 
-  ordersChartInstance = new Chart(ctx, {
+  Array.from(buyersSet).sort().forEach(buyer => {
+    const option = document.createElement("option");
+    option.value = buyer;
+    option.textContent = buyer;
+    select.appendChild(option);
+  });
+}
+
+// Filter table rows by selected buyer
+function filterTable(selectedBuyer) {
+  const buyerIndex = getBuyerColumnIndex();
+  const rows = document.querySelectorAll('#ordersBody tr');
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const buyer = buyerIndex !== -1 ? cells[buyerIndex]?.textContent.trim() : "";
+
+    // ✅ Show all rows when "All Buyers" is selected (value is "")
+    if (selectedBuyer === "" || buyer === selectedBuyer) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+
+// Get column index of "Buyer"
+function getBuyerColumnIndex() {
+  const headerCells = document.querySelectorAll("#ordersHead th");
+  for (let i = 0; i < headerCells.length; i++) {
+    if (headerCells[i].dataset.col?.toLowerCase() === "buyer") return i;
+  }
+  return -1;
+}
+
+// Toggle Buyer Filter dropdown
+document.getElementById("buyerFilterBtn").addEventListener("click", () => {
+  const select = document.getElementById("buyerFilterSelect");
+  buildBuyerFilter(); // Refresh list in case table changed
+  select.classList.toggle("hidden");
+});
+
+// On Buyer Select Change
+document.getElementById("buyerFilterSelect").addEventListener("change", event => {
+  const selectedBuyer = event.target.value;
+  filterTable(selectedBuyer);
+});
+
+// Load everything on page init
+loadOrders();
+
+
+
+
+
+
+
+function formatDateDisplay(dateStr) {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+
+
+
+
+
+
+function showChartSection() {
+  const panel = document.getElementById("chartSlidePanel");
+  chartPanelVisible = !chartPanelVisible;
+
+  if (chartPanelVisible) {
+    panel.classList.add("visible");
+    renderOnTimeVsDelayedChart(); // ⬅️ Always call, not conditional anymore
+  } else {
+    panel.classList.remove("visible");
+  }
+}
+
+
+function renderOnTimeVsDelayedChart() {
+  const tbody = document.getElementById('ordersBody');
+  if (!tbody) return console.warn("⚠️ No table body found for chart rendering.");
+
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) return console.warn("⚠️ No table rows found.");
+
+  const headerCells = Array.from(document.querySelectorAll('#ordersHead th'));
+  const columnIndex = { number: -1, status: -1, deliveryDate: -1 };
+
+  headerCells.forEach((th, index) => {
+    const text = th.innerText.trim().toLowerCase();
+    if (text === 'number') columnIndex.number = index;
+    if (text === 'status') columnIndex.status = index;
+    if (text === 'delivery date') columnIndex.deliveryDate = index;
+  });
+
+  if (columnIndex.number === -1 || columnIndex.status === -1 || columnIndex.deliveryDate === -1) {
+    console.error("❌ Could not find Number, Status, or Delivery Date columns.");
+    return;
+  }
+
+  const monthlyStats = {};
+  const totalPerMonth = {};
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const orderNumber = cells[columnIndex.number]?.innerText.trim();
+    const status = cells[columnIndex.status]?.innerText.trim().toLowerCase();
+    const deliveryText = cells[columnIndex.deliveryDate]?.innerText.trim();
+    if (!orderNumber) return;
+
+    const deliveryDate = new Date(deliveryText);
+    if (isNaN(deliveryDate)) return;
+
+    const monthYear = deliveryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    if (!monthlyStats[monthYear]) {
+      monthlyStats[monthYear] = {
+        onTime: new Set(),
+        delayed: new Set(),
+        pending: new Set(),
+        partial: new Set(),
+        cancelled: new Set()
+      };
+    }
+
+    const map = monthlyStats[monthYear];
+    if (status.includes('on time')) map.onTime.add(orderNumber);
+    else if (status.includes('delayed')) map.delayed.add(orderNumber);
+    else if (status.includes('pending')) map.pending.add(orderNumber);
+    else if (status.includes('partially delivered') || status.includes('partial')) map.partial.add(orderNumber);
+    else if (status.includes('cancelled') || status.includes('canceled')) map.cancelled.add(orderNumber);
+  });
+
+  const labels = Object.keys(monthlyStats);
+  const statusTypes = ['onTime', 'delayed', 'pending', 'partial', 'cancelled'];
+  const statusColors = {
+    onTime: 'rgba(34, 197, 94, 0.7)',
+    delayed: 'rgba(239, 68, 68, 0.7)',
+    pending: 'rgba(234, 179, 8, 0.7)',
+    partial: 'rgba(59, 130, 246, 0.7)',
+    cancelled: 'rgba(107, 114, 128, 0.7)'
+  };
+
+  const datasets = statusTypes.map(type => {
+    const data = [];
+    const countData = [];
+
+    labels.forEach(month => {
+      const statusSet = monthlyStats[month][type];
+      const totalSet = new Set();
+      statusTypes.forEach(t => monthlyStats[month][t].forEach(num => totalSet.add(num)));
+
+      const total = totalSet.size || 1;
+      const count = statusSet.size;
+
+      data.push(((count / total) * 100).toFixed(1));
+      countData.push(count);
+
+      totalPerMonth[month] = totalSet.size; // Store total orders per month
+    });
+
+    return {
+      label: `${type.charAt(0).toUpperCase()}${type.slice(1).replace('partial', 'Partially Delivered')}`,
+      data,
+      countData,
+      backgroundColor: statusColors[type],
+      borderRadius: 8,
+      barPercentage: 0.5
+    };
+  });
+
+  if (labels.length === 0) {
+    labels.push("No Data");
+    datasets.forEach(ds => {
+      ds.data = [0];
+      ds.countData = [0];
+    });
+  }
+
+  const ctx = document.getElementById('onTimeDelayedChart').getContext('2d');
+
+  if (window.onTimeDelayedChart && typeof window.onTimeDelayedChart.destroy === 'function') {
+    window.onTimeDelayedChart.destroy();
+  }
+
+  window.onTimeDelayedChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'On Time',
-          data: onTimeData,
-          backgroundColor: '#4CAF50',
-          stack: 'status'
-        },
-        {
-          label: 'Delayed',
-          data: delayedData,
-          backgroundColor: '#FF5252',
-          stack: 'status'
-        },
-        {
-          label: 'In Progress',
-          data: inProgressData,
-          backgroundColor: '#FFC107',
-          stack: 'status'
-        }
-      ]
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
+        legend: { position: 'top' },
         tooltip: {
-          mode: 'index',
-          intersect: false
+          callbacks: {
+            label: (ctx) => {
+              const label = ctx.dataset.label;
+              const percent = ctx.formattedValue;
+              const count = ctx.dataset.countData?.[ctx.dataIndex] || 0;
+              return `${label}: ${count} orders (${percent}%)`;
+            }
+          }
         },
-        title: {
-          display: true,
-          text: 'Monthly Order Status'
+      datalabels: {
+  anchor: 'end',
+  align: 'top',
+  color: '#111',
+  font: {
+    weight: 'bold',
+    size: 11
+  },
+  formatter: (percent, ctx) => {
+    const count = ctx.dataset.countData?.[ctx.dataIndex];
+    if (!count || percent === '0.0') return null;
+    return `${count} (${percent}%)`;
+  }
+}
+,
+        totalLabels: {
+          display: true
         }
       },
       scales: {
-        x: {
-          stacked: true,
-          title: { display: true, text: 'Month' }
-        },
         y: {
-          stacked: true,
           beginAtZero: true,
-          title: { display: true, text: 'Number of Orders' }
+          max: 100,
+          title: {
+            display: true,
+            text: 'Percentage (%)'
+          }
         }
       }
-    }
+    },
+    plugins: [
+      ChartDataLabels,
+      {
+        id: 'totalOrderLabel',
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea: { top }, scales: { x }, data } = chart;
+          ctx.save();
+          ctx.font = 'bold 12px Arial';
+          ctx.fillStyle = '#000';
+          ctx.textAlign = 'center';
+
+          data.labels.forEach((label, index) => {
+            const total = totalPerMonth[label] || 0;
+            const xCenter = x.getPixelForTick(index);
+            ctx.fillText(`Total: ${total}`, xCenter, top + 12);
+          });
+
+          ctx.restore();
+        }
+      }
+    ]
   });
 }
 
 
-function renderCategoryPieChart(_0x3455ae) {
-    const _0x3b6159 = _0x1a94c3,
-        _0x123b34 = document['getElementById'](_0x3b6159(0x2c2))[_0x3b6159(0x2b8)]('2d');
-    if (categoryChartInstance) categoryChartInstance['destroy']();
-    const _0x32def0 = {};
-    _0x3455ae[_0x3b6159(0x26f)](_0x26a49e => {
-        const _0x502460 = _0x3b6159,
-            _0x66e734 = _0x26a49e[_0x502460(0x261)]?. ['Category'] || '',
-            _0x17af71 = _0x66e734[_0x502460(0x258)]('.')[0x0][_0x502460(0x27d)]()['toUpperCase']();
-        _0x17af71 && (_0x32def0[_0x17af71] = (_0x32def0[_0x17af71] || 0x0) + 0x1);
+
+
+
+
+
+
+  function saveColumnSettings() {
+    localStorage.setItem("tableColumnSettings", JSON.stringify(columnSettings));
+  }
+
+  function fixTableColumnWidths() {
+    const head = document.getElementById("ordersHead");
+    const body = document.getElementById("ordersBody");
+    const headerRow = head.querySelector("tr");
+    const rows = Array.from(body.querySelectorAll("tr"));
+
+    if (!headerRow) return;
+
+    columnSettings.order.forEach((col, i) => {
+      if (!columnSettings.visible.includes(col)) return;
+
+      let maxWidth = 0;
+      const th = headerRow.children[i];
+      if (th) maxWidth = Math.max(maxWidth, th.textContent.trim().length * 10);
+
+      rows.forEach(row => {
+        const cell = row.children[i];
+        if (cell) maxWidth = Math.max(maxWidth, cell.textContent.trim().length * 9);
+      });
+
+      maxWidth = Math.max(80, Math.min(maxWidth, 300));
+
+      if (headerRow.children[i]) headerRow.children[i].style.width = maxWidth + "px";
+      rows.forEach(row => {
+        if (row.children[i]) row.children[i].style.width = maxWidth + "px";
+      });
+
+      columnSettings.widths[col] = maxWidth;
     });
-    const _0x126875 = Object[_0x3b6159(0x28f)](_0x32def0),
-        _0x5020d0 = Object[_0x3b6159(0x23b)](_0x32def0),
-        _0x5677be = _0x126875[_0x3b6159(0x22d)]((_0x522758, _0x527de4) => 'hsl(' + _0x527de4 * 137.5 % 0x168 + _0x3b6159(0x1ec));
-    categoryChartInstance = new Chart(_0x123b34, {
-        'type': _0x3b6159(0x1ed),
-        'data': {
-            'labels': _0x126875,
-            'datasets': [{
-                'data': _0x5020d0,
-                'backgroundColor': _0x5677be
-            }]
-        },
-        'options': {
-            'responsive': !![],
-            'maintainAspectRatio': ![],
-            'plugins': {
-                'legend': {
-                    'position': 'bottom'
-                },
-                'tooltip': {
-                    'callbacks': {
-                        'label': _0x46c1b8 => _0x46c1b8[_0x3b6159(0x266)] + ': ' + _0x46c1b8[_0x3b6159(0x25b)] + _0x3b6159(0x255)
-                    }
-                }
-            }
+
+    saveColumnSettings();
+  }
+
+ function buildTable(rows) {
+  const head = document.getElementById("ordersHead");
+  const body = document.getElementById("ordersBody");
+  head.innerHTML = "";
+  body.innerHTML = "";
+
+  if (!rows.length) {
+    head.innerHTML = "<tr><th>No Data</th></tr>";
+    body.innerHTML = "<tr><td>No orders found</td></tr>";
+    return;
+  }
+
+  const allColumns = new Set(["userId"]);
+  rows.forEach(r => Object.keys(r.order).forEach(k => allColumns.add(k)));
+  const allColArray = Array.from(allColumns);
+
+  loadColumnSettings(allColArray);
+
+  // ⬅️ Get and clear the customize panel
+  const customizePanel = document.getElementById("customizePanel");
+  const customizeColumnsContainer = document.getElementById("customizeColumns");
+  customizeColumnsContainer.innerHTML = "";
+
+  // ✅ Auto Fit Button: Insert at top of customizePanel
+  let existingAutoFit = document.getElementById("autoFitBtn");
+  if (existingAutoFit) existingAutoFit.remove();
+
+  const autoFitBtn = document.createElement("button");
+  autoFitBtn.id = "autoFitBtn";
+  autoFitBtn.className = "mb-5 flex items-center gap-2 bg-[#d1d1d6] hover:bg-[#c7c7cc] text-[#1c1c1e] px-4 py-2 rounded-lg shadow-sm transition-all duration-200";
+  autoFitBtn.innerHTML = `🧩 <span class="font-medium">Auto Fit Column Widths</span> <kbd class="ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600">Shortcut</kbd>`;
+  autoFitBtn.onclick = fixTableColumnWidths;
+  customizePanel.insertBefore(autoFitBtn, customizeColumnsContainer);
+
+  // ✅ Column Visibility Checkboxes
+  customizeColumnsContainer.style.display = "grid";
+  customizeColumnsContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(180px, 1fr))";
+  customizeColumnsContainer.style.gap = "12px";
+
+  columnSettings.order.forEach(col => {
+    const wrapper = document.createElement("label");
+    wrapper.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f2f2f7;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+    `;
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = columnSettings.visible.includes(col);
+    input.dataset.col = col;
+    input.addEventListener("change", () => {
+      const colName = input.dataset.col;
+      if (input.checked) {
+        if (!columnSettings.visible.includes(colName)) {
+          columnSettings.visible.push(colName);
         }
+      } else {
+        columnSettings.visible = columnSettings.visible.filter(c => c !== colName);
+      }
+      saveColumnSettings();
+      buildTable(rows);
     });
-}
-function renderSupplierStatusChart() {
-    const _0x4c1831 = _0x1a94c3;
-    if (!window[_0x4c1831(0x225)]) return;
-    const _0x14fc04 = {};
-    window[_0x4c1831(0x225)][_0x4c1831(0x26f)](_0x5a2d76 => {
-        const _0x4ccaf7 = _0x4c1831,
-            _0x58d4ed = _0x5a2d76['order']?. [_0x4ccaf7(0x2a2)] || _0x4ccaf7(0x28a);
-        !_0x14fc04[_0x58d4ed] && (_0x14fc04[_0x58d4ed] = {
-            'On Time': 0x0,
-            'Delayed': 0x0,
-            'Invalid': 0x0,
-            'In Progress': 0x0
+    const labelText = document.createElement("span");
+    labelText.textContent = col;
+    wrapper.appendChild(input);
+    wrapper.appendChild(labelText);
+    customizeColumnsContainer.appendChild(wrapper);
+  });
+
+  // ✅ Table Header
+  const headerRow = document.createElement("tr");
+  columnSettings.order.forEach(col => {
+    if (!columnSettings.visible.includes(col)) return;
+
+const th = document.createElement("th");
+th.classList.add("resizable");
+
+th.dataset.col = col;
+th.style.userSelect = "none";
+
+    th.style.userSelect = "none";
+    if (columnSettings.widths[col]) {
+      th.style.width = columnSettings.widths[col] + "px";
+    }
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = col;
+    titleSpan.style.pointerEvents = "none";
+    th.appendChild(titleSpan);
+
+    const resizer = document.createElement("div");
+    resizer.style.cssText = `
+      width: 6px;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      right: 0;
+      cursor: col-resize;
+      z-index: 10;
+    `;
+    let isResizing = false;
+
+    resizer.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      isResizing = true;
+      const startX = e.pageX;
+      const startWidth = th.offsetWidth;
+      const index = Array.from(headerRow.children).indexOf(th);
+      const colName = th.dataset.col;
+
+      function onMouseMove(eMove) {
+        const newWidth = startWidth + (eMove.pageX - startX);
+        head.querySelectorAll("th")[index].style.width = newWidth + "px";
+        body.querySelectorAll("tr").forEach(row => {
+          if (row.children[index]) row.children[index].style.width = newWidth + "px";
         });
-    }), window[_0x4c1831(0x295)]['forEach'](_0xf89ae => _0x14fc04[_0xf89ae[_0x4c1831(0x210)]][_0x4c1831(0x287)]++), window[_0x4c1831(0x2ad)][_0x4c1831(0x26f)](_0x218920 => _0x14fc04[_0x218920['supplier']][_0x4c1831(0x29a)]++), window['invalidOrders'][_0x4c1831(0x26f)](_0x5aaef4 => _0x14fc04[_0x5aaef4[_0x4c1831(0x210)]][_0x4c1831(0x222)]++), window[_0x4c1831(0x2c4)]['forEach'](_0x1fc6b7 => _0x14fc04[_0x1fc6b7['supplier']][_0x4c1831(0x1fa)]++);
-    const _0x574a84 = Object['keys'](_0x14fc04),
-        _0x5c9357 = _0x574a84[_0x4c1831(0x22d)](_0x235c3d => _0x14fc04[_0x235c3d]['On Time']),
-        _0x14cb7c = _0x574a84[_0x4c1831(0x22d)](_0x269bc7 => _0x14fc04[_0x269bc7][_0x4c1831(0x29a)]),
-        _0x29f863 = _0x574a84[_0x4c1831(0x22d)](_0x5a9d58 => _0x14fc04[_0x5a9d58][_0x4c1831(0x222)]),
-        _0x4bb853 = _0x574a84['map'](_0xd0534f => _0x14fc04[_0xd0534f][_0x4c1831(0x1fa)]),
-        _0x466122 = document[_0x4c1831(0x1fb)](_0x4c1831(0x2a5))[_0x4c1831(0x2b8)]('2d');
-    if (supplierStatusChartInstance) supplierStatusChartInstance['destroy']();
-    supplierStatusChartInstance = new Chart(_0x466122, {
-        'type': _0x4c1831(0x265),
-        'data': {
-            'labels': _0x574a84,
-            'datasets': [{
-                'label': '🟢 On Time',
-                'data': _0x5c9357,
-                'backgroundColor': _0x4c1831(0x2db)
-            }, {
-                'label': _0x4c1831(0x262),
-                'data': _0x14cb7c,
-                'backgroundColor': '#facc15'
-            }, {
-                'label': _0x4c1831(0x2a1),
-                'data': _0x29f863,
-                'backgroundColor': _0x4c1831(0x240)
-            }, {
-                'label': _0x4c1831(0x21e),
-                'data': _0x4bb853,
-                'backgroundColor': '#60a5fa'
-            }]
-        },
-        'options': {
-            'responsive': !![],
-            'maintainAspectRatio': ![],
-            'scales': {
-                'x': {
-                    'stacked': !![],
-                    'title': {
-                        'display': !![],
-                        'text': _0x4c1831(0x1ef)
-                    }
-                },
-                'y': {
-                    'stacked': !![],
-                    'beginAtZero': !![],
-                    'title': {
-                        'display': !![],
-                        'text': _0x4c1831(0x2d1)
-                    }
-                }
-            },
-            'plugins': {
-                'legend': {
-                    'position': _0x4c1831(0x2ce)
-                },
-                'tooltip': {
-                    'callbacks': {
-                        'label': _0x58ea6a => _0x58ea6a[_0x4c1831(0x2ac)]['label'] + ': ' + _0x58ea6a[_0x4c1831(0x25b)]['y']
-                    }
-                }
-            }
-        }
+      }
+
+      function onMouseUp() {
+        isResizing = false;
+        const newWidth = head.querySelectorAll("th")[index].offsetWidth;
+        columnSettings.widths[colName] = newWidth;
+        saveColumnSettings();
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
     });
+
+    th.appendChild(resizer);
+
+    // Drag & Drop Columns
+    th.draggable = true;
+    th.addEventListener("dragstart", e => {
+      if (isResizing) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData("text/plain", col);
+    });
+    th.addEventListener("dragover", e => e.preventDefault());
+    th.addEventListener("drop", e => {
+      e.preventDefault();
+      if (isResizing) return;
+      const draggedCol = e.dataTransfer.getData("text/plain");
+      const targetCol = th.dataset.col;
+      const fromIndex = columnSettings.order.indexOf(draggedCol);
+      const toIndex = columnSettings.order.indexOf(targetCol);
+      columnSettings.order.splice(fromIndex, 1);
+      columnSettings.order.splice(toIndex, 0, draggedCol);
+      saveColumnSettings();
+      buildTable(rows);
+    });
+
+    headerRow.appendChild(th);
+  });
+  head.appendChild(headerRow);
+
+  // ✅ Table Body
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    columnSettings.order.forEach(col => {
+      if (!columnSettings.visible.includes(col)) return;
+      const td = document.createElement("td");
+
+      if (col === "userId") {
+  td.textContent = r.userId;
+} else if (["Delivery Date", "Order Date", "Approved Date", "Need By Date"].includes(col)) {
+  td.textContent = formatDateDisplay(r.order[col]);
+} else {
+
+  td.textContent = r.order[col] ?? "";
+if (col.toLowerCase() === "buyer") {
+  td.classList.add("buyer-cell");
 }
-function populateSupplierDropdown(_0x1f4cc8) {
-    const _0x4ecd76 = _0x1a94c3,
-        _0x2867b7 = document[_0x4ecd76(0x1fb)]('supplierSelect');
-    _0x2867b7['innerHTML'] = _0x4ecd76(0x298), _0x1f4cc8[_0x4ecd76(0x26f)](_0x49b8af => {
-        const _0x4762c1 = _0x4ecd76,
-            _0x15d602 = document[_0x4762c1(0x2d5)](_0x4762c1(0x1fc));
-        _0x15d602[_0x4762c1(0x29c)] = _0x49b8af, _0x15d602[_0x4762c1(0x218)] = _0x49b8af, _0x2867b7[_0x4762c1(0x21a)](_0x15d602);
-    });
+
+
+
+
 }
-function getTotalOrdersForSupplier(_0xe120dd) {
-    const _0x5e681d = _0x1a94c3;
-    return _0xe120dd[_0x5e681d(0x287)] + _0xe120dd['Delayed'] + _0xe120dd[_0x5e681d(0x222)] + _0xe120dd['In Progress'];
+
+    if (columnSettings.widths[col]) {
+  td.style.width = columnSettings.widths[col] + "px";
 }
-function updateSupplierStatusChart(_0x1e09d9 = _0x1a94c3(0x2cd), _0x5f1f04 = 'alphabetical') {
-    const _0x11325a = _0x1a94c3;
-    if (!window[_0x11325a(0x225)]) return;
-    const _0x36555d = {};
-    window['latestOrderData'][_0x11325a(0x26f)](_0x190fb5 => {
-        const _0x3fba0f = _0x11325a,
-            _0x1789ec = _0x190fb5[_0x3fba0f(0x261)]?. [_0x3fba0f(0x2a2)] || _0x3fba0f(0x28a);
-        !_0x36555d[_0x1789ec] && (_0x36555d[_0x1789ec] = {
-            'On Time': 0x0,
-            'Delayed': 0x0,
-            'Invalid': 0x0,
-            'In Progress': 0x0
-        });
-    }), (window[_0x11325a(0x295)] || [])[_0x11325a(0x26f)](_0x178f92 => {
-        const _0x424e32 = _0x11325a;
-        if (_0x36555d[_0x178f92[_0x424e32(0x210)]]) _0x36555d[_0x178f92[_0x424e32(0x210)]]['On Time']++;
-    }), (window[_0x11325a(0x2ad)] || [])[_0x11325a(0x26f)](_0x54aed4 => {
-        const _0x1b96e0 = _0x11325a;
-        if (_0x36555d[_0x54aed4[_0x1b96e0(0x210)]]) _0x36555d[_0x54aed4['supplier']][_0x1b96e0(0x29a)]++;
-    }), (window[_0x11325a(0x233)] || [])[_0x11325a(0x26f)](_0x2de020 => {
-        const _0x3dcee6 = _0x11325a;
-        if (_0x36555d[_0x2de020[_0x3dcee6(0x210)]]) _0x36555d[_0x2de020[_0x3dcee6(0x210)]][_0x3dcee6(0x222)]++;
-    }), (window[_0x11325a(0x2c4)] || [])[_0x11325a(0x26f)](_0x370c24 => {
-        const _0x33aeae = _0x11325a;
-        if (_0x36555d[_0x370c24[_0x33aeae(0x210)]]) _0x36555d[_0x370c24[_0x33aeae(0x210)]][_0x33aeae(0x1fa)]++;
-    });
-    let _0x8a8c9e = Object[_0x11325a(0x28f)](_0x36555d);
-    _0x1e09d9 !== _0x11325a(0x2cd) && (_0x8a8c9e = _0x8a8c9e[_0x11325a(0x28b)](_0xd177a9 => _0xd177a9 === _0x1e09d9));
-    if (_0x5f1f04 === 'alphabetical') _0x8a8c9e['sort']((_0x4ed25a, _0x3ab392) => _0x4ed25a[_0x11325a(0x249)](_0x3ab392));
-    else _0x5f1f04 === _0x11325a(0x2c8) && _0x8a8c9e['sort']((_0x1a4b02, _0xc155b0) => getTotalOrdersForSupplier(_0x36555d[_0xc155b0]) - getTotalOrdersForSupplier(_0x36555d[_0x1a4b02]));
-    const _0x4617e4 = _0x8a8c9e['map'](_0x3a09c4 => _0x36555d[_0x3a09c4]['On Time']),
-        _0x154271 = _0x8a8c9e[_0x11325a(0x22d)](_0x39804b => _0x36555d[_0x39804b][_0x11325a(0x29a)]),
-        _0x5f49a5 = _0x8a8c9e[_0x11325a(0x22d)](_0x45d811 => _0x36555d[_0x45d811][_0x11325a(0x222)]),
-        _0x476303 = _0x8a8c9e[_0x11325a(0x22d)](_0x1ab7a4 => _0x36555d[_0x1ab7a4][_0x11325a(0x1fa)]),
-        _0x4f8ab2 = document[_0x11325a(0x1fb)](_0x11325a(0x2a5))[_0x11325a(0x2b8)]('2d');
-    if (supplierStatusChartInstance) supplierStatusChartInstance[_0x11325a(0x2a9)]();
-    supplierStatusChartInstance = new Chart(_0x4f8ab2, {
-        'type': 'bar',
-        'data': {
-            'labels': _0x8a8c9e,
-            'datasets': [{
-                'label': _0x11325a(0x2a6),
-                'data': _0x4617e4,
-                'backgroundColor': _0x11325a(0x250),
-                'borderRadius': 0x5
-            }, {
-                'label': '🟡 Delayed',
-                'data': _0x154271,
-                'backgroundColor': _0x11325a(0x257),
-                'borderRadius': 0x5
-            }, {
-                'label': _0x11325a(0x2a1),
-                'data': _0x5f49a5,
-                'backgroundColor': _0x11325a(0x278),
-                'borderRadius': 0x5
-            }, {
-                'label': _0x11325a(0x21e),
-                'data': _0x476303,
-                'backgroundColor': 'rgba(96, 165, 250, 0.8)',
-                'borderRadius': 0x5
-            }]
-        },
-        'options': {
-            'responsive': !![],
-            'maintainAspectRatio': ![],
-            'scales': {
-                'x': {
-                    'stacked': !![],
-                    'title': {
-                        'display': !![],
-                        'text': _0x11325a(0x1ef),
-                        'font': {
-                            'size': 0xe,
-                            'weight': _0x11325a(0x1e1)
-                        }
-                    },
-                    'ticks': {
-                        'font': {
-                            'size': 0xc
-                        },
-                        'color': _0x11325a(0x26d)
-                    }
-                },
-                'y': {
-                    'stacked': !![],
-                    'beginAtZero': !![],
-                    'title': {
-                        'display': !![],
-                        'text': _0x11325a(0x2d1),
-                        'font': {
-                            'size': 0xe,
-                            'weight': _0x11325a(0x1e1)
-                        }
-                    },
-                    'ticks': {
-                        'stepSize': 0x1,
-                        'font': {
-                            'size': 0xc
-                        },
-                        'color': _0x11325a(0x26d)
-                    }
-                }
-            },
-            'plugins': {
-                'legend': {
-                    'position': _0x11325a(0x2ce),
-                    'labels': {
-                        'font': {
-                            'size': 0xd
-                        },
-                        'boxWidth': 0x10,
-                        'padding': 0xf
-                    }
-                },
-                'tooltip': {
-                    'backgroundColor': _0x11325a(0x244),
-                    'titleFont': {
-                        'size': 0xd
-                    },
-                    'bodyFont': {
-                        'size': 0xd
-                    },
-                    'padding': 0xa,
-                    'cornerRadius': 0x8,
-                    'callbacks': {
-                        'label': _0x1056fb => _0x1056fb[_0x11325a(0x2ac)]['label'] + ': ' + _0x1056fb[_0x11325a(0x25b)]['y']
-                    }
-                }
-            },
-            'animation': {
-                'duration': 0x320,
-                'easing': _0x11325a(0x235)
-            },
-            'interaction': {
-                'mode': _0x11325a(0x1f9),
-                'intersect': ![]
-            }
-        }
-    });
-}
-function initSupplierChartControls() {
-    const _0x588e8f = _0x1a94c3;
-    if (!window[_0x588e8f(0x225)]) return;
-    const _0x6303a5 = {};
-    window[_0x588e8f(0x225)][_0x588e8f(0x26f)](_0x316cf8 => {
-        const _0x4ac554 = _0x588e8f,
-            _0x3aa902 = _0x316cf8[_0x4ac554(0x261)]?. [_0x4ac554(0x2a2)] || _0x4ac554(0x28a);
-        _0x6303a5[_0x3aa902] = !![];
-    });
-    const _0x21578e = Object[_0x588e8f(0x28f)](_0x6303a5)[_0x588e8f(0x245)]();
-    populateSupplierDropdown(_0x21578e), !window[_0x588e8f(0x220)] && (updateSupplierStatusChart(), window[_0x588e8f(0x220)] = !![]), document[_0x588e8f(0x1fb)](_0x588e8f(0x1e0))['addEventListener'](_0x588e8f(0x2cc), _0xcbc0af => {
-        const _0x31754f = _0x588e8f,
-            _0x54f548 = _0xcbc0af[_0x31754f(0x23e)]['value'],
-            _0x36735a = document[_0x31754f(0x1fb)](_0x31754f(0x23d))['value'];
-        updateSupplierStatusChart(_0x54f548, _0x36735a);
-    }), document[_0x588e8f(0x1fb)](_0x588e8f(0x23d))[_0x588e8f(0x283)](_0x588e8f(0x2cc), _0x3cc4ff => {
-        const _0x44ceaf = _0x588e8f,
-            _0x255e9b = _0x3cc4ff['target']['value'],
-            _0x383dd8 = document[_0x44ceaf(0x1fb)](_0x44ceaf(0x1e0))['value'];
-        updateSupplierStatusChart(_0x383dd8, _0x255e9b);
-    });
-}
-document[_0x1a94c3(0x283)]('DOMContentLoaded', async () => {
-    await fetchAndPrepareOrderData(), initSupplierChartControls();
+tr.appendChild(td);
 });
-function saveColumnSettings() {
-    const _0x23b8e1 = _0x1a94c3;
-    localStorage[_0x23b8e1(0x29b)](_0x23b8e1(0x263), JSON[_0x23b8e1(0x247)](columnSettings));
-}
-function fixTableColumnWidths() {
-    const _0x322ebf = _0x1a94c3,
-        _0xff154 = document[_0x322ebf(0x1fb)]('ordersHead'),
-        _0xa99dd = document['getElementById']('ordersBody'),
-        _0x37efff = _0xff154[_0x322ebf(0x21b)]('tr'),
-        _0x4ef94d = Array[_0x322ebf(0x20d)](_0xa99dd[_0x322ebf(0x239)]('tr'));
-    if (!_0x37efff) return;
-    columnSettings['order']['forEach']((_0x1541a2, _0x509ae9) => {
-        const _0x35adb3 = _0x322ebf;
-        if (!columnSettings[_0x35adb3(0x242)][_0x35adb3(0x277)](_0x1541a2)) return;
-        let _0x2457f0 = 0x0;
-        const _0x33456d = _0x37efff[_0x35adb3(0x252)][_0x509ae9];
-        if (_0x33456d) _0x2457f0 = Math[_0x35adb3(0x2ca)](_0x2457f0, _0x33456d[_0x35adb3(0x218)][_0x35adb3(0x27d)]()[_0x35adb3(0x231)] * 0xa);
-        _0x4ef94d[_0x35adb3(0x26f)](_0x8dcb60 => {
-            const _0x637de8 = _0x35adb3,
-                _0x1cdd6f = _0x8dcb60[_0x637de8(0x252)][_0x509ae9];
-            if (_0x1cdd6f) _0x2457f0 = Math[_0x637de8(0x2ca)](_0x2457f0, _0x1cdd6f[_0x637de8(0x218)][_0x637de8(0x27d)]()['length'] * 0x9);
-        }), _0x2457f0 = Math[_0x35adb3(0x2ca)](0x50, Math[_0x35adb3(0x275)](_0x2457f0, 0x12c));
-        if (_0x37efff[_0x35adb3(0x252)][_0x509ae9]) _0x37efff[_0x35adb3(0x252)][_0x509ae9][_0x35adb3(0x228)]['width'] = _0x2457f0 + 'px';
-        _0x4ef94d[_0x35adb3(0x26f)](_0x5988f1 => {
-            const _0x2032c9 = _0x35adb3;
-            if (_0x5988f1[_0x2032c9(0x252)][_0x509ae9]) _0x5988f1['children'][_0x509ae9][_0x2032c9(0x228)]['width'] = _0x2457f0 + 'px';
-        }), columnSettings[_0x35adb3(0x2d4)][_0x1541a2] = _0x2457f0;
-    }), saveColumnSettings();
-}
-function buildTable(_0x3676ce) {
-    const _0x4688f5 = _0x1a94c3,
-        _0x1bc00e = document[_0x4688f5(0x1fb)]('ordersHead'),
-        _0x36e198 = document[_0x4688f5(0x1fb)](_0x4688f5(0x207));
-    _0x1bc00e['innerHTML'] = '', _0x36e198['innerHTML'] = '';
-    if (!_0x3676ce[_0x4688f5(0x231)]) {
-        _0x1bc00e[_0x4688f5(0x24e)] = _0x4688f5(0x1e7), _0x36e198[_0x4688f5(0x24e)] = _0x4688f5(0x2b9);
-        return;
-    }
-    const _0x239903 = new Set(['userId']);
-    _0x3676ce[_0x4688f5(0x26f)](_0x4c44a6 => Object[_0x4688f5(0x28f)](_0x4c44a6[_0x4688f5(0x261)])[_0x4688f5(0x26f)](_0x2ecf68 => _0x239903[_0x4688f5(0x22e)](_0x2ecf68)));
-    const _0x50b04c = Array[_0x4688f5(0x20d)](_0x239903);
-    loadColumnSettings(_0x50b04c);
-    const _0x3eb252 = document[_0x4688f5(0x1fb)](_0x4688f5(0x282)),
-        _0xa5cd1d = document[_0x4688f5(0x1fb)](_0x4688f5(0x1e8));
-    _0xa5cd1d[_0x4688f5(0x24e)] = '';
-    let _0x5efad1 = document['getElementById'](_0x4688f5(0x26b));
-    if (_0x5efad1) _0x5efad1[_0x4688f5(0x2bf)]();
-    const _0x5b36fc = document[_0x4688f5(0x2d5)]('button');
-    _0x5b36fc['id'] = _0x4688f5(0x26b), _0x5b36fc[_0x4688f5(0x2ae)] = _0x4688f5(0x2cf), _0x5b36fc['innerHTML'] = _0x4688f5(0x22f), _0x5b36fc[_0x4688f5(0x23c)] = fixTableColumnWidths, _0x3eb252[_0x4688f5(0x2aa)](_0x5b36fc, _0xa5cd1d), _0xa5cd1d[_0x4688f5(0x228)]['display'] = _0x4688f5(0x254), _0xa5cd1d[_0x4688f5(0x228)][_0x4688f5(0x1f7)] = _0x4688f5(0x236), _0xa5cd1d['style'][_0x4688f5(0x2c0)] = '12px', columnSettings[_0x4688f5(0x261)]['forEach'](_0x1568e4 => {
-        const _0x47642f = _0x4688f5,
-            _0x525bc8 = document[_0x47642f(0x2d5)](_0x47642f(0x266));
-        _0x525bc8[_0x47642f(0x228)][_0x47642f(0x219)] = _0x47642f(0x294);
-        const _0xf47d2c = document['createElement'](_0x47642f(0x297));
-        _0xf47d2c['type'] = 'checkbox', _0xf47d2c[_0x47642f(0x272)] = columnSettings['visible'][_0x47642f(0x277)](_0x1568e4), _0xf47d2c[_0x47642f(0x2ac)][_0x47642f(0x290)] = _0x1568e4, _0xf47d2c[_0x47642f(0x283)](_0x47642f(0x2cc), () => {
-            const _0x4205c3 = _0x47642f,
-                _0x2156b8 = _0xf47d2c['dataset']['col'];
-            _0xf47d2c['checked'] ? !columnSettings[_0x4205c3(0x242)][_0x4205c3(0x277)](_0x2156b8) && columnSettings[_0x4205c3(0x242)][_0x4205c3(0x2c7)](_0x2156b8) : columnSettings[_0x4205c3(0x242)] = columnSettings[_0x4205c3(0x242)][_0x4205c3(0x28b)](_0x3c3e03 => _0x3c3e03 !== _0x2156b8), saveColumnSettings(), buildTable(_0x3676ce);
-        });
-        const _0xbaa635 = document[_0x47642f(0x2d5)](_0x47642f(0x246));
-        _0xbaa635[_0x47642f(0x218)] = _0x1568e4, _0x525bc8[_0x47642f(0x21a)](_0xf47d2c), _0x525bc8[_0x47642f(0x21a)](_0xbaa635), _0xa5cd1d[_0x47642f(0x21a)](_0x525bc8);
-    });
-    const _0x5ae703 = document[_0x4688f5(0x2d5)]('tr');
-    columnSettings[_0x4688f5(0x261)][_0x4688f5(0x26f)](_0x6e5969 => {
-        const _0x4d105f = _0x4688f5;
-        if (!columnSettings['visible'][_0x4d105f(0x277)](_0x6e5969)) return;
-        const _0x2c75af = document['createElement']('th');
-        _0x2c75af['classList'][_0x4d105f(0x22e)]('resizable'), _0x2c75af['dataset'][_0x4d105f(0x290)] = _0x6e5969, _0x2c75af[_0x4d105f(0x228)][_0x4d105f(0x27a)] = _0x4d105f(0x2d2), _0x2c75af[_0x4d105f(0x228)][_0x4d105f(0x27a)] = 'none';
-        columnSettings[_0x4d105f(0x2d4)][_0x6e5969] && (_0x2c75af['style'][_0x4d105f(0x205)] = columnSettings[_0x4d105f(0x2d4)][_0x6e5969] + 'px');
-        const _0x3067e6 = document['createElement']('span');
-        _0x3067e6[_0x4d105f(0x218)] = _0x6e5969, _0x3067e6[_0x4d105f(0x228)][_0x4d105f(0x20a)] = _0x4d105f(0x2d2), _0x2c75af[_0x4d105f(0x21a)](_0x3067e6);
-        const _0x11fbee = document[_0x4d105f(0x2d5)](_0x4d105f(0x2ab));
-        _0x11fbee[_0x4d105f(0x228)][_0x4d105f(0x219)] = _0x4d105f(0x201);
-        let _0x13da34 = ![];
-        _0x11fbee['addEventListener'](_0x4d105f(0x291), _0x314ae4 => {
-            const _0x5c3402 = _0x4d105f;
-            _0x314ae4[_0x5c3402(0x2b7)](), _0x13da34 = !![];
-            const _0x144887 = _0x314ae4[_0x5c3402(0x2a0)],
-                _0x3c79a8 = _0x2c75af[_0x5c3402(0x299)],
-                _0x3c279e = Array['from'](_0x5ae703[_0x5c3402(0x252)])[_0x5c3402(0x1f6)](_0x2c75af),
-                _0x456590 = _0x2c75af['dataset'][_0x5c3402(0x290)];
-            function _0x138c43(_0x3b87a5) {
-                const _0x25b286 = _0x5c3402,
-                    _0x5b4282 = _0x3c79a8 + (_0x3b87a5[_0x25b286(0x2a0)] - _0x144887);
-                _0x1bc00e[_0x25b286(0x239)]('th')[_0x3c279e][_0x25b286(0x228)][_0x25b286(0x205)] = _0x5b4282 + 'px', _0x36e198[_0x25b286(0x239)]('tr')[_0x25b286(0x26f)](_0x53b28e => {
-                    const _0x503aaa = _0x25b286;
-                    if (_0x53b28e[_0x503aaa(0x252)][_0x3c279e]) _0x53b28e[_0x503aaa(0x252)][_0x3c279e]['style'][_0x503aaa(0x205)] = _0x5b4282 + 'px';
-                });
-            }
-            function _0x3e1689() {
-                const _0x25cd8c = _0x5c3402;
-                _0x13da34 = ![];
-                const _0x206f69 = _0x1bc00e[_0x25cd8c(0x239)]('th')[_0x3c279e][_0x25cd8c(0x299)];
-                columnSettings[_0x25cd8c(0x2d4)][_0x456590] = _0x206f69, saveColumnSettings(), document[_0x25cd8c(0x2b4)](_0x25cd8c(0x234), _0x138c43), document[_0x25cd8c(0x2b4)](_0x25cd8c(0x22c), _0x3e1689);
-            }
-            document[_0x5c3402(0x283)]('mousemove', _0x138c43), document['addEventListener'](_0x5c3402(0x22c), _0x3e1689);
-        }), _0x2c75af[_0x4d105f(0x21a)](_0x11fbee), _0x2c75af['draggable'] = !![], _0x2c75af[_0x4d105f(0x283)](_0x4d105f(0x285), _0xe6e13a => {
-            const _0x18b916 = _0x4d105f;
-            if (_0x13da34) {
-                _0xe6e13a[_0x18b916(0x237)]();
-                return;
-            }
-            _0xe6e13a[_0x18b916(0x264)][_0x18b916(0x253)]('text/plain', _0x6e5969);
-        }), _0x2c75af[_0x4d105f(0x283)](_0x4d105f(0x22a), _0x236380 => _0x236380[_0x4d105f(0x237)]()), _0x2c75af[_0x4d105f(0x283)]('drop', _0x53c41d => {
-            const _0x569d01 = _0x4d105f;
-            _0x53c41d[_0x569d01(0x237)]();
-            if (_0x13da34) return;
-            const _0x46b1e6 = _0x53c41d[_0x569d01(0x264)]['getData'](_0x569d01(0x2c5)),
-                _0x554aba = _0x2c75af[_0x569d01(0x2ac)][_0x569d01(0x290)],
-                _0x5c2439 = columnSettings[_0x569d01(0x261)][_0x569d01(0x1f6)](_0x46b1e6),
-                _0x2a1ec8 = columnSettings[_0x569d01(0x261)][_0x569d01(0x1f6)](_0x554aba);
-            columnSettings[_0x569d01(0x261)][_0x569d01(0x23f)](_0x5c2439, 0x1), columnSettings['order'][_0x569d01(0x23f)](_0x2a1ec8, 0x0, _0x46b1e6), saveColumnSettings(), buildTable(_0x3676ce);
-        }), _0x5ae703['appendChild'](_0x2c75af);
-    }), _0x1bc00e[_0x4688f5(0x21a)](_0x5ae703), _0x3676ce[_0x4688f5(0x26f)](_0x9b6076 => {
-        const _0x255b62 = _0x4688f5,
-            _0x2b4132 = document[_0x255b62(0x2d5)]('tr');
-        columnSettings[_0x255b62(0x261)][_0x255b62(0x26f)](_0x2047c9 => {
-            const _0x19b6f9 = _0x255b62;
-            if (!columnSettings['visible'][_0x19b6f9(0x277)](_0x2047c9)) return;
-            const _0x117451 = document[_0x19b6f9(0x2d5)]('td');
-            if (_0x2047c9 === _0x19b6f9(0x208)) _0x117451[_0x19b6f9(0x218)] = _0x9b6076[_0x19b6f9(0x208)];
-            else [_0x19b6f9(0x2d0), _0x19b6f9(0x1f4), _0x19b6f9(0x1ff), _0x19b6f9(0x27f)][_0x19b6f9(0x277)](_0x2047c9) ? _0x117451['textContent'] = formatDateDisplay(_0x9b6076[_0x19b6f9(0x261)][_0x2047c9]) : (_0x117451['textContent'] = _0x9b6076['order'][_0x2047c9] ?? '', _0x2047c9['toLowerCase']() === _0x19b6f9(0x2d9) && _0x117451[_0x19b6f9(0x204)][_0x19b6f9(0x22e)]('buyer-cell'));
-            columnSettings[_0x19b6f9(0x2d4)][_0x2047c9] && (_0x117451['style']['width'] = columnSettings[_0x19b6f9(0x2d4)][_0x2047c9] + 'px'), _0x2b4132['appendChild'](_0x117451);
-        }), _0x36e198[_0x255b62(0x21a)](_0x2b4132);
-    });
-}
-auth[_0x1a94c3(0x288)](async _0x5bc122 => {
-    const _0xc98156 = _0x1a94c3,
-        _0x46199e = document[_0xc98156(0x1fb)]('statusMsg');
-    if (!_0x5bc122) {
-        _0x46199e[_0xc98156(0x218)] = _0xc98156(0x251);
-        return;
-    }
-    try {
-        const _0xb803eb = await db[_0xc98156(0x24c)](_0xc98156(0x274))[_0xc98156(0x2b1)](_0x5bc122['uid'])[_0xc98156(0x276)](),
-            _0x4f317d = _0xb803eb[_0xc98156(0x24b)]();
-        if (!_0x4f317d || _0x4f317d[_0xc98156(0x289)]?. [_0xc98156(0x293)]() !== _0xc98156(0x27c)) {
-            _0x46199e[_0xc98156(0x218)] = '⛔ Access denied. Only Team Leaders allowed.';
-            return;
-        }
-        const _0x1d7fbf = _0x4f317d[_0xc98156(0x1e9)] || [];
-        if (_0x1d7fbf[_0xc98156(0x231)] === 0x0) {
-            _0x46199e[_0xc98156(0x218)] = '📝 No users assigned to you yet.';
-            return;
-        }
-        const _0xb8d77 = [];
-        for (const _0x51f448 of _0x1d7fbf) {
-            const _0x2b0566 = await db[_0xc98156(0x24c)](_0xc98156(0x1e6))[_0xc98156(0x2b1)](_0x51f448)['collection'](_0xc98156(0x2b3))[_0xc98156(0x276)]();
-            _0x2b0566[_0xc98156(0x26f)](_0x224bd7 => {
-                const _0x542ef2 = _0xc98156;
-                _0xb8d77[_0x542ef2(0x2c7)]({
-                    'userId': _0x51f448,
-                    'order': _0x224bd7[_0x542ef2(0x24b)]()
-                });
-            });
-        }
-        document['getElementById'](_0xc98156(0x224))[_0xc98156(0x228)]['display'] = _0xc98156(0x2da), _0x46199e[_0xc98156(0x228)][_0xc98156(0x28e)] = _0xc98156(0x2d2), buildTable(_0xb8d77), buildBuyerFilter(), window[_0xc98156(0x225)] = _0xb8d77, initSupplierChartControls(), !Object['keys'](columnSettings[_0xc98156(0x2d4)])[_0xc98156(0x231)] && fixTableColumnWidths();
-    } catch (_0x2b7c1a) {
-        console[_0xc98156(0x1f3)](_0xc98156(0x248), _0x2b7c1a), _0x46199e[_0xc98156(0x218)] = _0xc98156(0x2be);
-        return;
-    }
-}), document[_0x1a94c3(0x1fb)]('btnCustomize')[_0x1a94c3(0x283)](_0x1a94c3(0x1ea), () => {
-    const _0x1831d6 = _0x1a94c3,
-        _0x29bd3d = document['getElementById'](_0x1831d6(0x282));
-    _0x29bd3d[_0x1831d6(0x228)]['display'] = _0x29bd3d[_0x1831d6(0x228)][_0x1831d6(0x28e)] === 'none' ? 'block' : 'none';
-}), document[_0x1a94c3(0x283)]('DOMContentLoaded', function () {
-    const _0x54293d = _0x1a94c3,
-        _0x588d08 = document[_0x54293d(0x21b)]('table'),
-        _0x24486b = Array[_0x54293d(0x20d)](_0x588d08['querySelectorAll'](_0x54293d(0x212))),
-        _0x3f5ca3 = new Set();
-    _0x24486b[_0x54293d(0x26f)](_0x3caa2b => {
-        const _0xdc93d8 = _0x54293d,
-            _0x38a123 = _0x3caa2b[_0xdc93d8(0x21b)](_0xdc93d8(0x1f1));
-        if (_0x38a123) _0x3f5ca3[_0xdc93d8(0x22e)](_0x38a123[_0xdc93d8(0x2bc)][_0xdc93d8(0x27d)]());
-    });
-    const _0x23bc2e = Array[_0x54293d(0x20d)](_0x3f5ca3)[_0x54293d(0x245)](),
-        _0x53feb1 = document['getElementById'](_0x54293d(0x28c));
-    _0x23bc2e[_0x54293d(0x26f)](_0x337341 => {
-        const _0x5c2eee = _0x54293d,
-            _0x57f795 = document['createElement']('label');
-        _0x57f795['style'][_0x5c2eee(0x292)] = _0x5c2eee(0x279), _0x57f795[_0x5c2eee(0x24e)] = _0x5c2eee(0x200) + _0x337341 + _0x5c2eee(0x243) + _0x337341 + _0x5c2eee(0x2a7), _0x53feb1[_0x5c2eee(0x21a)](_0x57f795);
-    }), document[_0x54293d(0x239)](_0x54293d(0x20e))[_0x54293d(0x26f)](_0x4dc81c => {
-        const _0x3d546b = _0x54293d;
-        _0x4dc81c[_0x3d546b(0x283)](_0x3d546b(0x2cc), _0x452ff9);
-    });
-    function _0x452ff9() {
-        const _0xb0c45a = _0x54293d,
-            _0x355a93 = Array[_0xb0c45a(0x20d)](document['querySelectorAll']('.buyer-filter:checked'))[_0xb0c45a(0x22d)](_0x48ad00 => _0x48ad00[_0xb0c45a(0x29c)]);
-        _0x24486b[_0xb0c45a(0x26f)](_0x41e1d5 => {
-            const _0x2d900c = _0xb0c45a,
-                _0x5eddc6 = _0x41e1d5[_0x2d900c(0x21b)](_0x2d900c(0x1f1));
-            if (_0x5eddc6) {
-                const _0x88742b = _0x5eddc6['innerText'][_0x2d900c(0x27d)]();
-                _0x41e1d5[_0x2d900c(0x228)][_0x2d900c(0x28e)] = _0x355a93['includes'](_0x88742b) ? '' : 'none';
-            }
-        });
-    }
+body.appendChild(tr);
 });
-function buildBuyerFilter() {
-    const _0x78a055 = _0x1a94c3,
-        _0x46ec7b = document['getElementById'](_0x78a055(0x28c));
-    _0x46ec7b[_0x78a055(0x24e)] = '';
-    const _0x1e08e0 = document[_0x78a055(0x239)](_0x78a055(0x24a)),
-        _0x1da4e4 = new Set();
-    _0x1e08e0['forEach'](_0x50f45c => {
-        const _0x500ea7 = _0x78a055,
-            _0x566492 = _0x50f45c[_0x500ea7(0x21b)](_0x500ea7(0x1f1));
-        if (_0x566492) _0x1da4e4[_0x500ea7(0x22e)](_0x566492[_0x500ea7(0x2bc)][_0x500ea7(0x27d)]());
-    });
-    const _0x525390 = Array['from'](_0x1da4e4)['sort']();
-    _0x525390[_0x78a055(0x26f)](_0x584839 => {
-        const _0x1e4763 = _0x78a055,
-            _0x9287de = document[_0x1e4763(0x2d5)](_0x1e4763(0x266));
-        _0x9287de[_0x1e4763(0x228)][_0x1e4763(0x292)] = _0x1e4763(0x279), _0x9287de[_0x1e4763(0x24e)] = _0x1e4763(0x200) + _0x584839 + '\" checked />\x0a      ' + _0x584839 + '\x0a    ', _0x46ec7b[_0x1e4763(0x21a)](_0x9287de);
-    });
-    const _0x2ebc0e = _0x1366a(_0x2f6b68);
-    document['querySelectorAll'](_0x78a055(0x20e))[_0x78a055(0x26f)](_0x54526f => {
-        const _0x3d001d = _0x78a055;
-        _0x54526f['addEventListener'](_0x3d001d(0x2cc), _0x2ebc0e);
-    });
-    function _0x1366a(_0x110d91, _0x2a3d6b = 0x96) {
-        let _0x16dc1f;
-        return (..._0x257a9b) => {
-            clearTimeout(_0x16dc1f), _0x16dc1f = setTimeout(() => _0x110d91['apply'](this, _0x257a9b), _0x2a3d6b);
-        };
-    }
-    function _0x2f6b68() {
-        const _0x46650e = _0x78a055,
-            _0x39d716 = Array[_0x46650e(0x20d)](document['querySelectorAll']('.buyer-filter:checked'))[_0x46650e(0x22d)](_0xe9d7d8 => _0xe9d7d8[_0x46650e(0x29c)]),
-            _0x26c5a8 = document['querySelectorAll']('#ordersBody tr'),
-            _0x4cd45d = document[_0x46650e(0x1fb)](_0x46650e(0x27b)),
-            _0xf5c608 = document[_0x46650e(0x1fb)](_0x46650e(0x2a4)),
-            _0x23ba1e = document[_0x46650e(0x1fb)]('loaderLabel');
-        _0x4cd45d[_0x46650e(0x228)]['display'] = 'block', _0xf5c608[_0x46650e(0x228)][_0x46650e(0x205)] = '0%', _0x23ba1e[_0x46650e(0x218)] = _0x46650e(0x1e4);
-        let _0x162dd8 = 0x0;
-        const _0x10c283 = 0x14,
-            _0x2ac689 = _0x26c5a8[_0x46650e(0x231)];
-        function _0xb624ad() {
-            const _0x13b82e = _0x46650e,
-                _0x2c5e89 = _0x162dd8,
-                _0x35c64e = Math[_0x13b82e(0x275)](_0x162dd8 + _0x10c283, _0x2ac689);
-            for (let _0x37c93b = _0x2c5e89; _0x37c93b < _0x35c64e; _0x37c93b++) {
-                const _0x3371a6 = _0x26c5a8[_0x37c93b],
-                    _0x39e72c = _0x3371a6[_0x13b82e(0x21b)](_0x13b82e(0x1f1));
-                if (!_0x39e72c) continue;
-                const _0x13af08 = _0x39e72c[_0x13b82e(0x2bc)]['trim']();
-                _0x3371a6[_0x13b82e(0x228)][_0x13b82e(0x28e)] = _0x39d716[_0x13b82e(0x277)](_0x13af08) ? '' : 'none';
-            }
-            _0x162dd8 = _0x35c64e;
-            const _0x1febe6 = Math[_0x13b82e(0x2c1)](_0x162dd8 / _0x2ac689 * 0x64);
-            _0xf5c608[_0x13b82e(0x228)][_0x13b82e(0x205)] = _0x1febe6 + '%', _0x23ba1e[_0x13b82e(0x218)] = _0x13b82e(0x25f) + _0x1febe6 + '%', _0x162dd8 < _0x2ac689 ? requestAnimationFrame(_0xb624ad) : setTimeout(() => {
-                const _0x5d5e9a = _0x13b82e;
-                _0x4cd45d[_0x5d5e9a(0x228)]['display'] = 'none', _0xf5c608[_0x5d5e9a(0x228)][_0x5d5e9a(0x205)] = '0%';
-            }, 0x12c);
-        }
-        requestAnimationFrame(_0xb624ad);
-    }
+
+// ✅ After building the table, update the on-time vs delayed chart
+setTimeout(() => {
+  renderOnTimeVsDelayedChart();
+}, 200);
+
 }
+
+
+
+
+
+ auth.onAuthStateChanged(async user => {
+  const status = document.getElementById("statusMsg");
+  if (!user) {
+    status.textContent = "⛔ Not logged in.";
+    return;
+  }
+
+  try {
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    const data = userDoc.data();
+
+    if (!data || (data.role?.toLowerCase() !== "team leader")) {
+      status.textContent = "⛔ Access denied. Only Team Leaders allowed.";
+      return;
+    }
+
+    const assignedUsers = data.teamMembers || [];
+    if (assignedUsers.length === 0) {
+      status.textContent = "📝 No users assigned to you yet.";
+      return;
+    }
+
+    const rows = [];
+    for (const uid of assignedUsers) {
+      const snap = await db.collection("orders").doc(uid).collection("userOrders").get();
+      snap.forEach(doc => {
+        rows.push({ userId: uid, order: doc.data() });
+      });
+    }
+
+    document.getElementById("ordersTable").style.display = "table";
+    status.style.display = "none";
+
+    buildTable(rows);          // ✅ Build the table
+    window.latestOrderData = rows; // Save for chart use
+    initSupplierChartControls(); // Initialize supplier chart controls and render chart
+
+
+    if (!Object.keys(columnSettings.widths).length) {
+      fixTableColumnWidths();
+    }
+
+  } catch (err) {
+    console.error("Error loading orders:", err);
+    status.textContent = "❌ Error loading orders.";
+    return;
+  }
+});
+
+
+
+  document.getElementById("btnCustomize").addEventListener("click", () => {
+    const panel = document.getElementById("customizePanel");
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+  });
+
+
+
+
+
+document.addEventListener('click', function (e) {
+  const buyerPanel = document.getElementById('buyerFilterPanel');
+  const customizePanel = document.getElementById('customizePanel');
+  const usersBtn = document.querySelector('a[onclick*="showBuyerFilterPanel"]');
+  const customizeBtn = document.getElementById('btnCustomize');
+
+  const clickedInsideBuyer = buyerPanel.contains(e.target) || usersBtn.contains(e.target);
+  const clickedInsideCustomize = customizePanel.contains(e.target) || customizeBtn.contains(e.target);
+
+  // If click is outside both panels and their toggle buttons
+  if (!clickedInsideBuyer) {
+    buyerPanel.style.display = 'none';
+  }
+
+  if (!clickedInsideCustomize) {
+    customizePanel.style.display = 'none';
+  }
+});
+
+
+function showReportModal() {
+  document.getElementById("reportModal").classList.remove("hidden");
+}
+
+
+function closeReportModal() {
+  document.getElementById("reportModal").classList.add("hidden");
+}
+
 
 function exportTableToExcel(tableId, filename = 'excel_data') {
     const table = document.getElementById(tableId);
@@ -832,239 +1112,87 @@ function exportTableToExcel(tableId, filename = 'excel_data') {
 
 
 
-document['addEventListener']('click', function (_0x5c1c3c) {
-    const _0x1a7af2 = _0x1a94c3,
-        _0x54577d = document[_0x1a7af2(0x1fb)](_0x1a7af2(0x1f5)),
-        _0x228cb4 = document['getElementById'](_0x1a7af2(0x282)),
-        _0x4ed508 = document[_0x1a7af2(0x21b)](_0x1a7af2(0x2d8)),
-        _0x479a62 = document[_0x1a7af2(0x1fb)](_0x1a7af2(0x284)),
-        _0x32f4ef = _0x54577d[_0x1a7af2(0x20f)](_0x5c1c3c['target']) || _0x4ed508[_0x1a7af2(0x20f)](_0x5c1c3c['target']),
-        _0x4397f0 = _0x228cb4['contains'](_0x5c1c3c[_0x1a7af2(0x23e)]) || _0x479a62[_0x1a7af2(0x20f)](_0x5c1c3c[_0x1a7af2(0x23e)]);
-    !_0x32f4ef && (_0x54577d[_0x1a7af2(0x228)][_0x1a7af2(0x28e)] = _0x1a7af2(0x2d2)), !_0x4397f0 && (_0x228cb4[_0x1a7af2(0x228)]['display'] = _0x1a7af2(0x2d2));
-});
-function showReportModal() {
-    const _0x56f28a = _0x1a94c3;
-    document[_0x56f28a(0x1fb)](_0x56f28a(0x2b6))[_0x56f28a(0x204)][_0x56f28a(0x2bf)](_0x56f28a(0x2c9));
-}
-function closeReportModal() {
-    const _0x54aa65 = _0x1a94c3;
-    document['getElementById'](_0x54aa65(0x2b6))[_0x54aa65(0x204)][_0x54aa65(0x22e)](_0x54aa65(0x2c9));
-}
-function generateStatusReport() {
-    const _0x31186f = _0x1a94c3;
-    console[_0x31186f(0x2ba)](_0x31186f(0x2dc));
-    const _0x574a89 = window['latestOrderData'];
-    if (!_0x574a89 || !_0x574a89[_0x31186f(0x231)]) {
-        alert(_0x31186f(0x259));
-        return;
-    }
-    const _0x2a6ae2 = new Date();
-    let _0x157c68 = 0x0,
-        _0x48b775 = 0x0,
-        _0x5d5522 = 0x0,
-        _0xb1d95e = 0x0,
-        _0x10b863 = [],
-        _0x5710a7 = [],
-        _0x4cf769 = [],
-        _0x4b1042 = [];
-    const _0x21ba03 = _0x3d1f85 => {
-        const _0x14cb2d = _0x31186f,
-            _0x59291f = new Date(_0x3d1f85);
-        return _0x3d1f85 && !isNaN(_0x59291f) ? _0x59291f[_0x14cb2d(0x2c3)]('en-US', {
-            'year': _0x14cb2d(0x281),
-            'month': _0x14cb2d(0x270),
-            'day': _0x14cb2d(0x281)
-        }) : '—';
-    };
-    _0x574a89['forEach'](_0xdee8c6 => {
-        const _0x554f77 = _0x31186f,
-            _0x4f1152 = _0xdee8c6[_0x554f77(0x261)],
-            _0x1b0ee2 = _0x4f1152[_0x554f77(0x2d0)],
-            _0x3773a2 = _0x4f1152[_0x554f77(0x1ff)],
-            _0x4486bb = _0x4f1152['Tentative Delivery Date'],
-            _0x36dabf = _0x1b0ee2 ? new Date(_0x1b0ee2) : null,
-            _0x28d8f0 = _0x3773a2 ? new Date(_0x3773a2) : null,
-            _0x45713e = _0x4486bb ? new Date(_0x4486bb) : null;
-        if (!_0x45713e) return;
-        const _0x549f89 = {
-            'orderNo': _0x4f1152[_0x554f77(0x20b)] || _0x554f77(0x209),
-            'supplier': _0x4f1152[_0x554f77(0x2a2)] || '—',
-            'deliveryDate': _0x21ba03(_0x1b0ee2),
-            'approvedDate': _0x21ba03(_0x3773a2),
-            'tentativeDate': _0x21ba03(_0x4486bb)
-        };
-        if (_0x36dabf && _0x28d8f0 && _0x36dabf < _0x28d8f0) {
-            _0x5d5522++, _0x4cf769[_0x554f77(0x2c7)]({
-                ..._0x549f89,
-                'remarks': _0x554f77(0x26e)
-            });
-            return;
-        }
-        if (_0x36dabf && _0x36dabf <= _0x45713e) {
-            _0x157c68++, _0x10b863[_0x554f77(0x2c7)]({
-                ..._0x549f89,
-                'remarks': _0x554f77(0x287)
-            });
-            return;
-        }
-        if (_0x36dabf && _0x36dabf > _0x45713e) _0x48b775++, _0x5710a7['push']({
-            ..._0x549f89,
-            'remarks': _0x554f77(0x29a)
-        });
-        else !_0x36dabf && _0x2a6ae2 > _0x45713e && (_0xb1d95e++, _0x4b1042['push']({
-            ..._0x549f89,
-            'remarks': _0x554f77(0x25e)
-        }));
-    }), window[_0x31186f(0x295)] = _0x10b863, window['delayedOrders'] = _0x5710a7, window['invalidOrders'] = _0x4cf769, window[_0x31186f(0x2c4)] = _0x4b1042, renderSupplierStatusChart(), document['getElementById'](_0x31186f(0x232))[_0x31186f(0x218)] = _0x157c68, document['getElementById'](_0x31186f(0x216))[_0x31186f(0x218)] = _0x48b775, document[_0x31186f(0x1fb)](_0x31186f(0x286))['textContent'] = _0x5d5522, document['getElementById'](_0x31186f(0x2bd))[_0x31186f(0x218)] = _0xb1d95e, renderStatusTable('Delayed', _0x5710a7), auth[_0x31186f(0x288)](_0x430b2e => {
-        const _0x20b167 = _0x31186f;
-        if (!_0x430b2e) return;
-        const _0x32a558 = {
-            'timestamp': Date[_0x20b167(0x29d)](),
-            'onTimeOrders': window[_0x20b167(0x295)],
-            'delayedOrders': window['delayedOrders'],
-            'invalidOrders': window[_0x20b167(0x233)],
-            'inProgressOrders': window[_0x20b167(0x2c4)]
-        };
-        saveReportsToFirestore(_0x430b2e['uid'], _0x32a558);
-    });
-}
-async function saveReportsToFirestore(_0x589415, _0x5f1281) {
-    const _0x3fcdb8 = _0x1a94c3,
-        _0x1c4554 = db['collection'](_0x3fcdb8(0x21f))[_0x3fcdb8(0x2b1)](_0x589415)[_0x3fcdb8(0x24c)]('statusReports')[_0x3fcdb8(0x2b1)](_0x3fcdb8(0x1f8));
-    try {
-        const _0x307647 = await _0x1c4554[_0x3fcdb8(0x276)](),
-            _0x197a79 = _0x307647[_0x3fcdb8(0x203)] ? _0x307647[_0x3fcdb8(0x24b)]() : null,
-            _0x8ce836 = !_0x197a79 || JSON['stringify'](_0x197a79) !== JSON[_0x3fcdb8(0x247)](_0x5f1281);
-        _0x8ce836 ? (await _0x1c4554[_0x3fcdb8(0x226)](_0x5f1281, {
-            'merge': !![]
-        }), console[_0x3fcdb8(0x2ba)](_0x3fcdb8(0x2d7))) : console[_0x3fcdb8(0x2ba)]('ℹ️ No changes in report data. Skipped saving.');
-    } catch (_0x3b8e60) {
-        console[_0x3fcdb8(0x1f3)](_0x3fcdb8(0x2a8), _0x3b8e60);
-    }
-}
-function renderStatusTable(_0x293a54, _0x1ea9e7) {
-    const _0x5b38e3 = _0x1a94c3,
-        _0x1bd918 = document[_0x5b38e3(0x1fb)](_0x5b38e3(0x217));
-    _0x1bd918[_0x5b38e3(0x24e)] = '', _0x1ea9e7['length'] === 0x0 ? _0x1bd918['innerHTML'] = '<tr><td colspan=\"6\" class=\"text-center text-gray-500 py-2\">No ' + _0x293a54 + ' orders found.</td></tr>' : _0x1ea9e7[_0x5b38e3(0x26f)](_0x5cc78e => {
-        const _0x525d93 = _0x5b38e3,
-            _0x610dda = document[_0x525d93(0x2d5)]('tr');
-        _0x610dda[_0x525d93(0x24e)] = _0x525d93(0x230) + _0x5cc78e[_0x525d93(0x21c)] + '</td>\x0a        <td class=\"px-3 py-1 border\">' + (_0x5cc78e[_0x525d93(0x210)] || '-') + _0x525d93(0x1eb) + _0x5cc78e['deliveryDate'] + _0x525d93(0x1eb) + _0x5cc78e[_0x525d93(0x29e)] + _0x525d93(0x1eb) + _0x5cc78e[_0x525d93(0x223)] + _0x525d93(0x22b) + _0x5cc78e[_0x525d93(0x267)] + '</td>\x0a      ', _0x1bd918[_0x525d93(0x21a)](_0x610dda);
-    }), document[_0x5b38e3(0x1fb)](_0x5b38e3(0x26c))[_0x5b38e3(0x218)] = _0x5b38e3(0x24f) + _0x293a54 + _0x5b38e3(0x2b0), showReportModal();
-}
-document['getElementById'](_0x1a94c3(0x232))[_0x1a94c3(0x283)](_0x1a94c3(0x1ea), () => {
-    renderStatusTable('On Time', window['onTimeOrders']);
-}), document[_0x1a94c3(0x1fb)](_0x1a94c3(0x216))[_0x1a94c3(0x283)](_0x1a94c3(0x1ea), () => {
-    const _0x2df92e = _0x1a94c3;
-    renderStatusTable(_0x2df92e(0x29a), window[_0x2df92e(0x2ad)]);
-}), document[_0x1a94c3(0x1fb)](_0x1a94c3(0x286))[_0x1a94c3(0x283)](_0x1a94c3(0x1ea), () => {
-    renderStatusTable('Invalid', window['invalidOrders']);
-}), document[_0x1a94c3(0x1fb)]('inProgressCount')['addEventListener'](_0x1a94c3(0x1ea), () => {
-    const _0x440b42 = _0x1a94c3;
-    renderStatusTable(_0x440b42(0x1fa), window[_0x440b42(0x2c4)]);
-}), document[_0x1a94c3(0x239)](_0x1a94c3(0x1fd))[_0x1a94c3(0x26f)](_0x1248df => {
-    const _0xb53d39 = _0x1a94c3;
-    _0x1248df[_0xb53d39(0x283)]('click', () => {
-        const _0x3339fc = _0xb53d39,
-            _0xa2aa29 = _0x1248df['getAttribute']('data-status');
-        document[_0x3339fc(0x239)](_0x3339fc(0x1fd))['forEach'](_0x77a6e0 => {
-            const _0x2414b3 = _0x3339fc;
-            _0x77a6e0[_0x2414b3(0x204)][_0x2414b3(0x2bf)](_0x2414b3(0x2b2), _0x2414b3(0x20c), 'ring', _0x2414b3(0x27e));
-        }), _0x1248df[_0x3339fc(0x204)][_0x3339fc(0x22e)](_0x3339fc(0x2b2), _0x3339fc(0x20c), _0x3339fc(0x215), 'ring-offset-2');
-        switch (_0xa2aa29) {
-        case _0x3339fc(0x287):
-            renderStatusTable(_0x3339fc(0x287), window[_0x3339fc(0x295)]);
-            break;
-        case _0x3339fc(0x29a):
-            renderStatusTable(_0x3339fc(0x29a), window[_0x3339fc(0x2ad)]);
-            break;
-        case _0x3339fc(0x222):
-            renderStatusTable('Invalid', window['invalidOrders']);
-            break;
-        case _0x3339fc(0x1fa):
-            renderStatusTable('In Progress', window['inProgressOrders']);
-            break;
-        default:
-            break;
-        }
-    });
-}), document[_0x1a94c3(0x283)]('DOMContentLoaded', () => {
-    const _0x4158ce = _0x1a94c3,
-        _0x4c4112 = document[_0x4158ce(0x1fb)]('reportLink');
-    _0x4c4112 ? _0x4c4112['addEventListener'](_0x4158ce(0x1ea), _0x544090 => {
-        const _0xc21b6d = _0x4158ce;
-        _0x544090[_0xc21b6d(0x237)](), generateStatusReport();
-    }) : console[_0x4158ce(0x1f3)](_0x4158ce(0x238));
-});
-
-
-
-// LOGOUT BUTTON TRIGGER
-document.getElementById("logoutBtn").addEventListener("click", logoutUser);
-
-async function logoutUser(showAlert = true) {
-  if (showAlert) alert("You've been logged out!");
-
-  const user = firebase.auth().currentUser;
-
-  if (user) {
-    try {
-      await firebase.firestore()
-        .collection("users")
-        .doc(user.uid)
-        .update({
-          sessionActive: false,
-          sessionId: null,
-          lastSession: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (err) {
-      console.error("Failed to update session info on logout:", err);
-    }
-  }
-
-  localStorage.removeItem('sessionId');
-  sessionStorage.clear();
+async function saveReportsToFirestore(userId, reportData) {
+  const reportRef = db.collection("reports").doc(userId).collection("statusReports").doc("latest");
 
   try {
-    await firebase.auth().signOut();
+    const existing = await reportRef.get();
+    const existingData = existing.exists ? existing.data() : null;
+
+    // Check if the report data is different
+    const hasChanged = !existingData || JSON.stringify(existingData) !== JSON.stringify(reportData);
+
+    if (hasChanged) {
+      await reportRef.set(reportData, { merge: true });
+      console.log("✅ Reports saved to Firestore.");
+    } else {
+      console.log("ℹ️ No changes in report data. Skipped saving.");
+    }
   } catch (err) {
-    console.error("Logout error:", err.message);
+    console.error("❌ Error saving report:", err);
   }
-
-  window.location.href = "Loginindex.html";
 }
 
 
 
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => {
-    logoutUser(); // Logs out after 10 minutes of inactivity
-  }, 10 * 60 * 1000); // 10 minutes
-}
 
-["click", "mousemove", "keydown", "scroll", "touchstart"].forEach(event => {
-  window.addEventListener(event, resetInactivityTimer);
-});
 
-window.addEventListener("load", resetInactivityTimer);
 
-// 🔒 Page/tab close session cleanup (best-effort)
-window.addEventListener("unload", () => {
-  const user = firebase.auth().currentUser;
-  if (user) {
-    navigator.sendBeacon("/log-session-close", JSON.stringify({
-      uid: user.uid
-    }));
+
+
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "Loginindex.html";
+    });
   }
 
-  localStorage.removeItem('sessionId');
-  sessionStorage.clear();
-});
+ document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const ordersBody = document.getElementById("ordersBody");
+
+    // Remove previous highlights
+    function resetHighlights() {
+      Array.from(ordersBody.rows).forEach(row => row.classList.remove("highlight"));
+    }
+
+    // Search and highlight all matching rows
+    function searchAndHighlight(term) {
+      resetHighlights();
+
+      const rows = Array.from(ordersBody.rows);
+      const lowerTerm = term.toLowerCase();
+      const matches = rows.filter(row => row.textContent.toLowerCase().includes(lowerTerm));
+
+      matches.forEach(row => row.classList.add("highlight"));
+
+      // Scroll to first match if found
+      if (matches.length > 0) {
+        matches[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    // Event listener for input change
+    searchInput.addEventListener("input", () => {
+      const term = searchInput.value.trim();
+      if (term.length >= 2) {
+        searchAndHighlight(term);
+      } else {
+        resetHighlights();
+      }
+    });
+
+    // Inject highlight style
+    const style = document.createElement("style");
+    style.innerHTML = `.highlight { background-color: #ffeaa7 !important; }`;
+    document.head.appendChild(style);
+  });
 
 
 
 
 </script>
+
+
 
 </body>
 </html>
