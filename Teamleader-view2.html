@@ -1,80 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset=UTF-8><title>Team Leader Order View</title><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js></script><script src=https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js></script><link href=https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css rel=stylesheet><script src=https://cdn.jsdelivr.net/npm/chart.js></script><link href=https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css rel=stylesheet>
-  <style>
-body,html{height:100%;overflow:auto}
-.sidebar a:hover,h2{color:#0a84ff}#statusMsg,h2{margin-bottom:1rem}.sidebar,body,header{display:flex}h2,thead th{font-weight:600}.sidebar,thead th{color:#fff;z-index:10}td,th,thead th{padding:12px 14px;text-align:left}#customizePanel,header{margin-bottom:1.5rem;background:#fff}.fade-in{animation:.4s ease-in fadeIn}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.sidebar{width:260px;background:#1c1c1e;padding:2rem 1.5rem;flex-direction:column;gap:1rem;position:fixed;height:100%;box-shadow:0 4px 10px rgba(0,0,0,.2)}.sidebar h3{font-size:1.5rem;margin-bottom:2rem}.sidebar a{font-size:1rem;color:#fff;text-decoration:none;padding:8px 0;transition:.2s}.main-content{flex:1;margin-left:260px;padding:2rem;overflow-x:hidden;background:#f2f2f7}h2{font-size:1.75rem}#statusMsg{font-size:1rem;color:#444;text-align:center}header{padding:1rem 1.5rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);justify-content:space-between;align-items:center}header button{padding:8px 14px;border:none;border-radius:8px;font-size:.95rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:transform .2s,background .2s}header button:hover{transform:scale(1.05)}.table-container{overflow-y:auto;overflow-x:auto;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);max-height:70vh;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;position:relative}table{width:100%;border-collapse:collapse;font-size:.95rem;table-layout:fixed}td,th{border:1px solid #e5e5ea;word-wrap:break-word;white-space:normal}thead th{position:sticky;top:0;background-color:#007aff;user-select:none;border-bottom:1px solid #ccc;box-shadow:0 2px 5px rgba(0,0,0,.05)}tr:nth-child(2n){background-color:#f9f9f9}th.resizable::after{content:'';position:absolute;right:0;top:0;width:5px;height:100%;cursor:col-resize;z-index:2}#customizePanel{display:none;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-radius:12px;max-width:100%}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.chart-slide-panel{transform:translateX(-100%);max-height:0;overflow:hidden;transition:transform .5s,max-height .5s;will-change:transform,max-height}.chart-slide-panel.visible{transform:translateX(0);max-height:2000px}
-@media (max-width:768px){.sidebar{position:absolute;width:100%;height:auto;flex-direction:row;justify-content:space-around;padding:1rem;top:0;z-index:99}.main-content{margin-left:0;padding-top:6rem}header{flex-direction:column;align-items:flex-start;gap:1rem}.table-container{max-height:60vh}}.table-container::-webkit-scrollbar{width:8px;height:8px}.table-container::-webkit-scrollbar-thumb{background:#ccc;border-radius:10px}thead th{transition:box-shadow .3s}.table-container:has(thead th.sticky) thead th{box-shadow:0 4px 6px rgba(0,0,0,.08)}#buyerFilterPanel{animation:.3s ease-in fadeIn}
+  <meta charset="UTF-8" />
+  <title>Team Leader Order View</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/ui@0.7.2/dist/tailwind-ui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
-options: {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: {
-    mode: 'index',
-    intersect: false
-  },
-  animation: {
-    duration: 1000,
-    easing: 'easeOutCubic'
-  },
-  scales: {
-    x: {
-      stacked: true,
-      title: {
-        display: true,
-        text: 'Suppliers',
-        font: { size: 14, weight: 'bold' }
-      },
-      ticks: {
-        font: { size: 12 },
-        color: '#333'
-      }
-    },
-    y: {
-      stacked: true,
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: 'Number of Orders',
-        font: { size: 14, weight: 'bold' }
-      },
-      ticks: {
-        stepSize: 1,
-        font: { size: 12 },
-        color: '#333'
-      }
-    }
-  },
-  plugins: {
-    legend: {
-      position: 'bottom',
-      labels: {
-        font: { size: 13, family: 'Segoe UI, sans-serif' },
-        boxWidth: 16,
-        padding: 15
-      }
-    },
-    tooltip: {
-      backgroundColor: '#1c1c1e',
-      titleFont: { size: 13 },
-      bodyFont: { size: 13 },
-      padding: 10,
-      cornerRadius: 8,
-      callbacks: {
-        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}`
-      }
-    }
+
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f2f2f7;
+    overflow: hidden;
   }
+
+  body {
+    display: flex;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.4s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .sidebar {
+    width: 260px;
+    background: #1c1c1e;
+    color: white;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: fixed;
+    height: 100%;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+
+  .sidebar h3 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .sidebar a {
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar a:hover {
+    color: #0a84ff;
+  }
+
+ .main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2rem;
+  overflow-x: hidden;
+  background: #f2f2f7;
 }
+
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #0a84ff;
+    margin-bottom: 1rem;
+  }
+
+  #statusMsg {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  header {
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+
+  header button:hover {
+    transform: scale(1.05);
+  }
+
+ .table-container {
+  overflow: auto;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 70vh;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
+  position: relative;
+}
+
+/* Sticky header */
+#ordersTable thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff;
+  color: white;
+  z-index: 10;
+  font-weight: 600;
+  border-bottom: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed;
+  }
+
+table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* match header background */
+  color: white;
+  z-index: 5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* subtle shadow */
+}
+
+  th, td {
+    padding: 12px 14px;
+    border: 1px solid #e5e5ea;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007aff; /* Required! */
+  color: white;
+  font-weight: 600;
+  z-index: 10;
+  padding: 12px 14px;
+  text-align: left;
+  user-select: none;
+  border-bottom: 1px solid #ccc;
+}
+
+
+
+  th {
+    background-color: #007aff;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  th.resizable {
+    position: relative;
+  }
+
+  th.resizable::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2;
+  }
+
+  #customizePanel {
+    display: none;
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+
+.chart-slide-panel {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  max-height: 0;
+  overflow: hidden;
+  transform: translateX(-100%); /* start fully hidden */
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  transition: transform 0.5s ease-in-out, max-height 0.5s ease-in-out;
+}
+
+.chart-slide-panel.visible {
+  transform: translateX(0%);
+  max-height: 600px; /* adjust if needed based on chart height */
+}
+
+
+#buyerFilterButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+
+
 </style>
 
-<aside class=sidebar><h3>📊 Dashboard</h3><a href=#>🏠 Home</a> <a href=# onclick=showChartSection()>📈 Charts</a> <a href=# onclick=generateStatusReport()>📄 Reports</a> <a href=# onclick=showBuyerFilterPanel()>👥 Purchasers</a> <a href=# onclick=logout() class="hover:text-red-500 text-red-400">🚪 Logout</a></aside><div class="fade-in main-content"><header><h2>📋 Team Leader Control Panel</h2><div class="flex gap-3"><button class="text-white bg-[#007aff]"id=btnCustomize>⚙️ Customize</button> <button class="text-white bg-[#34c759]"onclick=refreshTable()>🔄 Refresh</button> <button class="text-white bg-[#ff9500]"onclick=exportTableToCSV()>📤 Export CSV</button></div></header><div class="bg-white shadow-md animate-fade-in-down hidden mb-6 p-6 rounded-xl"id=customizePanel><div class="flex items-center justify-between mb-4"><h4 class="flex items-center gap-2 font-semibold text-gray-800 text-xl">🛠️ Table Settings</h4></div><div class="gap-4 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2"id=customizeColumns></div></div><div style="display:none;background:#fff;padding:1rem;margin-bottom:1rem;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08)"id=buyerFilterPanel><strong>Filter by Buyer:</strong><div style=display:flex;flex-wrap:wrap;gap:10px;margin-top:.5rem id=buyerCheckboxes></div></div><div class="bg-gray-50 rounded-xl chart-slide-panel duration-500 ease-in-out p-6 shadow-inner transform transition-transform"id=chartSlidePanel><div class="flex items-center justify-between mb-6"><h4 class="font-semibold text-xl text-gray-800 tracking-tight">📊 Order Insights</h4></div><div class="flex justify-center flex-wrap gap-6"><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">🧩 Orders by Main Category</h5><div class="flex items-center h-full justify-center"><canvas id=categoryPieChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-1/2"style=max-width:550px;height:400px><div class="bg-white shadow-md duration-300 h-full hover:shadow-lg p-5 rounded-2xl transition-all"><h5 class="font-semibold mb-3 text-gray-700 text-md">📈 Orders Over Time</h5><div class="flex items-center h-full justify-center"><canvas id=ordersLineChart style=min-height:300px;min-width:300px></canvas></div></div></div><div class="w-full xl:w-1/3 md:w-full"style=max-width:550px;height:400px><div class="flex justify-between bg-white duration-300 flex-col h-full hover:shadow-lg p-5 rounded-2xl shadow-md transition-all"><div class=mb-3><h5 class="font-semibold mb-3 text-gray-700 text-md">📦 Delivery Status per Supplier</h5><div class="flex gap-2 flex-wrap"><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=supplierSelect>Supplier:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=supplierSelect><option value=all>All Suppliers</select></div><div class="flex items-center gap-2"><label class="text-sm text-gray-600 font-medium"for=sortSelect>Sort:</label> <select class="border rounded-xl bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 px-2 py-1 text-sm"id=sortSelect><option value=alphabetical>Alphabetical (A-Z)<option value=total>Total Orders (desc)</select></div></div></div><div class="border rounded-xl bg-gray-50 border-gray-100 overflow-x-auto p-2"><div style=min-width:400px;min-height:280px><canvas id=supplierStatusChart style=height:280px!important class=w-full></canvas></div></div></div></div></div></div><div style=display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;pointer-events:auto id=loaderModal><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:600px;background:#fff;padding:40px;border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.25);text-align:center"><div style=margin-bottom:20px;font-weight:700;font-size:1.8rem id=loaderLabel>Sorting... 0%</div><div style=width:100%;background:#ddd;height:30px;border-radius:15px;overflow:hidden><div style="height:100%;width:0%;background:linear-gradient(to right,#007bff,#00d4ff);transition:width .1s"id=loaderBar></div></div></div></div><div class=table-container><table id=ordersTable><thead id=ordersHead><tr><th>Loading...<tbody id=ordersBody><tr><td>Loading orders...</table></div><div id=statusMsg>🔐 Verifying user...</div><footer class="text-sm mt-8 text-center text-gray-400">© 2025 Team Leader Dashboard. All rights reserved.</footer></div><div class="flex justify-center bg-black bg-opacity-50 fixed hidden inset-0 items-start overflow-y-auto pb-10 pt-10 z-50"id=reportModal><div class="flex bg-white flex-col max-w-5xl p-6 relative rounded-lg shadow-lg w-full"><button class="hover:text-red-500 absolute right-2 text-2xl text-gray-500 top-2"onclick=closeReportModal()>×</button><h3 class="font-semibold text-xl mb-4"id=reportTitle>📊 Report</h3><div class="flex justify-between mb-4 flex-wrap gap-3"><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-green-100 hover:bg-green-200"data-status="On Time"><h4 class="font-semibold text-lg">🟢 On Time (<span id=onTimeCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered on or before target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-yellow-100 hover:bg-yellow-200"data-status=Delayed><h4 class="font-semibold text-lg">🟡 Delayed (<span id=delayedCount>0</span>)</h4><p class="text-sm text-gray-600">Orders delivered after target date</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-red-100 hover:bg-red-200"data-status=Invalid><h4 class="font-semibold text-lg">🔴 Invalid (<span id=invalidCount>0</span>)</h4><p class="text-sm text-gray-600">Orders with invalid or missing data</div><div class="cursor-pointer min-w-[200px] p-4 rounded status-btn w-[calc(25%-0.75rem)] bg-blue-100 hover:bg-blue-200"data-status="In Progress"><h4 class="font-semibold text-lg">🔵 In Progress (<span id=inProgressCount>0</span>)</h4><p class="text-sm text-gray-600">Orders not delivered and overdue</div></div><div class="max-h-[60vh] overflow-auto"><table class="border text-sm text-left w-full"><thead class="bg-gray-100 sticky top-0"><tr><th class="border px-3 py-2">Order No<th class="border px-3 py-2">Supplier<th class="border px-3 py-2">Delivery Date<th class="border px-3 py-2">Tentative Date<th class="border px-3 py-2">Approved Date<th class="border px-3 py-2">Remarks<tbody id=delayedOrdersTableBody></table></div></div></div>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <h3>📊 Dashboard</h3>
+  <a href="#">🏠 Home</a>
+  <a href="#" onclick="showChartSection()">📈 Charts</a>
+
+  <a href="#">📄 Reports</a>
+  <a href="#">👥 Users</a>
+  <a href="#" onclick="logout()" class="text-red-400 hover:text-red-500">🚪 Logout</a>
+</aside>
+
+<!-- Page Content -->
+<div class="main-content fade-in">
+  <!-- Top Header -->
+  <header>
+  <h2>📋 Team Leader Orders</h2>
+  <div class="flex gap-3 flex-wrap">
+    <button id="btnCustomize" type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg transition-all">
+      ⚙️ Customize
+    </button>
+
+    <button onclick="refreshTable()" type="button" class="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition-all">
+      🔄 Refresh
+    </button>
+    <button class="text-black bg-[#ff9500]" onclick="exportTableToExcel('ordersTable', 'Order_Report')">📤 Export Excel</button>
+    </button>
+  </div>
+</header>
+
+
+  <!-- Customize Panel -->
+  <div id="customizePanel" class="hidden bg-white rounded-xl shadow-md p-6 mb-6 animate-fade-in-down">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-xl font-semibold text-gray-800 flex items-center gap-2">🛠️ Table Settings</h4>
+    </div>
+    <div id="customizeColumns" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- JS will populate columns here -->
+    </div>
+  </div>
+
+
+<!-- Use a simple toggle for visibility of the filter dropdown -->
+<div class="relative inline-block">
+  <button id="buyerFilterBtn" class="bg-white text-sm border rounded px-3 py-1">
+    Filter Buyer ⏷
+  </button>
+
+  <!-- This dropdown should always be visible or appear when the button is clicked -->
+  <select id="buyerFilterSelect" class="absolute mt-1 w-full border rounded bg-white shadow-md hidden z-10">
+    <option value="">All Buyers</option>
+    <!-- Options will be added via JS -->
+  </select>
+</div>
 
 
 
 
-<script>
+
+<!-- Chart Slide Panel -->
+<div id="chartSlidePanel"
+     class="chart-slide-panel transform transition-transform duration-500 ease-in-out">
+  <div class="p-6">
+
+    <!-- Section Title -->
+    <div class="flex justify-between items-center mb-4">
+      <h4 class="text-lg font-semibold text-gray-700">📊 Order Insights</h4>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="w-full mt-6 max-w-[800px] mx-auto">
+      <h5 class="text-md font-semibold text-gray-600 mb-2">⏱️ Monthly On Time vs Delayed Orders (%)</h5>
+      
+<div class="w-full" style="height: 300px;">
+  <canvas id="onTimeDelayedChart" width="800" height="300" class="w-full h-full"></canvas>
+</div>
+
+
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- Status Message -->
+<div id="statusMsg">🔐 Verifying user...</div>
+
+
+<!-- Search Navigation -->
+<div class="flex justify-end items-center px-6 py-4">
+  <input 
+    type="text" 
+    id="searchInput" 
+    placeholder="🔍 Search orders..." 
+    class="px-4 py-2 border rounded-md shadow-sm w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+  />
+</div>
+
+
+<!-- Table Container -->
+<div class="table-container">
+  <table id="ordersTable">
+    <thead id="ordersHead">
+      <tr><th>Loading...</th></tr>
+    </thead>
+    <tbody id="ordersBody">
+      <tr><td>Loading orders...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Bigger Modal Loader -->
+<div id="loaderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5); z-index: 9999; pointer-events: auto;">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80%; max-width: 600px; background: white; padding: 40px; border-radius: 16px;
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25); text-align: center;">
+    
+    <div id="loaderLabel" style="margin-bottom: 20px; font-weight: bold; font-size: 1.8rem;">Sorting... 0%</div>
+    
+    <div style="width: 100%; background: #ddd; height: 30px; border-radius: 15px; overflow: hidden;">
+      <div id="loaderBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #007bff, #00d4ff); transition: width 0.1s;"></div>
+    </div>
+    
+  </div>
+</div>
+
+
+
+
+
+  <!-- Footer -->
+  <footer class="mt-8 text-center text-gray-400 text-sm">
+    © 2025 Team Leader Dashboard. All rights reserved.
+  </footer>
+</div>
+
+
+
+
+
+
+<script> 
   const firebaseConfig = {
     apiKey: "AIzaSyD9LCzMuEGIiRQrOVCgH6d-jxxJLZ0QBCk",
     authDomain: "order-monitoring-purchasing.firebaseapp.com",
@@ -88,53 +418,24 @@ options: {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+
+
+
   let columnSettings = { visible: [], order: [], widths: {} };
   let chartPanelVisible = false;
   let ordersChartInstance = null;
   let categoryChartInstance = null;
   let supplierStatusChartInstance = null;
   let chartsRendered = false;
+  
+
+const buyerFilterDropdown = document.getElementById("buyerFilterDropdown");
+const buyerFilterBtn = document.getElementById("buyerFilterBtn");
+
+
+
 
 window.supplierChartRendered = false;
-
-
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  const userRef = firebase.firestore().collection("users").doc(user.uid);
-  const userDoc = await userRef.get();
-  const userData = userDoc.data();
-
-  const localSessionId = localStorage.getItem('sessionId');
-
-  if (!userData.sessionId || userData.sessionId !== localSessionId) {
-    alert("🚫 You’ve been logged out because another login occurred.");
-    await firebase.auth().signOut();
-    localStorage.removeItem('sessionId');
-    window.location.href = "Loginindex.html";
-  } else {
-    currentUserId = user.uid; // continue normal flow
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   function loadColumnSettings(defaultColumns) {
@@ -154,24 +455,90 @@ firebase.auth().onAuthStateChanged(async (user) => {
     }
   }
 
+let selectedBuyers = []; // Placeholder if needed in future
 
-function showBuyerFilterPanel() {
-  const panel = document.getElementById('buyerFilterPanel');
-  panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+async function loadOrders() {
+  try {
+    const data = await fetchDataFromDatabase();
+
+    populateTable(data);
+
+    // Wait a short delay to ensure table renders
+    setTimeout(() => {
+      renderOnTimeVsDelayedChart();
+    }, 100); // Delay just enough for DOM update
+
+    buildBuyerFilter(); // Build after table is populated
+  } catch (error) {
+    console.error('Error loading orders:', error);
+  }
 }
 
+// Build the Buyer filter dropdown options
+function buildBuyerFilter() {
+  const buyerIndex = getBuyerColumnIndex();
+  const rows = document.querySelectorAll("#ordersBody tr");
+  const buyersSet = new Set();
 
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const buyer = cells[buyerIndex]?.textContent.trim();
+    if (buyer) buyersSet.add(buyer);
+  });
 
+  const select = document.getElementById("buyerFilterSelect");
+  select.innerHTML = `<option value="">All Buyers</option>`; // Value = "" is important
 
+  Array.from(buyersSet).sort().forEach(buyer => {
+    const option = document.createElement("option");
+    option.value = buyer;
+    option.textContent = buyer;
+    select.appendChild(option);
+  });
+}
 
+// Filter table rows by selected buyer
+function filterTable(selectedBuyer) {
+  const buyerIndex = getBuyerColumnIndex();
+  const rows = document.querySelectorAll('#ordersBody tr');
 
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const buyer = buyerIndex !== -1 ? cells[buyerIndex]?.textContent.trim() : "";
 
+    // ✅ Show all rows when "All Buyers" is selected (value is "")
+    if (selectedBuyer === "" || buyer === selectedBuyer) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
 
+// Get column index of "Buyer"
+function getBuyerColumnIndex() {
+  const headerCells = document.querySelectorAll("#ordersHead th");
+  for (let i = 0; i < headerCells.length; i++) {
+    if (headerCells[i].dataset.col?.toLowerCase() === "buyer") return i;
+  }
+  return -1;
+}
 
+// Toggle Buyer Filter dropdown
+document.getElementById("buyerFilterBtn").addEventListener("click", () => {
+  const select = document.getElementById("buyerFilterSelect");
+  buildBuyerFilter(); // Refresh list in case table changed
+  select.classList.toggle("hidden");
+});
 
+// On Buyer Select Change
+document.getElementById("buyerFilterSelect").addEventListener("change", event => {
+  const selectedBuyer = event.target.value;
+  filterTable(selectedBuyer);
+});
 
-
-
+// Load everything on page init
+loadOrders();
 
 
 
@@ -195,391 +562,197 @@ function formatDateDisplay(dateStr) {
 
 
 
-
-
-
-
 function showChartSection() {
   const panel = document.getElementById("chartSlidePanel");
   chartPanelVisible = !chartPanelVisible;
 
   if (chartPanelVisible) {
     panel.classList.add("visible");
-    if (!chartsRendered && window.latestOrderData) {
-      renderOrdersChart(window.latestOrderData);
-      renderCategoryPieChart(window.latestOrderData);
-      chartsRendered = true;
-    }
+    renderOnTimeVsDelayedChart(); // ⬅️ Always call, not conditional anymore
   } else {
     panel.classList.remove("visible");
   }
 }
 
 
+function renderOnTimeVsDelayedChart() {
+  const tbody = document.getElementById('ordersBody');
+  if (!tbody) return console.warn("⚠️ No table body found for chart rendering.");
 
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) return console.warn("⚠️ No table rows found.");
 
+  const headerCells = Array.from(document.querySelectorAll('#ordersHead th'));
+  const columnIndex = { number: -1, status: -1, deliveryDate: -1 };
 
-function renderOrdersChart(orderData) {
-  const ctx = document.getElementById('ordersLineChart').getContext('2d');
-  if (ordersChartInstance) ordersChartInstance.destroy();
-
-  const monthlyCounts = {};
-  orderData.forEach(order => {
-    const date = new Date(order.orderDate || order.order?.['Order Date']);
-    if (!isNaN(date)) {
-      const monthKey = date.toLocaleString('default', { month: 'short', year: 'numeric' });
-      monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
-    }
+  headerCells.forEach((th, index) => {
+    const text = th.innerText.trim().toLowerCase();
+    if (text === 'number') columnIndex.number = index;
+    if (text === 'status') columnIndex.status = index;
+    if (text === 'delivery date') columnIndex.deliveryDate = index;
   });
 
-  const labels = Object.keys(monthlyCounts);
-  const values = Object.values(monthlyCounts);
+  if (columnIndex.number === -1 || columnIndex.status === -1 || columnIndex.deliveryDate === -1) {
+    console.error("❌ Could not find Number, Status, or Delivery Date columns.");
+    return;
+  }
 
-  ordersChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Orders',
-        data: values,
-        borderColor: '#0a84ff',
-        backgroundColor: 'rgba(10,132,255,0.1)',
-        tension: 0.3,
-        fill: true,
-        pointRadius: 5,
-        pointBackgroundColor: '#0a84ff'
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => Orders: ${ctx.parsed.y}
-          }
-        }
-      },
-      scales: {
-        x: { title: { display: true, text: 'Month' } },
-        y: { beginAtZero: true, title: { display: true, text: 'Number of Orders' } }
-      }
-    }
-  });
-}
+  const monthlyStats = {};
+  const totalPerMonth = {};
 
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const orderNumber = cells[columnIndex.number]?.innerText.trim();
+    const status = cells[columnIndex.status]?.innerText.trim().toLowerCase();
+    const deliveryText = cells[columnIndex.deliveryDate]?.innerText.trim();
+    if (!orderNumber) return;
 
+    const deliveryDate = new Date(deliveryText);
+    if (isNaN(deliveryDate)) return;
 
+    const monthYear = deliveryDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-function renderCategoryPieChart(orderData) {
-  const ctx = document.getElementById('categoryPieChart').getContext('2d');
-  if (categoryChartInstance) categoryChartInstance.destroy();
-
-  const categoryCounts = {};
-
-  orderData.forEach(order => {
-    const rawCategory = order.order?.Category || "";
-    const mainCategory = rawCategory.split('.')[0].trim().toUpperCase();
-
-    if (mainCategory) {
-      categoryCounts[mainCategory] = (categoryCounts[mainCategory] || 0) + 1;
-    }
-  });
-
-  const labels = Object.keys(categoryCounts);
-  const data = Object.values(categoryCounts);
-  const backgroundColors = labels.map((_, i) =>
-    hsl(${(i * 137.5) % 360}, 70%, 60%));
-
-  categoryChartInstance = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: backgroundColors
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
-          callbacks: {
-            label: ctx => ${ctx.label}: ${ctx.parsed} orders
-          }
-        }
-      }
-    }
-  });
-}
-
-
-function renderSupplierStatusChart() {
-  if (!window.latestOrderData) return;
-
-  const supplierMap = {};
-
-  // Initialize all suppliers
-  window.latestOrderData.forEach(row => {
-    const supplier = row.order?.Supplier || "Unknown";
-    if (!supplierMap[supplier]) {
-      supplierMap[supplier] = {
-        "On Time": 0,
-        "Delayed": 0,
-        "Invalid": 0,
-        "In Progress": 0
+    if (!monthlyStats[monthYear]) {
+      monthlyStats[monthYear] = {
+        onTime: new Set(),
+        delayed: new Set(),
+        pending: new Set(),
+        partial: new Set(),
+        cancelled: new Set()
       };
     }
+
+    const map = monthlyStats[monthYear];
+    if (status.includes('on time')) map.onTime.add(orderNumber);
+    else if (status.includes('delayed')) map.delayed.add(orderNumber);
+    else if (status.includes('pending')) map.pending.add(orderNumber);
+    else if (status.includes('partially delivered') || status.includes('partial')) map.partial.add(orderNumber);
+    else if (status.includes('cancelled') || status.includes('canceled')) map.cancelled.add(orderNumber);
   });
 
-  // Count per category
-  window.onTimeOrders.forEach(o => supplierMap[o.supplier]["On Time"]++);
-  window.delayedOrders.forEach(o => supplierMap[o.supplier]["Delayed"]++);
-  window.invalidOrders.forEach(o => supplierMap[o.supplier]["Invalid"]++);
-  window.inProgressOrders.forEach(o => supplierMap[o.supplier]["In Progress"]++);
+  const labels = Object.keys(monthlyStats);
+  const statusTypes = ['onTime', 'delayed', 'pending', 'partial', 'cancelled'];
+  const statusColors = {
+    onTime: 'rgba(34, 197, 94, 0.7)',
+    delayed: 'rgba(239, 68, 68, 0.7)',
+    pending: 'rgba(234, 179, 8, 0.7)',
+    partial: 'rgba(59, 130, 246, 0.7)',
+    cancelled: 'rgba(107, 114, 128, 0.7)'
+  };
 
-  const suppliers = Object.keys(supplierMap);
-  const onTimeData = suppliers.map(s => supplierMap[s]["On Time"]);
-  const delayedData = suppliers.map(s => supplierMap[s]["Delayed"]);
-  const invalidData = suppliers.map(s => supplierMap[s]["Invalid"]);
-  const inProgressData = suppliers.map(s => supplierMap[s]["In Progress"]);
+  const datasets = statusTypes.map(type => {
+    const data = [];
+    const countData = [];
 
-  const ctx = document.getElementById('supplierStatusChart').getContext('2d');
-  if (supplierStatusChartInstance) supplierStatusChartInstance.destroy();
+    labels.forEach(month => {
+      const statusSet = monthlyStats[month][type];
+      const totalSet = new Set();
+      statusTypes.forEach(t => monthlyStats[month][t].forEach(num => totalSet.add(num)));
 
-  supplierStatusChartInstance = new Chart(ctx, {
+      const total = totalSet.size || 1;
+      const count = statusSet.size;
+
+      data.push(((count / total) * 100).toFixed(1));
+      countData.push(count);
+
+      totalPerMonth[month] = totalSet.size; // Store total orders per month
+    });
+
+    return {
+      label: `${type.charAt(0).toUpperCase()}${type.slice(1).replace('partial', 'Partially Delivered')}`,
+      data,
+      countData,
+      backgroundColor: statusColors[type],
+      borderRadius: 8,
+      barPercentage: 0.5
+    };
+  });
+
+  if (labels.length === 0) {
+    labels.push("No Data");
+    datasets.forEach(ds => {
+      ds.data = [0];
+      ds.countData = [0];
+    });
+  }
+
+  const ctx = document.getElementById('onTimeDelayedChart').getContext('2d');
+
+  if (window.onTimeDelayedChart && typeof window.onTimeDelayedChart.destroy === 'function') {
+    window.onTimeDelayedChart.destroy();
+  }
+
+  window.onTimeDelayedChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels: suppliers,
-      datasets: [
-        {
-          label: '🟢 On Time',
-          data: onTimeData,
-          backgroundColor: '#34d399'
-        },
-        {
-          label: '🟡 Delayed',
-          data: delayedData,
-          backgroundColor: '#facc15'
-        },
-        {
-          label: '🔴 Invalid',
-          data: invalidData,
-          backgroundColor: '#f87171'
-        },
-        {
-          label: '🔵 In Progress',
-          data: inProgressData,
-          backgroundColor: '#60a5fa'
-        }
-      ]
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        x: {
-          stacked: true,
-          title: { display: true, text: 'Suppliers' }
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          title: { display: true, text: 'Number of Orders' }
-        }
-      },
       plugins: {
-        legend: { position: 'bottom' },
+        legend: { position: 'top' },
         tooltip: {
           callbacks: {
-            label: ctx => ${ctx.dataset.label}: ${ctx.parsed.y}
+            label: (ctx) => {
+              const label = ctx.dataset.label;
+              const percent = ctx.formattedValue;
+              const count = ctx.dataset.countData?.[ctx.dataIndex] || 0;
+              return `${label}: ${count} orders (${percent}%)`;
+            }
+          }
+        },
+      datalabels: {
+  anchor: 'end',
+  align: 'top',
+  color: '#111',
+  font: {
+    weight: 'bold',
+    size: 11
+  },
+  formatter: (percent, ctx) => {
+    const count = ctx.dataset.countData?.[ctx.dataIndex];
+    if (!count || percent === '0.0') return null;
+    return `${count} (${percent}%)`;
+  }
+}
+,
+        totalLabels: {
+          display: true
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Percentage (%)'
           }
         }
       }
-    }
-  });
-}
-
-function populateSupplierDropdown(suppliers) {
-  const supplierSelect = document.getElementById('supplierSelect');
-  supplierSelect.innerHTML = '<option value="all">All Suppliers</option>'; // reset
-
-  suppliers.forEach(supplier => {
-    const option = document.createElement('option');
-    option.value = supplier;
-    option.textContent = supplier;
-    supplierSelect.appendChild(option);
-  });
-}
-
-function getTotalOrdersForSupplier(supplierData) {
-  return supplierData["On Time"] + supplierData["Delayed"] + supplierData["Invalid"] + supplierData["In Progress"];
-}
-
-function updateSupplierStatusChart(selectedSupplier = "all", sortBy = "alphabetical") {
-  if (!window.latestOrderData) return;
-
-  const supplierMap = {};
-
-  // Initialize counts per supplier
-  window.latestOrderData.forEach(row => {
-    const supplier = row.order?.Supplier || "Unknown";
-    if (!supplierMap[supplier]) {
-      supplierMap[supplier] = {
-        "On Time": 0,
-        "Delayed": 0,
-        "Invalid": 0,
-        "In Progress": 0
-      };
-    }
-  });
-
-  // Fill counts from categorized orders (make sure these globals exist and are correct)
-  (window.onTimeOrders || []).forEach(o => {
-  if (supplierMap[o.supplier]) supplierMap[o.supplier]["On Time"]++;
-});
-
-(window.delayedOrders || []).forEach(o => {
-  if (supplierMap[o.supplier]) supplierMap[o.supplier]["Delayed"]++;
-});
-
-(window.invalidOrders || []).forEach(o => {
-  if (supplierMap[o.supplier]) supplierMap[o.supplier]["Invalid"]++;
-});
-
-(window.inProgressOrders || []).forEach(o => {
-  if (supplierMap[o.supplier]) supplierMap[o.supplier]["In Progress"]++;
-});
-
-
-  // Filter suppliers if needed
-  let suppliers = Object.keys(supplierMap);
-  if (selectedSupplier !== "all") {
-    suppliers = suppliers.filter(s => s === selectedSupplier);
-  }
-
-  // Sort suppliers
-  if (sortBy === "alphabetical") {
-    suppliers.sort((a, b) => a.localeCompare(b));
-  } else if (sortBy === "total") {
-    suppliers.sort((a, b) => getTotalOrdersForSupplier(supplierMap[b]) - getTotalOrdersForSupplier(supplierMap[a]));
-  }
-
-  // Prepare datasets
-  const onTimeData = suppliers.map(s => supplierMap[s]["On Time"]);
-  const delayedData = suppliers.map(s => supplierMap[s]["Delayed"]);
-  const invalidData = suppliers.map(s => supplierMap[s]["Invalid"]);
-  const inProgressData = suppliers.map(s => supplierMap[s]["In Progress"]);
-
-  const ctx = document.getElementById('supplierStatusChart').getContext('2d');
-  if (supplierStatusChartInstance) supplierStatusChartInstance.destroy();
-
-  supplierStatusChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: suppliers,
-      datasets: [
-        {
-          label: '🟢 On Time',
-          data: onTimeData,
-          backgroundColor: 'rgba(52, 211, 153, 0.8)',
-          borderRadius: 5
-        },
-        {
-          label: '🟡 Delayed',
-          data: delayedData,
-          backgroundColor: 'rgba(250, 204, 21, 0.8)',
-          borderRadius: 5
-        },
-        {
-          label: '🔴 Invalid',
-          data: invalidData,
-          backgroundColor: 'rgba(248, 113, 113, 0.8)',
-          borderRadius: 5
-        },
-        {
-          label: '🔵 In Progress',
-          data: inProgressData,
-          backgroundColor: 'rgba(96, 165, 250, 0.8)',
-          borderRadius: 5
-        }
-      ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          stacked: true,
-          title: { display: true, text: 'Suppliers', font: { size: 14, weight: 'bold' } },
-          ticks: { font: { size: 12 }, color: '#333' }
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          title: { display: true, text: 'Number of Orders', font: { size: 14, weight: 'bold' } },
-          ticks: { stepSize: 1, font: { size: 12 }, color: '#333' }
+    plugins: [
+      ChartDataLabels,
+      {
+        id: 'totalOrderLabel',
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea: { top }, scales: { x }, data } = chart;
+          ctx.save();
+          ctx.font = 'bold 12px Arial';
+          ctx.fillStyle = '#000';
+          ctx.textAlign = 'center';
+
+          data.labels.forEach((label, index) => {
+            const total = totalPerMonth[label] || 0;
+            const xCenter = x.getPixelForTick(index);
+            ctx.fillText(`Total: ${total}`, xCenter, top + 12);
+          });
+
+          ctx.restore();
         }
-      },
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 13 }, boxWidth: 16, padding: 15 } },
-        tooltip: {
-          backgroundColor: '#1c1c1e',
-          titleFont: { size: 13 },
-          bodyFont: { size: 13 },
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: { label: ctx => ${ctx.dataset.label}: ${ctx.parsed.y} }
-        }
-      },
-      animation: { duration: 800, easing: 'easeOutCubic' },
-      interaction: { mode: 'index', intersect: false }
-    }
+      }
+    ]
   });
 }
-
-
-// Initialize dropdowns and chart after data loads
-function initSupplierChartControls() {
-  if (!window.latestOrderData) return;
-
-  const supplierMap = {};
-  window.latestOrderData.forEach(row => {
-    const supplier = row.order?.Supplier || "Unknown";
-    supplierMap[supplier] = true;
-  });
-  const suppliers = Object.keys(supplierMap).sort();
-
-  populateSupplierDropdown(suppliers);
-
-  // ✅ Render the chart once even if panel not opened yet
-  if (!window.supplierChartRendered) {
-    updateSupplierStatusChart();
-    window.supplierChartRendered = true;
-  }
-
-  // Event listeners
-  document.getElementById('supplierSelect').addEventListener('change', (e) => {
-    const selectedSupplier = e.target.value;
-    const sortBy = document.getElementById('sortSelect').value;
-    updateSupplierStatusChart(selectedSupplier, sortBy);
-  });
-
-  document.getElementById('sortSelect').addEventListener('change', (e) => {
-    const sortBy = e.target.value;
-    const selectedSupplier = document.getElementById('supplierSelect').value;
-    updateSupplierStatusChart(selectedSupplier, sortBy);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await fetchAndPrepareOrderData(); // Make sure this initializes all global data
-  initSupplierChartControls();      // Only call this AFTER data is ready
-});
-
-
 
 
 
@@ -655,7 +828,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const autoFitBtn = document.createElement("button");
   autoFitBtn.id = "autoFitBtn";
   autoFitBtn.className = "mb-5 flex items-center gap-2 bg-[#d1d1d6] hover:bg-[#c7c7cc] text-[#1c1c1e] px-4 py-2 rounded-lg shadow-sm transition-all duration-200";
-  autoFitBtn.innerHTML = 🧩 <span class="font-medium">Auto Fit Column Widths</span> <kbd class="ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600">Shortcut</kbd>;
+  autoFitBtn.innerHTML = `🧩 <span class="font-medium">Auto Fit Column Widths</span> <kbd class="ml-auto bg-white border border-gray-300 px-2 py-0.5 rounded text-xs text-gray-600">Shortcut</kbd>`;
   autoFitBtn.onclick = fixTableColumnWidths;
   customizePanel.insertBefore(autoFitBtn, customizeColumnsContainer);
 
@@ -666,7 +839,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   columnSettings.order.forEach(col => {
     const wrapper = document.createElement("label");
-    wrapper.style.cssText = 
+    wrapper.style.cssText = `
       display: flex;
       align-items: center;
       gap: 10px;
@@ -675,7 +848,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       border-radius: 10px;
       padding: 10px 12px;
       cursor: pointer;
-    ;
+    `;
     const input = document.createElement("input");
     input.type = "checkbox";
     input.checked = columnSettings.visible.includes(col);
@@ -721,7 +894,7 @@ th.style.userSelect = "none";
     th.appendChild(titleSpan);
 
     const resizer = document.createElement("div");
-    resizer.style.cssText = 
+    resizer.style.cssText = `
       width: 6px;
       height: 100%;
       position: absolute;
@@ -729,7 +902,7 @@ th.style.userSelect = "none";
       right: 0;
       cursor: col-resize;
       z-index: 10;
-    ;
+    `;
     let isResizing = false;
 
     resizer.addEventListener("mousedown", (e) => {
@@ -802,6 +975,7 @@ th.style.userSelect = "none";
 } else if (["Delivery Date", "Order Date", "Approved Date", "Need By Date"].includes(col)) {
   td.textContent = formatDateDisplay(r.order[col]);
 } else {
+
   td.textContent = r.order[col] ?? "";
 if (col.toLowerCase() === "buyer") {
   td.classList.add("buyer-cell");
@@ -812,14 +986,22 @@ if (col.toLowerCase() === "buyer") {
 
 }
 
-      if (columnSettings.widths[col]) {
-        td.style.width = columnSettings.widths[col] + "px";
-      }
-      tr.appendChild(td);
-    });
-    body.appendChild(tr);
-  });
+    if (columnSettings.widths[col]) {
+  td.style.width = columnSettings.widths[col] + "px";
 }
+tr.appendChild(td);
+});
+body.appendChild(tr);
+});
+
+// ✅ After building the table, update the on-time vs delayed chart
+setTimeout(() => {
+  renderOnTimeVsDelayedChart();
+}, 200);
+
+}
+
+
 
 
 
@@ -857,7 +1039,6 @@ if (col.toLowerCase() === "buyer") {
     status.style.display = "none";
 
     buildTable(rows);          // ✅ Build the table
-    buildBuyerFilter();        // ✅ Then build the buyer filter
     window.latestOrderData = rows; // Save for chart use
     initSupplierChartControls(); // Initialize supplier chart controls and render chart
 
@@ -881,138 +1062,8 @@ if (col.toLowerCase() === "buyer") {
   });
 
 
-document.addEventListener('DOMContentLoaded', function () {
-  const table = document.querySelector('table');
-  const rows = Array.from(table.querySelectorAll('tbody tr'));
-  const buyerSet = new Set();
-
-  // Step 1: Collect all unique buyers
-  rows.forEach(row => {
-    const buyerCell = row.querySelector('.buyer-cell');
-    if (buyerCell) buyerSet.add(buyerCell.innerText.trim());
-  });
-
-  const buyerList = Array.from(buyerSet).sort();
-  const checkboxContainer = document.getElementById('buyerCheckboxes');
-
-  // Step 2: Generate checkboxes
-  buyerList.forEach(buyer => {
-    const label = document.createElement('label');
-    label.style.marginRight = '15px';
-    label.innerHTML = 
-      <input type="checkbox" class="buyer-filter" value="${buyer}" checked />
-      ${buyer}
-    ;
-    checkboxContainer.appendChild(label);
-  });
-
-  // Step 3: Filter table based on checkbox selection
-  document.querySelectorAll('.buyer-filter').forEach(checkbox => {
-    checkbox.addEventListener('change', filterRows);
-  });
-
-  function filterRows() {
-    const checkedBuyers = Array.from(document.querySelectorAll('.buyer-filter:checked')).map(cb => cb.value);
-
-    rows.forEach(row => {
-      const buyerCell = row.querySelector('.buyer-cell');
-      if (buyerCell) {
-        const buyerName = buyerCell.innerText.trim();
-        row.style.display = checkedBuyers.includes(buyerName) ? '' : 'none';
-      }
-    });
-  }
-});
 
 
-function buildBuyerFilter() {
-  const checkboxContainer = document.getElementById('buyerCheckboxes');
-  checkboxContainer.innerHTML = ""; // clear previous
-
-  const allRows = document.querySelectorAll('#ordersBody tr');
-  const buyerSet = new Set();
-
-  allRows.forEach(row => {
-    const buyerCell = row.querySelector('.buyer-cell');
-    if (buyerCell) buyerSet.add(buyerCell.innerText.trim());
-  });
-
-  const buyerList = Array.from(buyerSet).sort();
-  buyerList.forEach(buyer => {
-    const label = document.createElement('label');
-    label.style.marginRight = '15px';
-    label.innerHTML = 
-      <input type="checkbox" class="buyer-filter" value="${buyer}" checked />
-      ${buyer}
-    ;
-    checkboxContainer.appendChild(label);
-  });
-
-  const debouncedFilter = debounce(filterRowsSmoothly);
-  document.querySelectorAll('.buyer-filter').forEach(checkbox => {
-    checkbox.addEventListener('change', debouncedFilter);
-  });
-
-  function debounce(func, delay = 150) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-  }
-
-  function filterRowsSmoothly() {
-  const selected = Array.from(document.querySelectorAll('.buyer-filter:checked')).map(cb => cb.value);
-  const rows = document.querySelectorAll('#ordersBody tr');
-
-  // Modal loader elements
-  const loaderModal = document.getElementById('loaderModal');
-  const loaderBar = document.getElementById('loaderBar');
-  const loaderLabel = document.getElementById('loaderLabel');
-
-  loaderModal.style.display = 'block';
-  loaderBar.style.width = '0%';
-  loaderLabel.textContent = 'Sorting... 0%';
-
-  let i = 0;
-  const chunkSize = 20;
-  const total = rows.length;
-
-  function processNextChunk() {
-    const start = i;
-    const end = Math.min(i + chunkSize, total);
-
-    for (let j = start; j < end; j++) {
-      const row = rows[j];
-      const buyerCell = row.querySelector('.buyer-cell');
-      if (!buyerCell) continue;
-
-      const buyerName = buyerCell.innerText.trim();
-      row.style.display = selected.includes(buyerName) ? "" : "none";
-    }
-
-    i = end;
-
-    // Update loader progress
-    const progress = Math.round((i / total) * 100);
-    loaderBar.style.width = ${progress}%;
-    loaderLabel.textContent = Sorting... ${progress}%;
-
-    if (i < total) {
-      requestAnimationFrame(processNextChunk);
-    } else {
-      // Hide modal after a short delay
-      setTimeout(() => {
-        loaderModal.style.display = 'none';
-        loaderBar.style.width = '0%';
-      }, 300);
-    }
-  }
-
-  requestAnimationFrame(processNextChunk);
-}
-
-}
 
 document.addEventListener('click', function (e) {
   const buyerPanel = document.getElementById('buyerFilterPanel');
@@ -1044,102 +1095,20 @@ function closeReportModal() {
 }
 
 
-
-
-function generateStatusReport() {
-  console.log("🚀 generateStatusReport called");
-  const data = window.latestOrderData;
-  if (!data || !data.length) {
-    alert("No order data available.");
-    return;
-  }
-
-  const today = new Date();
-  let onTime = 0, delayed = 0, invalid = 0, inProgress = 0;
-  let onTimeRows = [], delayedRows = [], invalidRows = [], inProgressRows = [];
-
-  const formatDate = (raw) => {
-    const date = new Date(raw);
-    return raw && !isNaN(date)
-      ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-      : "—";
-  };
-
-  data.forEach(row => {
-    const order = row.order;
-    const deliveryDateRaw = order["Delivery Date"];
-    const approvedDateRaw = order["Approved Date"];
-    const tentativeDateRaw = order["Tentative Delivery Date"];
-
-    const deliveryDate = deliveryDateRaw ? new Date(deliveryDateRaw) : null;
-    const approvedDate = approvedDateRaw ? new Date(approvedDateRaw) : null;
-    const tentativeDate = tentativeDateRaw ? new Date(tentativeDateRaw) : null;
-
-    if (!tentativeDate) return;
-
-    const baseDetails = {
-      orderNo: order["Number"] || "N/A",
-      supplier: order["Supplier"] || "—",
-      deliveryDate: formatDate(deliveryDateRaw),
-      approvedDate: formatDate(approvedDateRaw),
-      tentativeDate: formatDate(tentativeDateRaw)
-    };
-
-    if (deliveryDate && approvedDate && deliveryDate < approvedDate) {
-      invalid++;
-      invalidRows.push({ ...baseDetails, remarks: "Invalid (Delivery before Approval)" });
-      return;
+function exportTableToExcel(tableId, filename = 'excel_data') {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        alert("Table not found!");
+        return;
     }
 
-    if (deliveryDate && deliveryDate <= tentativeDate) {
-      onTime++;
-      onTimeRows.push({ ...baseDetails, remarks: "On Time" });
-      return;
-    }
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.table_to_sheet(table);
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
 
-    if (deliveryDate && deliveryDate > tentativeDate) {
-      delayed++;
-      delayedRows.push({ ...baseDetails, remarks: "Delayed" });
-    } else if (!deliveryDate && today > tentativeDate) {
-      inProgress++;
-      inProgressRows.push({ ...baseDetails, remarks: "Not Delivered (Overdue)" });
-    }
-  });
-
-  // 🌐 Store in global variables
-  window.onTimeOrders = onTimeRows;
-  window.delayedOrders = delayedRows;
-  window.invalidOrders = invalidRows;
-  window.inProgressOrders = inProgressRows;
-
- // 🆕 ✅ Render the new chart here
-  renderSupplierStatusChart();
-
-
-  // 🧮 Update UI counters
-  document.getElementById("onTimeCount").textContent = onTime;
-  document.getElementById("delayedCount").textContent = delayed;
-  document.getElementById("invalidCount").textContent = invalid;
-  document.getElementById("inProgressCount").textContent = inProgress;
-
-  // 📊 Show Delayed by default
-  renderStatusTable("Delayed", delayedRows);
-
- auth.onAuthStateChanged(user => {
-  if (!user) return;
-
-  const reportData = {
-    timestamp: Date.now(),
-    onTimeOrders: window.onTimeOrders,
-    delayedOrders: window.delayedOrders,
-    invalidOrders: window.invalidOrders,
-    inProgressOrders: window.inProgressOrders
-  };
-
-  saveReportsToFirestore(user.uid, reportData);
-});
-
+    XLSX.writeFile(wb, `${filename}.xlsx`);
 }
+
 
 
 
@@ -1171,189 +1140,59 @@ async function saveReportsToFirestore(userId, reportData) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function renderStatusTable(title, rows) {
-  const tbody = document.getElementById("delayedOrdersTableBody");
-  tbody.innerHTML = "";
-
-  if (rows.length === 0) {
-    tbody.innerHTML = <tr><td colspan="6" class="text-center text-gray-500 py-2">No ${title} orders found.</td></tr>;
-  } else {
-    rows.forEach(item => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = 
-        <td class="px-3 py-1 border">${item.orderNo}</td>
-        <td class="px-3 py-1 border">${item.supplier || '-'}</td>
-        <td class="px-3 py-1 border">${item.deliveryDate}</td>
-        <td class="px-3 py-1 border">${item.tentativeDate}</td>
-        <td class="px-3 py-1 border">${item.approvedDate}</td>
-        <td class="px-3 py-1 border text-red-600">${item.remarks}</td>
-      ;
-      tbody.appendChild(tr);
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "Loginindex.html";
     });
   }
 
-  document.getElementById("reportTitle").textContent = 📊 ${title} Orders;
-  showReportModal();
-}
+ document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const ordersBody = document.getElementById("ordersBody");
 
-
-
-
-// 🖱️ Click events on count sections to filter table
-document.getElementById("onTimeCount").addEventListener("click", () => {
-  renderStatusTable("On Time", window.onTimeOrders);
-});
-document.getElementById("delayedCount").addEventListener("click", () => {
-  renderStatusTable("Delayed", window.delayedOrders);
-});
-document.getElementById("invalidCount").addEventListener("click", () => {
-  renderStatusTable("Invalid", window.invalidOrders);
-});
-document.getElementById("inProgressCount").addEventListener("click", () => {
-  renderStatusTable("In Progress", window.inProgressOrders);
-});
-
-
-
-
-
-// 🖱️ Handle click events for status buttons
-document.querySelectorAll('.status-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const selectedStatus = btn.getAttribute('data-status');
-
-    // 🔄 Highlight active
-    document.querySelectorAll('.status-btn').forEach(b => {
-      b.classList.remove('bg-blue-500', 'text-white', 'ring', 'ring-offset-2');
-    });
-    btn.classList.add('bg-blue-500', 'text-white', 'ring', 'ring-offset-2');
-
-    // 🎯 Select dataset based on clicked status
-    switch (selectedStatus) {
-      case 'On Time':
-        renderStatusTable('On Time', window.onTimeOrders);
-        break;
-      case 'Delayed':
-        renderStatusTable('Delayed', window.delayedOrders);
-        break;
-      case 'Invalid':
-        renderStatusTable('Invalid', window.invalidOrders);
-        break;
-      case 'In Progress':
-        renderStatusTable('In Progress', window.inProgressOrders);
-        break;
-      default:
-        break;
+    // Remove previous highlights
+    function resetHighlights() {
+      Array.from(ordersBody.rows).forEach(row => row.classList.remove("highlight"));
     }
+
+    // Search and highlight all matching rows
+    function searchAndHighlight(term) {
+      resetHighlights();
+
+      const rows = Array.from(ordersBody.rows);
+      const lowerTerm = term.toLowerCase();
+      const matches = rows.filter(row => row.textContent.toLowerCase().includes(lowerTerm));
+
+      matches.forEach(row => row.classList.add("highlight"));
+
+      // Scroll to first match if found
+      if (matches.length > 0) {
+        matches[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    // Event listener for input change
+    searchInput.addEventListener("input", () => {
+      const term = searchInput.value.trim();
+      if (term.length >= 2) {
+        searchAndHighlight(term);
+      } else {
+        resetHighlights();
+      }
+    });
+
+    // Inject highlight style
+    const style = document.createElement("style");
+    style.innerHTML = `.highlight { background-color: #ffeaa7 !important; }`;
+    document.head.appendChild(style);
   });
-});
 
 
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const reportLink = document.getElementById("reportLink");
-  if (reportLink) {
-    reportLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      generateStatusReport(); // this will call showReportModal()
-    });
-  } else {
-    console.error("❌ reportLink not found in DOM");
-  }
-});
-
-
-
-
-
-
-
-
-
-  // LOGOUT BUTTON TRIGGER
-document.getElementById("logoutBtn").addEventListener("click", logoutUser);
-
-async function logoutUser(showAlert = true) {
-  if (showAlert) alert("You've been logged out!");
-
-  const user = firebase.auth().currentUser;
-
-  if (user) {
-    try {
-      await firebase.firestore()
-        .collection("users")
-        .doc(user.uid)
-        .update({
-          sessionActive: false,
-          sessionId: null,
-          lastSession: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (err) {
-      console.error("Failed to update session info on logout:", err);
-    }
-  }
-
-  localStorage.removeItem('sessionId');
-  sessionStorage.clear();
-
-  try {
-    await firebase.auth().signOut();
-  } catch (err) {
-    console.error("Logout error:", err.message);
-  }
-
-  window.location.href = "Loginindex.html";
-}
-
-
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => {
-    logoutUser(); // Logs out after 10 minutes of inactivity
-  }, 10 * 60 * 1000); // 10 minutes
-}
-
-["click", "mousemove", "keydown", "scroll", "touchstart"].forEach(event => {
-  window.addEventListener(event, resetInactivityTimer);
-});
-
-window.addEventListener("load", resetInactivityTimer);
-
-// 🔒 Page/tab close session cleanup (best-effort)
-window.addEventListener("unload", () => {
-  const user = firebase.auth().currentUser;
-  if (user) {
-    navigator.sendBeacon("/log-session-close", JSON.stringify({
-      uid: user.uid
-    }));
-  }
-
-  localStorage.removeItem('sessionId');
-  sessionStorage.clear();
-});
 
 
 </script>
+
+
 
 </body>
 </html>
